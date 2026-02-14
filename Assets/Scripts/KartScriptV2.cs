@@ -1,4 +1,5 @@
-using Unity.VisualScripting;
+
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -24,7 +25,11 @@ public class KartScriptV2 : MonoBehaviour
     public float currentTurnSpeed; // c'est l'equivalent de la rotation du vollant
     public float turnAccelSpeed;
     public float turnDecelSpeed;
-
+    [Header("Visual Kart")]
+    public GameObject visualKart;
+    public float visKartZRot;
+    public GameObject[] turningWheels;
+    public float visWheelsYRot;
 
     void Start()
     {
@@ -43,6 +48,8 @@ public class KartScriptV2 : MonoBehaviour
         HandleTurning();
         rb.linearVelocity = transform.forward * currentSpeed;
         transform.Rotate(0, currentTurnSpeed, 0);
+        HandleVisualKartBody();
+        HandleVisualKartWheels();
         //Debug.Log(currentSpeed);
     }
 
@@ -71,7 +78,7 @@ public class KartScriptV2 : MonoBehaviour
                 if (nextSpeed < 0)
                 {
                     nextSpeed = 0;
-                }
+                }                
             }
             else if (currentSpeed < 0) // si on  recule
             {
@@ -103,10 +110,12 @@ public class KartScriptV2 : MonoBehaviour
         if (currentSpeed > 0) // si on avance
         {
             nextTurnSpeed += turnDirection * turnAccelSpeed * Time.fixedDeltaTime;
+            visWheelsYRot = currentTurnSpeed * 16;
         }
         else if (currentSpeed < 0) // si on recule
         {
             nextTurnSpeed += -turnDirection * turnAccelSpeed * Time.fixedDeltaTime;
+            visWheelsYRot = -currentTurnSpeed * 16;
         }        
 
         if (turnDirection == 0 || currentSpeed == 0) // turn deceleration
@@ -141,5 +150,20 @@ public class KartScriptV2 : MonoBehaviour
 
         // on applique
         currentTurnSpeed = nextTurnSpeed;
+    }
+
+    void HandleVisualKartBody()
+    {
+        visKartZRot = currentTurnSpeed * (currentSpeed / 3);
+        visualKart.transform.localRotation = Quaternion.Euler(0, 0, visKartZRot);
+    }
+
+    void HandleVisualKartWheels()
+    {
+        //visWheelsYRot = currentTurnSpeed * 12;
+        for (int i = 0; i < turningWheels.Length; i++)
+        {
+            turningWheels[i].transform.localRotation = Quaternion.Euler(90, visWheelsYRot, 90);
+        }
     }
 }
