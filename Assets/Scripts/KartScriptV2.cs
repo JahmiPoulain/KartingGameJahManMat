@@ -26,16 +26,32 @@ public class KartScriptV2 : MonoBehaviour
     public float turnAccelSpeed;
     public float turnDecelSpeed;
     [Header("Visual Kart")]
-    public GameObject visualKart;
+    public GameObject visualKartBody;
     public float visKartZRot;
     public float visKartXRot;
     public float visKartXRotCatchUp;
+    public float visKartTurboXRotCatchUp;
     public GameObject[] turningWheels;
     public float visWheelsYRot;
+    [Header("Bounce Animation")]
+    public bool bounce;
+    float bounceTimer;
     [Header("Camera")]
     public float camXpos;
     public GameObject playerCamera;
-
+    [Header("Colisions")]
+    public LayerMask wallLayer;
+    public Vector3 bounceDirection;
+    public float bounceForce;
+    public float minBounceDecelForce;
+    [Header("Turbo")]
+    public float currentTurboForce;
+    public float turboAccelSpeed;
+    float targetTurboForce;
+    public float minTurboDecel;
+    bool turbo;
+    float turboTimer;
+    
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -43,20 +59,44 @@ public class KartScriptV2 : MonoBehaviour
 
     void Update()
     {
-
+        PlayerInputs();
+        if (Input.GetMouseButtonDown(1))
+        {
+            StartTurbo(10f, 1.5f);
+        }
     }
 
     private void FixedUpdate()
     {
-        PlayerInputs();
+        
         HandleCurrentSpeed();
         HandleTurning();
-        rb.linearVelocity = transform.forward * currentSpeed;
+        HandleTurbo();
+        float unsignedCurSpeed = currentSpeed;
+        if (unsignedCurSpeed < 0)
+        {
+            unsignedCurSpeed = -unsignedCurSpeed;
+        }
+        float nextBounceForce = bounceForce - (minBounceDecelForce) * Time.fixedDeltaTime;
+        if (nextBounceForce > 0)
+        {
+            bounceForce = nextBounceForce;
+        }
+        else
+        {
+            bounceForce = 0;
+            bounceDirection = Vector3.zero;
+        }
+        rb.linearVelocity = transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce;
         transform.Rotate(0, currentTurnSpeed, 0);
         HandleVisualKartBody();
         HandleVisualKartWheels();
         HandleCameraLocalPosition();
+        SquishAnimation();
+
+
         //Debug.Log(currentSpeed);
+        
     }
 
     void PlayerInputs()
@@ -158,6 +198,48 @@ public class KartScriptV2 : MonoBehaviour
         currentTurnSpeed = nextTurnSpeed;
     }
 
+    public void StartTurbo(float force ,float time)
+    {
+        turbo = true;
+        turboTimer += time;
+        float nextTForce = targetTurboForce + force;
+        if (nextTForce > targetTurboForce)
+        {
+            targetTurboForce = nextTForce;
+        }
+        Debug.Log("turbo");
+    }
+    void HandleTurbo()
+    {
+        if (turbo)
+        {
+            turboTimer -= Time.fixedDeltaTime;
+            if (turboTimer > 0)
+            {
+                float nextTForce = currentTurboForce + turboAccelSpeed * Time.fixedDeltaTime;
+                if (nextTForce < targetTurboForce)
+                {
+                    currentTurboForce = nextTForce;
+                }
+                else
+                {
+                    currentTurboForce = targetTurboForce;
+                }
+            }
+            else
+            {
+                targetTurboForce = 0;
+                currentTurboForce -= minTurboDecel * Time.fixedDeltaTime;
+            }
+            if (currentTurboForce <= 0)
+            {
+                turbo = false;
+                currentTurboForce = 0;
+                targetTurboForce = 0;
+            }                       
+        }
+    }
+
     void HandleVisualKartBody()
     {
         
@@ -187,10 +269,11 @@ public class KartScriptV2 : MonoBehaviour
         else
         {            
             visKartXRotCatchUp = 0;            
-        }
+        }                    
+
         visKartXRot = (-currentSpeed / 2) * visKartXRotCatchUp;
         visKartZRot = currentTurnSpeed * (currentSpeed / 3);
-        visualKart.transform.localRotation = Quaternion.Euler(visKartXRot, 0, visKartZRot);
+        visualKartBody.transform.localRotation = Quaternion.Euler(visKartXRot + -currentTurboForce * 2, 0, visKartZRot);
     }
 
     void HandleVisualKartWheels()
@@ -234,5 +317,47 @@ public class KartScriptV2 : MonoBehaviour
         }
         // playerCamera.transform.localRotation = Quaternion.Euler(32, camYRot, 0);
         //playerCamera.transform.localPosition = new Vector3(camXpos, 3.9f, -4.7f);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        //Debug.Log(collision.gameObject.layer);
+        if (collision.gameObject.layer == 6)
+        { 
+            bounce = true;
+            Vector3 rawDir = transform.position - collision.contacts[0].point;
+            bounceDirection = new Vector3(rawDir.x, 0, rawDir.z).normalized;
+            float unsignedCurSpeed = currentSpeed;
+            if (unsignedCurSpeed < 0)
+            {
+                unsignedCurSpeed = -unsignedCurSpeed;
+            }
+            bounceForce = unsignedCurSpeed * 2f;
+            currentSpeed *= 0.2f;
+            //rb.AddForce((, ForceMode.Impulse);
+        }
+    }
+    void SquishAnimation()
+    {
+        if (bounce)
+        {
+            
+            bounceTimer += Time.deltaTime;
+            if (bounceTimer < 0.05f)
+            {
+                visualKartBody.transform.localScale += new Vector3(-6f, 10f, -6f) * Time.deltaTime;
+                
+            }
+            else if (bounceTimer < 0.1f)
+            {
+                visualKartBody.transform.localScale += new Vector3(6f, -10f, 6f) * Time.deltaTime;
+            }
+            else
+            {
+                visualKartBody.transform.localScale = Vector3.one;
+                bounce = false;                
+                bounceTimer = 0;
+            }
+        }
     }
 }
