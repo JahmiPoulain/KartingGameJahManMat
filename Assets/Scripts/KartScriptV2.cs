@@ -25,6 +25,21 @@ public class KartScriptV2 : MonoBehaviour
     public float currentTurnSpeed; // c'est l'equivalent de la rotation du vollant
     public float turnAccelSpeed;
     public float turnDecelSpeed;
+    [Header("Turbo")]
+    public float currentTurboForce;
+    public float turboAccelSpeed;
+    float targetTurboForce;
+    public float minTurboDecel;
+    bool turbo;    
+    [Header("Colisions")]
+    public LayerMask wallLayer;
+    public Vector3 bounceDirection;
+    public float bounceForce;
+    public float minBounceDecelForce;
+    [Header("Camera")]
+    public float camXpos;
+    public GameObject playerCamera;
+    float turboTimer;
     [Header("Visual Kart")]
     public GameObject visualKartBody;
     public float visKartZRot;
@@ -36,22 +51,11 @@ public class KartScriptV2 : MonoBehaviour
     [Header("Bounce Animation")]
     public bool bounce;
     float bounceTimer;
-    [Header("Camera")]
-    public float camXpos;
-    public GameObject playerCamera;
-    [Header("Colisions")]
-    public LayerMask wallLayer;
-    public Vector3 bounceDirection;
-    public float bounceForce;
-    public float minBounceDecelForce;
-    [Header("Turbo")]
-    public float currentTurboForce;
-    public float turboAccelSpeed;
-    float targetTurboForce;
-    public float minTurboDecel;
-    bool turbo;
-    float turboTimer;
-    
+    [Header("Smoke")]
+    public GameObject smokePrefab;
+    public Transform smokeOrigin;
+    public Material fireSmokeMat;
+    float smokeTimer;
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -93,10 +97,10 @@ public class KartScriptV2 : MonoBehaviour
         HandleVisualKartWheels();
         HandleCameraLocalPosition();
         SquishAnimation();
-
+        HandleSmoke();
 
         //Debug.Log(currentSpeed);
-        
+
     }
 
     void PlayerInputs()
@@ -358,6 +362,20 @@ public class KartScriptV2 : MonoBehaviour
                 bounce = false;                
                 bounceTimer = 0;
             }
+        }
+    }
+
+    void HandleSmoke()
+    {
+        smokeTimer -= (currentSpeed + currentTurboForce * 3f) * Time.fixedDeltaTime;
+        if (smokeTimer < 0)
+        {
+            GameObject smoke = Instantiate(smokePrefab, smokeOrigin.position, Quaternion.identity);
+            if (currentTurboForce > 0)
+            {
+                smoke.GetComponent<Renderer>().material = fireSmokeMat;
+            }
+            smokeTimer = 2f;
         }
     }
 }
