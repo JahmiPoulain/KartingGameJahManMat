@@ -17,7 +17,7 @@ public class KartScriptV2 : MonoBehaviour
     [Header("Acceleration")]
     public bool accelerate;
     public float accelSpeed;
-    public float currentAccelSpeed;
+    //public float currentAccelSpeed;
     [Header("Deceleration")]
     public float decelSpeed;
     [Header("Turning")]
@@ -28,8 +28,13 @@ public class KartScriptV2 : MonoBehaviour
     [Header("Visual Kart")]
     public GameObject visualKart;
     public float visKartZRot;
+    public float visKartXRot;
+    public float visKartXRotCatchUp;
     public GameObject[] turningWheels;
     public float visWheelsYRot;
+    [Header("Camera")]
+    public float camXpos;
+    public GameObject playerCamera;
 
     void Start()
     {
@@ -50,6 +55,7 @@ public class KartScriptV2 : MonoBehaviour
         transform.Rotate(0, currentTurnSpeed, 0);
         HandleVisualKartBody();
         HandleVisualKartWheels();
+        HandleCameraLocalPosition();
         //Debug.Log(currentSpeed);
     }
 
@@ -154,8 +160,37 @@ public class KartScriptV2 : MonoBehaviour
 
     void HandleVisualKartBody()
     {
+        
+        
+        if (currentSpeed > 0)
+        {            
+            if (forwardDirection > 0)
+            { 
+                visKartXRotCatchUp = (maxSpeed - currentSpeed) / 4;
+            }
+            else
+            {
+                visKartXRotCatchUp = -(maxSpeed - currentSpeed) / 4;
+            }
+        }
+        else if (currentSpeed < 0)
+        {            
+            if (forwardDirection < 0)
+            {
+                visKartXRotCatchUp = (maxSpeed + currentSpeed) / 8;
+            }
+            else
+            {
+                visKartXRotCatchUp = -(maxSpeed + currentSpeed) / 8;
+            }            
+        }
+        else
+        {            
+            visKartXRotCatchUp = 0;            
+        }
+        visKartXRot = (-currentSpeed / 2) * visKartXRotCatchUp;
         visKartZRot = currentTurnSpeed * (currentSpeed / 3);
-        visualKart.transform.localRotation = Quaternion.Euler(0, 0, visKartZRot);
+        visualKart.transform.localRotation = Quaternion.Euler(visKartXRot, 0, visKartZRot);
     }
 
     void HandleVisualKartWheels()
@@ -165,5 +200,39 @@ public class KartScriptV2 : MonoBehaviour
         {
             turningWheels[i].transform.localRotation = Quaternion.Euler(90, visWheelsYRot, 90);
         }
+    }
+
+    void HandleCameraLocalPosition()
+    {
+        camXpos = currentSpeed * -currentTurnSpeed / 120f * forwardDirection;
+        //+ -currentTurnSpeed;
+        /*if (playerCamera.transform.localRotation.y > camXpos)
+        {
+            playerCamera.transform.Rotate(0, -1f * Time.fixedDeltaTime, 0);
+        }
+        else if (playerCamera.transform.localRotation.y < camXpos)
+        {
+            playerCamera.transform.Rotate(0, 1f * Time.fixedDeltaTime, 0);
+        }*/
+        if (playerCamera.transform.localPosition.x > camXpos)
+        {
+            float nextXpos = playerCamera.transform.localPosition.x - 1f * Time.fixedDeltaTime;
+            if (nextXpos < camXpos)
+            {
+                nextXpos = camXpos;
+            }
+            playerCamera.transform.localPosition = new Vector3(nextXpos, 3.9f, -4.7f);
+        }
+        else if (playerCamera.transform.localPosition.x < camXpos)
+        {
+            float nextXpos = playerCamera.transform.localPosition.x + 1f * Time.fixedDeltaTime;
+            if ( nextXpos > camXpos)
+            {
+                nextXpos = camXpos;
+            }
+            playerCamera.transform.localPosition = new Vector3(nextXpos, 3.9f, -4.7f);
+        }
+        // playerCamera.transform.localRotation = Quaternion.Euler(32, camYRot, 0);
+        //playerCamera.transform.localPosition = new Vector3(camXpos, 3.9f, -4.7f);
     }
 }
