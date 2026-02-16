@@ -1692,10 +1692,10 @@ MonoBehaviour:
   currentSpeed: 0
   maxBackSpeed: 8
   accelerate: 0
-  accelSpeed: 0.001
+  accelSpeed: 0.008
   flatAccelSpeed: 0.2
   decelSpeed: 0.0001
-  flatDecelSpeed: 0.1
+  flatDecelSpeed: 0.15
   maxTurnSpeed: 2
   currentTurnSpeed: 0
   turnAccelSpeed: 15
@@ -1732,7 +1732,7 @@ MonoBehaviour:
   fireSmokeMat: {fileID: 2100000, guid: 632ee81195b274c44aa9d2b9c4a01af4, type: 2}
   smokeParticlesGenerator: {fileID: 1952493912}
   fireParticlesGenerator: {fileID: 829169390}
-  gravity: 1.5
+  gravity: 0
 --- !u!1 &499588288
 GameObject:
   m_ObjectHideFlags: 0
