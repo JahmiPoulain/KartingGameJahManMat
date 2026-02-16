@@ -17,9 +17,11 @@ public class KartScriptV2 : MonoBehaviour
     [Header("Acceleration")]
     public bool accelerate;
     public float accelSpeed;
+    public float flatAccelSpeed;
     //public float currentAccelSpeed;
     [Header("Deceleration")]
     public float decelSpeed;
+    public float flatDecelSpeed;
     [Header("Turning")]
     public float maxTurnSpeed;
     public float currentTurnSpeed; // c'est l'equivalent de la rotation du vollant
@@ -64,6 +66,8 @@ public class KartScriptV2 : MonoBehaviour
     float smokeTimer;
     public ParticleSystem smokeParticlesGenerator;
     public ParticleSystem fireParticlesGenerator;
+    [Header("Gravity")]
+    public float gravity;
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -99,7 +103,10 @@ public class KartScriptV2 : MonoBehaviour
             bounceForce = 0;
             bounceDirection = Vector3.zero;
         }
-        rb.linearVelocity = transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce;
+
+        //rb.AddForce(transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce, ForceMode.Acceleration);
+        // rb.linearVelocity = transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce;
+        rb.linearVelocity = transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce + -transform.up * gravity;
         transform.Rotate(0, currentTurnSpeed, 0);
         HandleVisualKartBody();
         HandleVisualKartWheels();
@@ -122,17 +129,17 @@ public class KartScriptV2 : MonoBehaviour
         float nextSpeed = currentSpeed;
         if (forwardDirection > 0) // si on veut accelerer en avant
         {
-            nextSpeed += 1f + (maxSpeed - currentSpeed) * accelSpeed * Time.fixedDeltaTime;            
+            nextSpeed += flatAccelSpeed + (maxSpeed - currentSpeed) * accelSpeed * Time.fixedDeltaTime;            
         }
         else if (forwardDirection < 0) // si on veut accelerer en arière
         {
-            nextSpeed -= 1f + (maxSpeed - currentSpeed) * accelSpeed * Time.fixedDeltaTime;
+            nextSpeed -= flatAccelSpeed + (maxSpeed - currentSpeed) * accelSpeed * Time.fixedDeltaTime;
         }
         else // si on ne veut pas accelerer
         {           
             if (currentSpeed > 0) // si on avance
             {
-                nextSpeed -= 1f + (maxSpeed - currentSpeed) * decelSpeed * Time.fixedDeltaTime;                
+                nextSpeed -= flatDecelSpeed + (maxSpeed - currentSpeed) * decelSpeed * Time.fixedDeltaTime;                
                 if (nextSpeed < 0)
                 {
                     nextSpeed = 0;
@@ -140,7 +147,7 @@ public class KartScriptV2 : MonoBehaviour
             }
             else if (currentSpeed < 0) // si on  recule
             {
-                nextSpeed += 1f + (maxSpeed - currentSpeed) * decelSpeed * Time.fixedDeltaTime;
+                nextSpeed += flatDecelSpeed + (maxSpeed - currentSpeed) * decelSpeed * Time.fixedDeltaTime;
                 if (nextSpeed > 0)
                 {
                     nextSpeed = 0;
@@ -285,7 +292,10 @@ public class KartScriptV2 : MonoBehaviour
 
         visKartXRot = (-currentSpeed / 2) * visKartXRotCatchUp;
         visKartZRot = currentTurnSpeed * (currentSpeed / 3);
-        visualKartBody.transform.localRotation = Quaternion.Euler(visKartXRot + -currentTurboForce * 2, 0, visKartZRot);
+        float nextTotalSpeed = visKartXRot + -currentTurboForce * 2;
+        nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -100f , maxSpeed + 10f);
+        visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);
+        //visualKartBody.transform.localRotation = 
     }
 
     void HandleVisualKartWheels()
