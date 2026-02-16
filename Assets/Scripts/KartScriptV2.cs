@@ -47,15 +47,23 @@ public class KartScriptV2 : MonoBehaviour
     public float visKartXRotCatchUp;
     public float visKartTurboXRotCatchUp;
     public GameObject[] turningWheels;
+    public GameObject[] nonTurningWheels;
     public float visWheelsYRot;
+    float turningWheelsXRot;
+    float nonTurningWheelsXRot;
+    public float turningWheelsRatioScaling;
+    public float nonTurningWheelsRatioScaling;
     [Header("Bounce Animation")]
     public bool bounce;
     float bounceTimer;
     [Header("Smoke")]
     public GameObject smokePrefab;
     public Transform smokeOrigin;
+    public Material baseSmokeMat;
     public Material fireSmokeMat;
     float smokeTimer;
+    public ParticleSystem smokeParticlesGenerator;
+    public ParticleSystem fireParticlesGenerator;
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -283,9 +291,18 @@ public class KartScriptV2 : MonoBehaviour
     void HandleVisualKartWheels()
     {
         //visWheelsYRot = currentTurnSpeed * 12;
+        turningWheelsXRot += (currentSpeed + currentTurboForce) * turningWheelsRatioScaling * Time.fixedDeltaTime;
+        nonTurningWheelsXRot += (currentSpeed + currentTurboForce) * nonTurningWheelsRatioScaling * Time.fixedDeltaTime;
         for (int i = 0; i < turningWheels.Length; i++)
         {
-            turningWheels[i].transform.localRotation = Quaternion.Euler(90, visWheelsYRot, 90);
+           
+            turningWheels[i].transform.localRotation = Quaternion.Euler(turningWheelsXRot, visWheelsYRot, 90);
+            //turningWheels[i].transform.Rotate(0, 10, 0);
+        }
+        for (int i = 0; i < nonTurningWheels.Length; i++)
+        {
+            nonTurningWheels[i].transform.localRotation = Quaternion.Euler(nonTurningWheelsXRot, 0, 90);
+            //turningWheels[i].transform.Rotate(0, 10, 0);
         }
     }
 
@@ -367,15 +384,32 @@ public class KartScriptV2 : MonoBehaviour
 
     void HandleSmoke()
     {
-        smokeTimer -= (currentSpeed + currentTurboForce * 3f) * Time.fixedDeltaTime;
+        if (turbo) {
+            //var Pemission = smokeParticlesGenerator.emission;
+            //Pemission.rateOverTime = 0;
+            var FPemission = fireParticlesGenerator.emission;
+            FPemission.rateOverDistance = 3;
+            //FPemission.rateOverTime =3;
+        }
+        else
+        {
+            //var Pemission = smokeParticlesGenerator.emission;
+            //Pemission.rateOverTime = 3;
+            var FPemission = fireParticlesGenerator.emission;
+            //FPemission.rateOverTime = 0;
+            FPemission.rateOverDistance = 0;
+
+        }
+        /*smokeTimer -= (currentSpeed + currentTurboForce * 3f) * Time.fixedDeltaTime;
         if (smokeTimer < 0)
         {
+            
             GameObject smoke = Instantiate(smokePrefab, smokeOrigin.position, Quaternion.identity);
             if (currentTurboForce > 0)
             {
                 smoke.GetComponent<Renderer>().material = fireSmokeMat;
             }
             smokeTimer = 2f;
-        }
+        }*/
     }
 }
