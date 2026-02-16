@@ -106,7 +106,7 @@ public class KartScriptV2 : MonoBehaviour
 
         //rb.AddForce(transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce, ForceMode.Acceleration);
         // rb.linearVelocity = transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce;
-        rb.linearVelocity = transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce + -transform.up * gravity;
+        rb.linearVelocity = transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce;
         transform.Rotate(0, currentTurnSpeed, 0);
         HandleVisualKartBody();
         HandleVisualKartWheels();
