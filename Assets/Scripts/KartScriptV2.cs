@@ -410,16 +410,5 @@ public class KartScriptV2 : MonoBehaviour
             FPemission.rateOverDistance = 0;
 
         }
-        /*smokeTimer -= (currentSpeed + currentTurboForce * 3f) * Time.fixedDeltaTime;
-        if (smokeTimer < 0)
-        {
-            
-            GameObject smoke = Instantiate(smokePrefab, smokeOrigin.position, Quaternion.identity);
-            if (currentTurboForce > 0)
-            {
-                smoke.GetComponent<Renderer>().material = fireSmokeMat;
-            }
-            smokeTimer = 2f;
-        }*/
     }
 }
