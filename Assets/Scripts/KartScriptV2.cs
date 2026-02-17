@@ -325,10 +325,11 @@ public class KartScriptV2 : MonoBehaviour
         visKartZRot = currentTurnSpeed * (currentSpeed / 3);
         float nextTotalSpeed = visKartXRot + -currentTurboForce * 2;
         nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -100f , maxSpeed + 10f);
-        visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);
-       // preOrientation.up = goundNormal;
-       // visualKartBody.transform.localRotation = Quaternion.Euler(preOrientation.rotation.x + nextTotalSpeed, preOrientation.rotation.y, preOrientation.rotation.z + visKartZRot);
-        //visualKartBody.transform.localRotation = 
+        //visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);
+        preOrientation.up = goundNormal;
+        visualKartBody.transform.localRotation = Quaternion.Euler(preOrientation.rotation.x + nextTotalSpeed, preOrientation.rotation.y, preOrientation.rotation.z + visKartZRot);
+        //visualKartBody.transform.up = goundNormal;
+        //visualKartBody.transform.
     }
 
     void HandleVisualKartWheels()
