@@ -44,6 +44,7 @@ public class KartScriptV2 : MonoBehaviour
     float turboTimer;
     [Header("Visual Kart")]
     public GameObject visualKartBody;
+    public GameObject visualKartWheelsParent;
     public float visKartZRot;
     public float visKartXRot;
     public float visKartXRotCatchUp;
@@ -70,7 +71,7 @@ public class KartScriptV2 : MonoBehaviour
     public float gravity;
     public float currentFallSpeed;
     int minimalGrav;
-    Vector3 goundNormal;
+    Vector3 groundNormal;
     public Transform preOrientation;
     void Start()
     {
@@ -119,7 +120,7 @@ public class KartScriptV2 : MonoBehaviour
             currentFallSpeed += gravity * Time.deltaTime;
         }
        
-        rb.linearVelocity = (transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * currentFallSpeed;
+        rb.linearVelocity = (transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f +currentFallSpeed);
         transform.Rotate(0, currentTurnSpeed, 0);
         //rb.linearVelocity += Vector3.down * currentFallSpeed;
 
@@ -143,9 +144,9 @@ public class KartScriptV2 : MonoBehaviour
     bool IsGrounded()
     {
         RaycastHit hit;
-        if (Physics.Raycast(transform.position, Vector3.down, out hit, 1f))
+        if (Physics.Raycast(transform.position + new Vector3(0, 0, 0.5f), Vector3.down, out hit, 0.5f))
         {
-            goundNormal = hit.normal;
+            groundNormal = hit.normal;
             return true;
         }
         return false;
@@ -326,8 +327,11 @@ public class KartScriptV2 : MonoBehaviour
         float nextTotalSpeed = visKartXRot + -currentTurboForce * 2;
         nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -100f , maxSpeed + 10f);
         //visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);
-        preOrientation.up = goundNormal;
-        visualKartBody.transform.localRotation = Quaternion.Euler(preOrientation.rotation.x + nextTotalSpeed, preOrientation.rotation.y, preOrientation.rotation.z + visKartZRot);
+        preOrientation.up = groundNormal;
+        //preOrientation.forward = transform.forward;
+        Debug.Log(gameObject.transform.eulerAngles.y);
+        visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, transform.eulerAngles.y, visKartZRot);
+        //Quaternion.Euler(nextTotalSpeed, transform.eulerAngles.y, visKartZRot);
         //visualKartBody.transform.up = goundNormal;
         //visualKartBody.transform.
     }
@@ -335,6 +339,7 @@ public class KartScriptV2 : MonoBehaviour
     void HandleVisualKartWheels()
     {
         //visWheelsYRot = currentTurnSpeed * 12;
+        visualKartWheelsParent.transform.localRotation = Quaternion.Euler(0, transform.eulerAngles.y, 0);
         turningWheelsXRot += (currentSpeed + currentTurboForce) * turningWheelsRatioScaling * Time.fixedDeltaTime;
         nonTurningWheelsXRot += (currentSpeed + currentTurboForce) * nonTurningWheelsRatioScaling * Time.fixedDeltaTime;
         for (int i = 0; i < turningWheels.Length; i++)
@@ -428,7 +433,8 @@ public class KartScriptV2 : MonoBehaviour
 
     void HandleSmoke()
     {
-        if (turbo) {
+        if (turbo)
+        {
             //var Pemission = smokeParticlesGenerator.emission;
             //Pemission.rateOverTime = 0;
             var FPemission = fireParticlesGenerator.emission;
