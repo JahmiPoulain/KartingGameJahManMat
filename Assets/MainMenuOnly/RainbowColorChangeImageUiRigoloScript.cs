@@ -5,6 +5,7 @@ public class RainbowColorChangeImageUiRigoloScript : MonoBehaviour
     public float speed = 1f;
     private Image img;
     private float hue = 0f;
+    public float alpha = 1f;
 
     void Start()
     {
@@ -17,5 +18,8 @@ public class RainbowColorChangeImageUiRigoloScript : MonoBehaviour
         if (hue > 1f) hue = 0f;
 
         img.color = Color.HSVToRGB(hue, 1f, 1f);
+        Color color = img.color;
+        color.a = alpha;
+        img.color = color;
     }
 }
