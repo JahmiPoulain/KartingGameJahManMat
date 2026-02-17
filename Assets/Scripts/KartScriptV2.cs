@@ -68,6 +68,10 @@ public class KartScriptV2 : MonoBehaviour
     public ParticleSystem fireParticlesGenerator;
     [Header("Gravity")]
     public float gravity;
+    public float currentFallSpeed;
+    int minimalGrav;
+    Vector3 goundNormal;
+    public Transform preOrientation;
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -106,8 +110,20 @@ public class KartScriptV2 : MonoBehaviour
 
         //rb.AddForce(transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce, ForceMode.Acceleration);
         // rb.linearVelocity = transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce;
-        rb.linearVelocity = transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce;
+        if (IsGrounded())
+        {
+            currentFallSpeed = 0;
+        }
+        else
+        {          
+            currentFallSpeed += gravity * Time.deltaTime;
+        }
+       
+        rb.linearVelocity = (transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * currentFallSpeed;
         transform.Rotate(0, currentTurnSpeed, 0);
+        //rb.linearVelocity += Vector3.down * currentFallSpeed;
+
+        HandleWholeKartRotationXZ();
         HandleVisualKartBody();
         HandleVisualKartWheels();
         HandleCameraLocalPosition();
@@ -124,6 +140,16 @@ public class KartScriptV2 : MonoBehaviour
         turnDirection = Input.GetAxisRaw("Horizontal");
     }
 
+    bool IsGrounded()
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position, Vector3.down, out hit, 1f))
+        {
+            goundNormal = hit.normal;
+            return true;
+        }
+        return false;
+    }
     void HandleCurrentSpeed()
     {
         float nextSpeed = currentSpeed;
@@ -131,7 +157,7 @@ public class KartScriptV2 : MonoBehaviour
         {
             nextSpeed += flatAccelSpeed + (maxSpeed - currentSpeed) * accelSpeed * Time.fixedDeltaTime;            
         }
-        else if (forwardDirection < 0) // si on veut accelerer en arière
+        else if (forwardDirection < 0) // si on veut accelerer en ariÃ¨re
         {
             nextSpeed -= flatAccelSpeed + (maxSpeed - currentSpeed) * accelSpeed * Time.fixedDeltaTime;
         }
@@ -259,6 +285,11 @@ public class KartScriptV2 : MonoBehaviour
         }
     }
 
+    void HandleWholeKartRotationXZ()
+    {
+        //transform.up = new Vector3(goundNormal.x, goundNormal.y, goundNormal.z);
+    }
+
     void HandleVisualKartBody()
     {
         
@@ -295,6 +326,8 @@ public class KartScriptV2 : MonoBehaviour
         float nextTotalSpeed = visKartXRot + -currentTurboForce * 2;
         nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -100f , maxSpeed + 10f);
         visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);
+       // preOrientation.up = goundNormal;
+       // visualKartBody.transform.localRotation = Quaternion.Euler(preOrientation.rotation.x + nextTotalSpeed, preOrientation.rotation.y, preOrientation.rotation.z + visKartZRot);
         //visualKartBody.transform.localRotation = 
     }
 
