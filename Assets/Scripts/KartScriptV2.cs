@@ -144,7 +144,7 @@ public class KartScriptV2 : MonoBehaviour
     bool IsGrounded()
     {
         RaycastHit hit;
-        if (Physics.Raycast(transform.position + new Vector3(0, 0, 0.5f), Vector3.down, out hit, 0.5f))
+        if (Physics.SphereCast(transform.position + new Vector3(0, 0, 0.5f), 0.51f, Vector3.down, out hit, 0.25f))
         {
             groundNormal = hit.normal;
             return true;
