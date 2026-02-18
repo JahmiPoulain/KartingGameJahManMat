@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 
 public class KartScriptV2 : MonoBehaviour
 {
+    public static KartScriptV2 instance;
     [Header("Components")]
     public Rigidbody rb;
     [Header("Inputs")]
@@ -73,6 +74,20 @@ public class KartScriptV2 : MonoBehaviour
     int minimalGrav;
     Vector3 groundNormal;
     public Transform preOrientation;
+    public Transform groundRayOrigin;
+    bool grounded;
+
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -111,13 +126,14 @@ public class KartScriptV2 : MonoBehaviour
 
         //rb.AddForce(transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce, ForceMode.Acceleration);
         // rb.linearVelocity = transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce;
-        if (IsGrounded())
+        //if (IsGrounded())
+        if (grounded)
         {
             currentFallSpeed = 0;
         }
         else
         {          
-            currentFallSpeed += gravity * Time.deltaTime;
+            currentFallSpeed += gravity * Time.fixedDeltaTime;
         }
        
         rb.linearVelocity = (transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f +currentFallSpeed);
@@ -144,9 +160,11 @@ public class KartScriptV2 : MonoBehaviour
     bool IsGrounded()
     {
         RaycastHit hit;
-        if (Physics.SphereCast(transform.position + new Vector3(0, 0, 0.5f), 0.51f, Vector3.down, out hit, 0.25f))
+        if (Physics.Raycast(groundRayOrigin.position, Vector3.down, out hit, 0.25f))
         {
             groundNormal = hit.normal;
+            transform.position = new Vector3(transform.position.x, hit.point.y + 0.54f, transform.position.z);
+            //Debug.Log("grounded" + (0.5f - hit.distance));
             return true;
         }
         return false;
@@ -247,12 +265,13 @@ public class KartScriptV2 : MonoBehaviour
     public void StartTurbo(float force ,float time)
     {
         turbo = true;
-        turboTimer += time;
-        float nextTForce = targetTurboForce + force;
-        if (nextTForce > targetTurboForce)
-        {
-            targetTurboForce = nextTForce;
-        }
+        turboTimer = time;
+        targetTurboForce = force;
+        //float nextTForce = targetTurboForce + force;
+        //if (nextTForce > targetTurboForce)
+        //{
+        //    targetTurboForce = nextTForce;
+        //}
         Debug.Log("turbo");
     }
     void HandleTurbo()
@@ -327,9 +346,11 @@ public class KartScriptV2 : MonoBehaviour
         float nextTotalSpeed = visKartXRot + -currentTurboForce * 2;
         nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -100f , maxSpeed + 10f);
         //visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);
-        preOrientation.up = groundNormal;
+        //preOrientation.up = groundNormal;
+        preOrientation.up = Vector3.RotateTowards(preOrientation.up, groundNormal, 1.5f * Time.fixedDeltaTime, 0.0f);
+        //preOrientation.localRotation = Quaternion.LookRotation(groundNormal, transform.up);
         //preOrientation.forward = transform.forward;
-        Debug.Log(gameObject.transform.eulerAngles.y);
+        //Debug.Log(gameObject.transform.eulerAngles.y);
         visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, transform.eulerAngles.y, visKartZRot);
         //Quaternion.Euler(nextTotalSpeed, transform.eulerAngles.y, visKartZRot);
         //visualKartBody.transform.up = goundNormal;
@@ -407,20 +428,36 @@ public class KartScriptV2 : MonoBehaviour
             //rb.AddForce((, ForceMode.Impulse);
         }
     }
+    private void OnCollisionStay(Collision collision)
+    {
+        if (collision.gameObject.layer == 7)
+        {
+            grounded = true;
+            groundNormal = collision.contacts[0].normal;
+        }
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        if (collision.gameObject.layer == 7)
+        {
+            grounded = false;
+        }
+    }
     void SquishAnimation()
     {
         if (bounce)
         {
             
-            bounceTimer += Time.deltaTime;
+            bounceTimer += Time.fixedDeltaTime;
             if (bounceTimer < 0.05f)
             {
-                visualKartBody.transform.localScale += new Vector3(-6f, 10f, -6f) * Time.deltaTime;
+                visualKartBody.transform.localScale += new Vector3(-6f, 10f, -6f) * Time.fixedDeltaTime;
                 
             }
             else if (bounceTimer < 0.1f)
             {
-                visualKartBody.transform.localScale += new Vector3(6f, -10f, 6f) * Time.deltaTime;
+                visualKartBody.transform.localScale += new Vector3(6f, -10f, 6f) * Time.fixedDeltaTime;
             }
             else
             {
@@ -461,5 +498,10 @@ public class KartScriptV2 : MonoBehaviour
             }
             smokeTimer = 2f;
         }*/
+    }
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawRay(groundRayOrigin.position, Vector3.down * 0.5f);
     }
 }
