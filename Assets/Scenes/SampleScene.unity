@@ -1990,7 +1990,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!54 &498415607
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2074,8 +2074,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rb: {fileID: 0}
   maxSpeed: 25
-  maxBackSpeed: 10
   currentSpeed: 0
+  maxBackSpeed: 10
+  accelerate: 0
   accelSpeed: 5
   flatAccelSpeed: 10
   decelSpeed: 5
@@ -2090,21 +2091,36 @@ MonoBehaviour:
   wallLayer:
     serializedVersion: 2
     m_Bits: 64
+  bounceDirection: {x: 0, y: 0, z: 0}
   bounceForce: 0
   minBounceDecelForce: 30
+  camXpos: 0
   playerCamera: {fileID: 330585543}
   visualKartBody: {fileID: 441255415}
+  visualKartWheelsParent: {fileID: 0}
+  visKartZRot: 0
+  visKartXRot: 0
+  visKartXRotCatchUp: 0
+  visKartTurboXRotCatchUp: 0
   turningWheels:
   - {fileID: 487814555}
   - {fileID: 171618159}
   nonTurningWheels:
   - {fileID: 1733311742}
   - {fileID: 823869689}
+  visWheelsYRot: 0
+  turningWheelsRatioScaling: 0
+  nonTurningWheelsRatioScaling: 0
+  bounce: 0
+  smokePrefab: {fileID: 0}
+  smokeOrigin: {fileID: 0}
+  baseSmokeMat: {fileID: 0}
+  fireSmokeMat: {fileID: 0}
+  smokeParticlesGenerator: {fileID: 0}
   fireParticlesGenerator: {fileID: 829169390}
   gravity: 20
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 8
+  currentFallSpeed: 0
+  preOrientation: {fileID: 0}
 --- !u!1 &499588288
 GameObject:
   m_ObjectHideFlags: 0
@@ -10414,6 +10430,63 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1441525152}
   m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1001 &1464537798
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1369147673466979502, guid: 5f5223a7232ea494a929a6890cec8b38, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 1.0430269
+      objectReference: {fileID: 0}
+    - target: {fileID: 1369147673466979502, guid: 5f5223a7232ea494a929a6890cec8b38, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.72
+      objectReference: {fileID: 0}
+    - target: {fileID: 1369147673466979502, guid: 5f5223a7232ea494a929a6890cec8b38, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 8.502655
+      objectReference: {fileID: 0}
+    - target: {fileID: 1369147673466979502, guid: 5f5223a7232ea494a929a6890cec8b38, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: -0.48251805
+      objectReference: {fileID: 0}
+    - target: {fileID: 1369147673466979502, guid: 5f5223a7232ea494a929a6890cec8b38, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1369147673466979502, guid: 5f5223a7232ea494a929a6890cec8b38, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.8758861
+      objectReference: {fileID: 0}
+    - target: {fileID: 1369147673466979502, guid: 5f5223a7232ea494a929a6890cec8b38, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1369147673466979502, guid: 5f5223a7232ea494a929a6890cec8b38, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1369147673466979502, guid: 5f5223a7232ea494a929a6890cec8b38, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1369147673466979502, guid: 5f5223a7232ea494a929a6890cec8b38, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4126166717307160845, guid: 5f5223a7232ea494a929a6890cec8b38, type: 3}
+      propertyPath: m_Name
+      value: Kart (1)
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 5f5223a7232ea494a929a6890cec8b38, type: 3}
 --- !u!1 &1475564873
 GameObject:
   m_ObjectHideFlags: 0
@@ -18087,3 +18160,4 @@ SceneRoots:
   - {fileID: 1728119393}
   - {fileID: 1976023236}
   - {fileID: 185054911}
+  - {fileID: 1464537798}

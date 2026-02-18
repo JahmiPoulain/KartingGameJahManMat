@@ -1,233 +1,465 @@
+
+using System.Linq;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class KartScriptV2 : MonoBehaviour
 {
     [Header("Components")]
     public Rigidbody rb;
-
     [Header("Inputs")]
     float forwardDirection;
-    float turnDirection;
-
+    float turnDirection; // la direction de la rotation du vollant
     [Header("Speed")]
-    public float maxSpeed = 25f;
-    public float maxBackSpeed = 10f;
+    public float maxSpeed;
     public float currentSpeed;
-
+    public float maxBackSpeed;
     [Header("Acceleration")]
-    public float accelSpeed = 5f;
-    public float flatAccelSpeed = 10f;
-
+    public bool accelerate;
+    public float accelSpeed;
+    public float flatAccelSpeed;
+    //public float currentAccelSpeed;
     [Header("Deceleration")]
-    public float decelSpeed = 5f;
-    public float flatDecelSpeed = 8f;
-
+    public float decelSpeed;
+    public float flatDecelSpeed;
     [Header("Turning")]
-    public float maxTurnSpeed = 3f;
-    public float currentTurnSpeed;
-    public float turnAccelSpeed = 5f;
-    public float turnDecelSpeed = 6f;
-
+    public float maxTurnSpeed;
+    public float currentTurnSpeed; // c'est l'equivalent de la rotation du vollant
+    public float turnAccelSpeed;
+    public float turnDecelSpeed;
     [Header("Turbo")]
     public float currentTurboForce;
-    public float turboAccelSpeed = 20f;
+    public float turboAccelSpeed;
     float targetTurboForce;
-    public float minTurboDecel = 15f;
+    public float minTurboDecel;
     bool turbo;
-    float turboTimer;
-
-    [Header("Collision")]
+    [Header("Colisions")]
     public LayerMask wallLayer;
+    public Vector3 bounceDirection;
     public float bounceForce;
-    public float minBounceDecelForce = 30f;
-    Vector3 bounceDirection;
-
+    public float minBounceDecelForce;
     [Header("Camera")]
+    public float camXpos;
     public GameObject playerCamera;
-
-    [Header("Visual")]
+    float turboTimer;
+    [Header("Visual Kart")]
     public GameObject visualKartBody;
-    Vector3 baseScale;
-
-    [Header("Wheels")]
+    public GameObject visualKartWheelsParent;
+    public float visKartZRot;
+    public float visKartXRot;
+    public float visKartXRotCatchUp;
+    public float visKartTurboXRotCatchUp;
     public GameObject[] turningWheels;
     public GameObject[] nonTurningWheels;
-    float turningRot;
-    float nonTurningRot;
-
-    [Header("Particles")]
+    public float visWheelsYRot;
+    float turningWheelsXRot;
+    float nonTurningWheelsXRot;
+    public float turningWheelsRatioScaling;
+    public float nonTurningWheelsRatioScaling;
+    [Header("Bounce Animation")]
+    public bool bounce;
+    float bounceTimer;
+    [Header("Smoke")]
+    public GameObject smokePrefab;
+    public Transform smokeOrigin;
+    public Material baseSmokeMat;
+    public Material fireSmokeMat;
+    float smokeTimer;
+    public ParticleSystem smokeParticlesGenerator;
     public ParticleSystem fireParticlesGenerator;
-    ParticleSystem.EmissionModule fireEmission;
-
     [Header("Gravity")]
-    public float gravity = 20f;
-    float currentFallSpeed;
-    public LayerMask groundLayer;
+    public float gravity;
+    public float currentFallSpeed;
+    int minimalGrav;
     Vector3 groundNormal;
-
+    public Transform preOrientation;
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        rb.linearDamping = 0.2f;
-        rb.angularDamping = 2f;
-
-        baseScale = visualKartBody.transform.localScale;
-        fireEmission = fireParticlesGenerator.emission;
     }
 
     void Update()
     {
-        forwardDirection = Input.GetAxisRaw("Vertical");
-        turnDirection = Input.GetAxisRaw("Horizontal");
-
+        PlayerInputs();
         if (Input.GetMouseButtonDown(1))
-            StartTurbo(15f, 1.2f);
+        {
+            StartTurbo(10f, 1.5f);
+        }
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
-        HandleSpeed();
+
+        HandleCurrentSpeed();
         HandleTurning();
         HandleTurbo();
-        HandleGravity();
-        ApplyMovement();
-        HandleCamera();
-        HandleWheels();
-        HandleVisual();
-        HandleParticles();
-    }
-
-    void HandleSpeed()
-    {
-        float nextSpeed = currentSpeed;
-
-        if (forwardDirection > 0)
-            nextSpeed += flatAccelSpeed + (maxSpeed - currentSpeed) * accelSpeed * Time.fixedDeltaTime;
-
-        else if (forwardDirection < 0)
-            nextSpeed -= flatAccelSpeed + (maxBackSpeed + currentSpeed) * accelSpeed * Time.fixedDeltaTime;
-
+        float unsignedCurSpeed = currentSpeed;
+        if (unsignedCurSpeed < 0)
+        {
+            unsignedCurSpeed = -unsignedCurSpeed;
+        }
+        float nextBounceForce = bounceForce - (minBounceDecelForce) * Time.fixedDeltaTime;
+        if (nextBounceForce > 0)
+        {
+            bounceForce = nextBounceForce;
+        }
         else
         {
-            if (currentSpeed > 0)
-                nextSpeed -= flatDecelSpeed * Time.fixedDeltaTime;
-            else if (currentSpeed < 0)
-                nextSpeed += flatDecelSpeed * Time.fixedDeltaTime;
+            bounceForce = 0;
+            bounceDirection = Vector3.zero;
         }
 
-        nextSpeed = Mathf.Clamp(nextSpeed, -maxBackSpeed, maxSpeed);
-        currentSpeed = nextSpeed;
-    }
-
-    void HandleTurning()
-    {
-        float speedRatio = Mathf.Abs(currentSpeed) / maxSpeed;
-        float nextTurn = currentTurnSpeed;
-
-        nextTurn += turnDirection * turnAccelSpeed * speedRatio * Time.fixedDeltaTime;
-
-        if (turnDirection == 0)
-            nextTurn = Mathf.Lerp(nextTurn, 0, turnDecelSpeed * Time.fixedDeltaTime);
-
-        currentTurnSpeed = Mathf.Clamp(nextTurn, -maxTurnSpeed, maxTurnSpeed);
-    }
-
-    void HandleTurbo()
-    {
-        if (!turbo) return;
-
-        turboTimer -= Time.fixedDeltaTime;
-
-        if (turboTimer > 0)
-            currentTurboForce = Mathf.MoveTowards(currentTurboForce, targetTurboForce, turboAccelSpeed * Time.fixedDeltaTime);
-        else
-            currentTurboForce = Mathf.MoveTowards(currentTurboForce, 0, minTurboDecel * Time.fixedDeltaTime);
-
-        if (currentTurboForce <= 0)
-            turbo = false;
-    }
-
-    public void StartTurbo(float force, float time)
-    {
-        turbo = true;
-        turboTimer = Mathf.Max(turboTimer, time);
-        targetTurboForce = Mathf.Max(targetTurboForce, force);
-    }
-
-    void HandleGravity()
-    {
+        //rb.AddForce(transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce, ForceMode.Acceleration);
+        // rb.linearVelocity = transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce;
         if (IsGrounded())
-            currentFallSpeed = -2f;
+        {
+            currentFallSpeed = 0;
+        }
         else
-            currentFallSpeed += gravity * Time.fixedDeltaTime;
+        {
+            currentFallSpeed += gravity * Time.deltaTime;
+        }
+
+        rb.linearVelocity = (transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
+        transform.Rotate(0, currentTurnSpeed, 0);
+        //rb.linearVelocity += Vector3.down * currentFallSpeed;
+
+        HandleWholeKartRotationXZ();
+        HandleVisualKartBody();
+        HandleVisualKartWheels();
+        HandleCameraLocalPosition();
+        SquishAnimation();
+        HandleSmoke();
+
+        //Debug.Log(currentSpeed);
+
+    }
+
+    void PlayerInputs()
+    {
+        forwardDirection = Input.GetAxisRaw("Vertical");
+        turnDirection = Input.GetAxisRaw("Horizontal");
     }
 
     bool IsGrounded()
     {
-        if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, 1.2f, groundLayer))
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position + new Vector3(0, 0, 0.5f), Vector3.down, out hit, 0.5f))
         {
             groundNormal = hit.normal;
             return true;
         }
         return false;
     }
-
-    void ApplyMovement()
+    void HandleCurrentSpeed()
     {
-        Vector3 velocity =
-            transform.forward * (currentSpeed + currentTurboForce) +
-            bounceDirection * bounceForce +
-            Vector3.down * currentFallSpeed;
-
-        rb.linearVelocity = velocity;
-        transform.Rotate(0, currentTurnSpeed * 50f * Time.fixedDeltaTime, 0);
-
-        bounceForce = Mathf.MoveTowards(bounceForce, 0, minBounceDecelForce * Time.fixedDeltaTime);
-    }
-
-    void HandleCamera()
-    {
-        float camX = currentSpeed * -currentTurnSpeed / 80f;
-        Vector3 target = new Vector3(camX, 3.9f, -4.7f);
-
-        playerCamera.transform.localPosition =
-            Vector3.Lerp(playerCamera.transform.localPosition, target, 5f * Time.fixedDeltaTime);
-    }
-
-    void HandleWheels()
-    {
-        turningRot += currentSpeed * 20f * Time.fixedDeltaTime;
-        nonTurningRot += currentSpeed * 20f * Time.fixedDeltaTime;
-
-        foreach (var w in turningWheels)
-            w.transform.localRotation = Quaternion.Euler(turningRot, currentTurnSpeed * 30f, 90);
-
-        foreach (var w in nonTurningWheels)
-            w.transform.localRotation = Quaternion.Euler(nonTurningRot, 0, 90);
-    }
-
-    void HandleVisual()
-    {
-        float tiltZ = currentTurnSpeed * currentSpeed * 0.5f;
-        float tiltX = -currentSpeed * 0.2f - currentTurboForce * 1.5f;
-
-        visualKartBody.transform.localRotation = Quaternion.Euler(tiltX, 0, tiltZ);
-    }
-
-    void HandleParticles()
-    {
-        fireEmission.rateOverDistance = turbo ? 3 : 0;
-    }
-
-    void OnCollisionEnter(Collision collision)
-    {
-        if (((1 << collision.gameObject.layer) & wallLayer) != 0)
+        float nextSpeed = currentSpeed;
+        if (forwardDirection > 0) // si on veut accelerer en avant
         {
+            nextSpeed += flatAccelSpeed + (maxSpeed - currentSpeed) * accelSpeed * Time.fixedDeltaTime;
+        }
+        else if (forwardDirection < 0) // si on veut accelerer en arière
+        {
+            nextSpeed -= flatAccelSpeed + (maxSpeed - currentSpeed) * accelSpeed * Time.fixedDeltaTime;
+        }
+        else // si on ne veut pas accelerer
+        {
+            if (currentSpeed > 0) // si on avance
+            {
+                nextSpeed -= flatDecelSpeed + (maxSpeed - currentSpeed) * decelSpeed * Time.fixedDeltaTime;
+                if (nextSpeed < 0)
+                {
+                    nextSpeed = 0;
+                }
+            }
+            else if (currentSpeed < 0) // si on  recule
+            {
+                nextSpeed += flatDecelSpeed + (maxSpeed - currentSpeed) * decelSpeed * Time.fixedDeltaTime;
+                if (nextSpeed > 0)
+                {
+                    nextSpeed = 0;
+                }
+            }
+        }
+
+        // on clamp
+        if (nextSpeed > maxSpeed)
+        {
+            nextSpeed = maxSpeed;
+        }
+        else if (nextSpeed < -maxBackSpeed)
+        {
+            nextSpeed = -maxBackSpeed;
+        }
+
+        currentSpeed = nextSpeed;
+    }
+
+    void HandleTurning()
+    {
+        float nextTurnSpeed = currentTurnSpeed;
+
+        if (currentSpeed > 0) // si on avance
+        {
+            nextTurnSpeed += turnDirection * turnAccelSpeed * Time.fixedDeltaTime;
+            visWheelsYRot = currentTurnSpeed * 16;
+        }
+        else if (currentSpeed < 0) // si on recule
+        {
+            nextTurnSpeed += -turnDirection * turnAccelSpeed * Time.fixedDeltaTime;
+            visWheelsYRot = -currentTurnSpeed * 16;
+        }
+
+        if (turnDirection == 0 || currentSpeed == 0) // turn deceleration
+        {
+            if (currentTurnSpeed > 0)
+            {
+                nextTurnSpeed -= turnDecelSpeed * Time.fixedDeltaTime;
+                if (nextTurnSpeed < 0)
+                {
+                    nextTurnSpeed = 0;
+                }
+            }
+            else if (currentTurnSpeed < 0)
+            {
+                nextTurnSpeed += turnDecelSpeed * Time.fixedDeltaTime;
+                if (nextTurnSpeed > 0)
+                {
+                    nextTurnSpeed = 0;
+                }
+            }
+        }
+
+        // on clamp
+        if (nextTurnSpeed > maxTurnSpeed)
+        {
+            nextTurnSpeed = maxTurnSpeed;
+        }
+        else if (nextTurnSpeed < -maxTurnSpeed)
+        {
+            nextTurnSpeed = -maxTurnSpeed;
+        }
+
+        // on applique
+        currentTurnSpeed = nextTurnSpeed;
+    }
+
+    public void StartTurbo(float force, float time)
+    {
+        turbo = true;
+        turboTimer += time;
+        float nextTForce = targetTurboForce + force;
+        if (nextTForce > targetTurboForce)
+        {
+            targetTurboForce = nextTForce;
+        }
+        Debug.Log("turbo");
+    }
+    void HandleTurbo()
+    {
+        if (turbo)
+        {
+            turboTimer -= Time.fixedDeltaTime;
+            if (turboTimer > 0)
+            {
+                float nextTForce = currentTurboForce + turboAccelSpeed * Time.fixedDeltaTime;
+                if (nextTForce < targetTurboForce)
+                {
+                    currentTurboForce = nextTForce;
+                }
+                else
+                {
+                    currentTurboForce = targetTurboForce;
+                }
+            }
+            else
+            {
+                targetTurboForce = 0;
+                currentTurboForce -= minTurboDecel * Time.fixedDeltaTime;
+            }
+            if (currentTurboForce <= 0)
+            {
+                turbo = false;
+                currentTurboForce = 0;
+                targetTurboForce = 0;
+            }
+        }
+    }
+
+    void HandleWholeKartRotationXZ()
+    {
+        //transform.up = new Vector3(goundNormal.x, goundNormal.y, goundNormal.z);
+    }
+
+    void HandleVisualKartBody()
+    {
+
+
+        if (currentSpeed > 0)
+        {
+            if (forwardDirection > 0)
+            {
+                visKartXRotCatchUp = (maxSpeed - currentSpeed) / 4;
+            }
+            else
+            {
+                visKartXRotCatchUp = -(maxSpeed - currentSpeed) / 4;
+            }
+        }
+        else if (currentSpeed < 0)
+        {
+            if (forwardDirection < 0)
+            {
+                visKartXRotCatchUp = (maxSpeed + currentSpeed) / 8;
+            }
+            else
+            {
+                visKartXRotCatchUp = -(maxSpeed + currentSpeed) / 8;
+            }
+        }
+        else
+        {
+            visKartXRotCatchUp = 0;
+        }
+
+        visKartXRot = (-currentSpeed / 2) * visKartXRotCatchUp;
+        visKartZRot = currentTurnSpeed * (currentSpeed / 3);
+        float nextTotalSpeed = visKartXRot + -currentTurboForce * 2;
+        nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -100f, maxSpeed + 10f);
+        //visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);
+        preOrientation.up = groundNormal;
+        //preOrientation.forward = transform.forward;
+        Debug.Log(gameObject.transform.eulerAngles.y);
+        visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, transform.eulerAngles.y, visKartZRot);
+        //Quaternion.Euler(nextTotalSpeed, transform.eulerAngles.y, visKartZRot);
+        //visualKartBody.transform.up = goundNormal;
+        //visualKartBody.transform.
+    }
+
+    void HandleVisualKartWheels()
+    {
+        //visWheelsYRot = currentTurnSpeed * 12;
+        visualKartWheelsParent.transform.localRotation = Quaternion.Euler(0, transform.eulerAngles.y, 0);
+        turningWheelsXRot += (currentSpeed + currentTurboForce) * turningWheelsRatioScaling * Time.fixedDeltaTime;
+        nonTurningWheelsXRot += (currentSpeed + currentTurboForce) * nonTurningWheelsRatioScaling * Time.fixedDeltaTime;
+        for (int i = 0; i < turningWheels.Length; i++)
+        {
+
+            turningWheels[i].transform.localRotation = Quaternion.Euler(turningWheelsXRot, visWheelsYRot, 90);
+            //turningWheels[i].transform.Rotate(0, 10, 0);
+        }
+        for (int i = 0; i < nonTurningWheels.Length; i++)
+        {
+            nonTurningWheels[i].transform.localRotation = Quaternion.Euler(nonTurningWheelsXRot, 0, 90);
+            //turningWheels[i].transform.Rotate(0, 10, 0);
+        }
+    }
+
+    void HandleCameraLocalPosition()
+    {
+        camXpos = currentSpeed * -currentTurnSpeed / 120f * forwardDirection;
+        //+ -currentTurnSpeed;
+        /*if (playerCamera.transform.localRotation.y > camXpos)
+        {
+            playerCamera.transform.Rotate(0, -1f * Time.fixedDeltaTime, 0);
+        }
+        else if (playerCamera.transform.localRotation.y < camXpos)
+        {
+            playerCamera.transform.Rotate(0, 1f * Time.fixedDeltaTime, 0);
+        }*/
+        if (playerCamera.transform.localPosition.x > camXpos)
+        {
+            float nextXpos = playerCamera.transform.localPosition.x - 1f * Time.fixedDeltaTime;
+            if (nextXpos < camXpos)
+            {
+                nextXpos = camXpos;
+            }
+            playerCamera.transform.localPosition = new Vector3(nextXpos, 3.9f, -4.7f);
+        }
+        else if (playerCamera.transform.localPosition.x < camXpos)
+        {
+            float nextXpos = playerCamera.transform.localPosition.x + 1f * Time.fixedDeltaTime;
+            if (nextXpos > camXpos)
+            {
+                nextXpos = camXpos;
+            }
+            playerCamera.transform.localPosition = new Vector3(nextXpos, 3.9f, -4.7f);
+        }
+        // playerCamera.transform.localRotation = Quaternion.Euler(32, camYRot, 0);
+        //playerCamera.transform.localPosition = new Vector3(camXpos, 3.9f, -4.7f);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        //Debug.Log(collision.gameObject.layer);
+        if (collision.gameObject.layer == 6)
+        {
+            bounce = true;
             Vector3 rawDir = transform.position - collision.contacts[0].point;
             bounceDirection = new Vector3(rawDir.x, 0, rawDir.z).normalized;
-
-            bounceForce = Mathf.Abs(currentSpeed) * 2f;
+            float unsignedCurSpeed = currentSpeed;
+            if (unsignedCurSpeed < 0)
+            {
+                unsignedCurSpeed = -unsignedCurSpeed;
+            }
+            bounceForce = unsignedCurSpeed * 2f;
             currentSpeed *= 0.2f;
+            //rb.AddForce((, ForceMode.Impulse);
         }
+    }
+    void SquishAnimation()
+    {
+        if (bounce)
+        {
+
+            bounceTimer += Time.deltaTime;
+            if (bounceTimer < 0.05f)
+            {
+                visualKartBody.transform.localScale += new Vector3(-6f, 10f, -6f) * Time.deltaTime;
+
+            }
+            else if (bounceTimer < 0.1f)
+            {
+                visualKartBody.transform.localScale += new Vector3(6f, -10f, 6f) * Time.deltaTime;
+            }
+            else
+            {
+                visualKartBody.transform.localScale = Vector3.one;
+                bounce = false;
+                bounceTimer = 0;
+            }
+        }
+    }
+
+    void HandleSmoke()
+    {
+        if (turbo)
+        {
+            //var Pemission = smokeParticlesGenerator.emission;
+            //Pemission.rateOverTime = 0;
+            var FPemission = fireParticlesGenerator.emission;
+            FPemission.rateOverDistance = 3;
+            //FPemission.rateOverTime =3;
+        }
+        else
+        {
+            //var Pemission = smokeParticlesGenerator.emission;
+            //Pemission.rateOverTime = 3;
+            var FPemission = fireParticlesGenerator.emission;
+            //FPemission.rateOverTime = 0;
+            FPemission.rateOverDistance = 0;
+
+        }
+        /*smokeTimer -= (currentSpeed + currentTurboForce * 3f) * Time.fixedDeltaTime;
+        if (smokeTimer < 0)
+        {
+            
+            GameObject smoke = Instantiate(smokePrefab, smokeOrigin.position, Quaternion.identity);
+            if (currentTurboForce > 0)
+            {
+                smoke.GetComponent<Renderer>().material = fireSmokeMat;
+            }
+            smokeTimer = 2f;
+        }*/
     }
 }
