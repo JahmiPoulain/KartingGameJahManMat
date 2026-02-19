@@ -294,7 +294,7 @@ public class KartScriptV2 : MonoBehaviour
             else
             {
                 targetTurboForce = 0;
-                currentTurboForce -= minTurboDecel * Time.fixedDeltaTime;
+                currentTurboForce -= 1f + minTurboDecel * minTurboDecel * Time.fixedDeltaTime;
             }
             if (currentTurboForce <= 0)
             {
@@ -344,7 +344,7 @@ public class KartScriptV2 : MonoBehaviour
         visKartXRot = (-currentSpeed / 2) * visKartXRotCatchUp;
         visKartZRot = currentTurnSpeed * (currentSpeed / 3);
         float nextTotalSpeed = visKartXRot + -currentTurboForce * 2;
-        nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -100f , maxSpeed + 10f);
+        nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -(maxSpeed + 12f), maxSpeed + 12f);
         //visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);
         //preOrientation.up = groundNormal;
         preOrientation.up = Vector3.RotateTowards(preOrientation.up, groundNormal, 1.5f * Time.fixedDeltaTime, 0.0f);
