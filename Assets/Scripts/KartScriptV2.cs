@@ -49,6 +49,7 @@ public class KartScriptV2 : MonoBehaviour
     public float visKartZRot;
     public float visKartXRot;
     public float visKartXRotCatchUp;
+    float visKartXRotCatchUpBis;
     public float visKartTurboXRotCatchUp;
     public GameObject[] turningWheels;
     public GameObject[] nonTurningWheels;
@@ -318,40 +319,51 @@ public class KartScriptV2 : MonoBehaviour
         {            
             if (forwardDirection > 0)
             { 
-                visKartXRotCatchUp = (maxSpeed - currentSpeed) / 4;
+                visKartXRotCatchUp = (maxSpeed - currentSpeed) / 3f;
             }
             else
             {
-                visKartXRotCatchUp = -(maxSpeed - currentSpeed) / 4;
+                visKartXRotCatchUp = -(maxSpeed - currentSpeed) / 3f;
             }
         }
         else if (currentSpeed < 0)
         {            
             if (forwardDirection < 0)
             {
-                visKartXRotCatchUp = (maxSpeed + currentSpeed) / 8;
+                visKartXRotCatchUp = (maxSpeed + currentSpeed) / 5f;
             }
             else
             {
-                visKartXRotCatchUp = -(maxSpeed + currentSpeed) / 8;
+                visKartXRotCatchUp = -(maxSpeed + currentSpeed) / 5f;
             }            
         }
-        else
+        else if (visKartXRotCatchUp < 0.05f && visKartXRotCatchUp > -0.05f)
         {            
             visKartXRotCatchUp = 0;            
         }                    
 
-        visKartXRot = (-currentSpeed / 2) * visKartXRotCatchUp;
+        if (visKartXRotCatchUpBis < visKartXRotCatchUp)
+        {
+            visKartXRotCatchUpBis += 8f * Time.fixedDeltaTime;
+        }
+        else if (visKartXRotCatchUpBis > visKartXRotCatchUp)
+        {
+            visKartXRotCatchUpBis -= 8f * Time.fixedDeltaTime;
+        }
+            visKartXRot = (-currentSpeed / 2) * visKartXRotCatchUpBis;
         visKartZRot = currentTurnSpeed * (currentSpeed / 3);
         float nextTotalSpeed = visKartXRot + -currentTurboForce * 2;
         nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -(maxSpeed + 12f), maxSpeed + 12f);
+        preOrientation.up = Vector3.RotateTowards(preOrientation.up, groundNormal, 1.5f * Time.fixedDeltaTime, 0.0f);
+        visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, transform.eulerAngles.y, visKartZRot);
         //visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);
         //preOrientation.up = groundNormal;
-        preOrientation.up = Vector3.RotateTowards(preOrientation.up, groundNormal, 1.5f * Time.fixedDeltaTime, 0.0f);
+        
         //preOrientation.localRotation = Quaternion.LookRotation(groundNormal, transform.up);
         //preOrientation.forward = transform.forward;
         //Debug.Log(gameObject.transform.eulerAngles.y);
-        visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, transform.eulerAngles.y, visKartZRot);
+        //visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, transform.eulerAngles.y, visKartZRot);
+
         //Quaternion.Euler(nextTotalSpeed, transform.eulerAngles.y, visKartZRot);
         //visualKartBody.transform.up = goundNormal;
         //visualKartBody.transform.
