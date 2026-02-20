@@ -77,6 +77,13 @@ public class KartScriptV2 : MonoBehaviour
     public Transform preOrientation;
     public Transform groundRayOrigin;
     bool grounded;
+    [Header("Drift")]
+    bool tryToDrift;
+    public bool keepDrifting;
+    float currentDriftForce;
+    public int driftDir;
+    public float highDrift;
+    public float lowDrift;
 
     private void Awake()
     {
@@ -109,6 +116,7 @@ public class KartScriptV2 : MonoBehaviour
         HandleCurrentSpeed();
         HandleTurning();
         HandleTurbo();
+        HandleDrift();
         float unsignedCurSpeed = currentSpeed;
         if (unsignedCurSpeed < 0)
         {
@@ -156,6 +164,8 @@ public class KartScriptV2 : MonoBehaviour
     {
         forwardDirection = Input.GetAxisRaw("Vertical");
         turnDirection = Input.GetAxisRaw("Horizontal");
+        tryToDrift = Input.GetMouseButtonDown(0);
+        keepDrifting = Input.GetMouseButton(0);
     }
 
     bool IsGrounded()
@@ -212,11 +222,11 @@ public class KartScriptV2 : MonoBehaviour
         }
 
         currentSpeed = nextSpeed;
-    }   
+    }       
 
     void HandleTurning()
-    {
-        float nextTurnSpeed = currentTurnSpeed;
+    {       
+        float nextTurnSpeed = currentTurnSpeed;               
 
         if (currentSpeed > 0) // si on avance
         {
@@ -258,9 +268,41 @@ public class KartScriptV2 : MonoBehaviour
         {
             nextTurnSpeed = -maxTurnSpeed; 
         }
+        if (keepDrifting)
+        {
+            if (nextTurnSpeed > maxTurnSpeed)
+            {
+                nextTurnSpeed = maxTurnSpeed;
+            }
+            else if (nextTurnSpeed < -maxTurnSpeed)
+            {
+                nextTurnSpeed = -maxTurnSpeed;
+            }
+        }
 
         // on applique
         currentTurnSpeed = nextTurnSpeed;
+    }
+
+    void StartDrift()
+    {
+        if (currentTurnSpeed > 1f)
+        {
+            driftDir = 1;
+        }
+        else if (currentTurnSpeed < -1f)
+        {
+            driftDir = -1;
+        }
+    }
+
+    void HandleDrift()
+    {
+        /*if (!keepDrifting) { return; }
+        if (driftDir > 0)
+        {
+            currentDriftForce = driftDir;
+        }*/
     }
 
     public void StartTurbo(float force ,float time)
