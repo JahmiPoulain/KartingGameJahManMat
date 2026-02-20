@@ -79,11 +79,13 @@ public class KartScriptV2 : MonoBehaviour
     bool grounded;
     [Header("Drift")]
     bool tryToDrift;
-    public bool keepDrifting;
+    bool keepDrifting;
     float currentDriftForce;
-    public int driftDir;
+    float driftCatchUp;
+    int driftDir;
     public float highDrift;
     public float lowDrift;
+    float driftTurboGauge;
 
     private void Awake()
     {
@@ -104,6 +106,7 @@ public class KartScriptV2 : MonoBehaviour
     void Update()
     {
         PlayerInputs();
+        HandleDrift();
         if (Input.GetMouseButtonDown(1))
         {
             StartTurbo(10f, 1.5f);
@@ -116,7 +119,7 @@ public class KartScriptV2 : MonoBehaviour
         HandleCurrentSpeed();
         HandleTurning();
         HandleTurbo();
-        HandleDrift();
+        
         float unsignedCurSpeed = currentSpeed;
         if (unsignedCurSpeed < 0)
         {
@@ -146,7 +149,7 @@ public class KartScriptV2 : MonoBehaviour
         }
        
         rb.linearVelocity = (transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f +currentFallSpeed);
-        transform.Rotate(0, currentTurnSpeed, 0);
+        transform.Rotate(0, currentTurnSpeed + currentDriftForce, 0);
         //rb.linearVelocity += Vector3.down * currentFallSpeed;
 
         HandleWholeKartRotationXZ();
@@ -223,6 +226,66 @@ public class KartScriptV2 : MonoBehaviour
 
         currentSpeed = nextSpeed;
     }       
+    void HandleDrift()
+    {
+        if (forwardDirection == 0) 
+        {
+            driftDir = 0;
+            currentDriftForce = 0;
+            driftCatchUp = 0;
+            driftTurboGauge = 0;
+            return; 
+        }
+        if (tryToDrift)
+        {
+            if (currentTurnSpeed > 1f)
+            {
+                driftDir = 1;
+            }
+            else if (currentTurnSpeed < -1f)
+            {
+                driftDir = -1;
+            }
+        }
+        if (!keepDrifting) 
+        {
+            driftDir = 0;
+            currentDriftForce = 0;
+            driftCatchUp = 0;
+            if (driftTurboGauge > 2f)
+            {
+                StartTurbo(driftTurboGauge, driftTurboGauge / 3);
+                driftTurboGauge = 0;
+            }            
+            return; 
+        }
+        if (driftDir != 0)
+        {
+            float nextDriftForceTarget = 1f;
+            if (driftDir > 0 && turnDirection < 0)
+            {               
+                nextDriftForceTarget = 3f;                        
+            }
+            else if (driftDir < 0 && turnDirection > 0)
+            {
+                nextDriftForceTarget = 3f;
+            }
+            else
+            {
+                driftTurboGauge += Time.deltaTime;
+            }
+
+            if (driftCatchUp < nextDriftForceTarget)
+            {
+                driftCatchUp += 6f * Time.deltaTime;
+            }
+            else if (driftCatchUp > nextDriftForceTarget)
+            {
+                driftCatchUp -= 6f * Time.deltaTime;
+            }
+                currentDriftForce = driftDir * driftCatchUp;
+        }
+    }
 
     void HandleTurning()
     {       
@@ -281,6 +344,7 @@ public class KartScriptV2 : MonoBehaviour
         }
 
         // on applique
+        //Debug.Log(nextTurnSpeed + " + " + currentDriftForce);
         currentTurnSpeed = nextTurnSpeed;
     }
 
@@ -296,14 +360,7 @@ public class KartScriptV2 : MonoBehaviour
         }
     }
 
-    void HandleDrift()
-    {
-        /*if (!keepDrifting) { return; }
-        if (driftDir > 0)
-        {
-            currentDriftForce = driftDir;
-        }*/
-    }
+    
 
     public void StartTurbo(float force ,float time)
     {
@@ -487,7 +544,7 @@ public class KartScriptV2 : MonoBehaviour
         if (collision.gameObject.layer == 7)
         {
             grounded = true;
-            groundNormal = collision.contacts[0].normal;
+            groundNormal = collision.contacts[0].normal; // l'orientation du kart
         }
     }
 
