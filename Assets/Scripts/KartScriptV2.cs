@@ -53,6 +53,7 @@ public class KartScriptV2 : MonoBehaviour
     public float visKartTurboXRotCatchUp;
     public GameObject[] turningWheels;
     public GameObject[] nonTurningWheels;
+    public GameObject[] fireWheelEffects;
     public float visWheelsYRot;
     float turningWheelsXRot;
     float nonTurningWheelsXRot;
@@ -86,6 +87,7 @@ public class KartScriptV2 : MonoBehaviour
     public float highDrift;
     public float lowDrift;
     float driftTurboGauge;
+    public float gaugeToActivateTurbo;
 
     private void Awake()
     {
@@ -234,6 +236,10 @@ public class KartScriptV2 : MonoBehaviour
             currentDriftForce = 0;
             driftCatchUp = 0;
             driftTurboGauge = 0;
+            for (int i = 0; i < fireWheelEffects.Length; i++)
+            {
+                fireWheelEffects[i].SetActive(false);
+            }
             return; 
         }
         if (tryToDrift)
@@ -247,16 +253,27 @@ public class KartScriptV2 : MonoBehaviour
                 driftDir = -1;
             }
         }
+        if (driftTurboGauge > gaugeToActivateTurbo)
+        {
+            for (int i = 0; i < fireWheelEffects.Length; i++) 
+            {
+                fireWheelEffects[i].SetActive(true);
+            }
+        }
         if (!keepDrifting) 
         {
             driftDir = 0;
             currentDriftForce = 0;
             driftCatchUp = 0;
-            if (driftTurboGauge > 2f)
+            if (driftTurboGauge > gaugeToActivateTurbo)
             {
-                StartTurbo(driftTurboGauge, driftTurboGauge / 3);
+                StartTurbo(driftTurboGauge * 1.4f, driftTurboGauge / 2.6f);
                 driftTurboGauge = 0;
-            }            
+            }
+            for (int i = 0; i < fireWheelEffects.Length; i++)
+            {
+                fireWheelEffects[i].SetActive(false);
+            }
             return; 
         }
         if (driftDir != 0)
@@ -454,7 +471,7 @@ public class KartScriptV2 : MonoBehaviour
         float nextTotalSpeed = visKartXRot + -currentTurboForce * 2;
         nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -(maxSpeed + 12f), maxSpeed + 12f);
         preOrientation.up = Vector3.RotateTowards(preOrientation.up, groundNormal, 1.5f * Time.fixedDeltaTime, 0.0f);
-        visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, transform.eulerAngles.y, visKartZRot);
+        visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, transform.eulerAngles.y, visKartZRot + (driftCatchUp * 7f * driftDir));
         //visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);
         //preOrientation.up = groundNormal;
         
