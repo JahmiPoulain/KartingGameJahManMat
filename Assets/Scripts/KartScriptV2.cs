@@ -70,6 +70,7 @@ public class KartScriptV2 : MonoBehaviour
     float smokeTimer;
     public ParticleSystem smokeParticlesGenerator;
     public ParticleSystem fireParticlesGenerator;
+    public ParticleSystem[] driftParticlesGenerators;
     [Header("Gravity")]
     public float gravity;
     public float currentFallSpeed;
@@ -244,13 +245,21 @@ public class KartScriptV2 : MonoBehaviour
         }
         if (tryToDrift)
         {
-            if (currentTurnSpeed > 1f)
+            if (currentTurnSpeed > 0.5f && turnDirection > 0)
             {
                 driftDir = 1;
+                for (int i = 0; i < driftParticlesGenerators.Length; i++)
+                {
+                    driftParticlesGenerators[i].gameObject.SetActive(true);
+                }
             }
-            else if (currentTurnSpeed < -1f)
+            else if (currentTurnSpeed < -0.5f && turnDirection < 0)
             {
                 driftDir = -1;
+                for (int i = 0; i < driftParticlesGenerators.Length; i++)
+                {
+                    driftParticlesGenerators[i].gameObject.SetActive(true);
+                }
             }
         }
         if (driftTurboGauge > gaugeToActivateTurbo)
@@ -267,12 +276,16 @@ public class KartScriptV2 : MonoBehaviour
             driftCatchUp = 0;
             if (driftTurboGauge > gaugeToActivateTurbo)
             {
-                StartTurbo(driftTurboGauge * 1.4f, driftTurboGauge / 2.6f);
+                StartTurbo(driftTurboGauge * 2.2f, driftTurboGauge / 2.6f);
                 driftTurboGauge = 0;
             }
             for (int i = 0; i < fireWheelEffects.Length; i++)
             {
                 fireWheelEffects[i].SetActive(false);
+            }
+            for (int i = 0; i < driftParticlesGenerators.Length; i++)
+            {
+                driftParticlesGenerators[i].gameObject.SetActive(false);
             }
             return; 
         }
@@ -281,15 +294,27 @@ public class KartScriptV2 : MonoBehaviour
             float nextDriftForceTarget = 1f;
             if (driftDir > 0 && turnDirection < 0)
             {               
-                nextDriftForceTarget = 3f;                        
+                nextDriftForceTarget = 3f;
+                driftTurboGauge += 0.2f * Time.deltaTime;
             }
             else if (driftDir < 0 && turnDirection > 0)
             {
                 nextDriftForceTarget = 3f;
+                driftTurboGauge += 0.2f * Time.deltaTime;
+            }
+            else if (driftDir > 0 && turnDirection > 0)
+            {
+                
+                driftTurboGauge += 2f * Time.deltaTime;
+            }
+            else if (driftDir < 0 && turnDirection < 0)
+            {
+                
+                driftTurboGauge += 2f * Time.deltaTime;
             }
             else
             {
-                driftTurboGauge += Time.deltaTime;
+                driftTurboGauge += 0.8f * Time.deltaTime;
             }
 
             if (driftCatchUp < nextDriftForceTarget)
@@ -467,7 +492,7 @@ public class KartScriptV2 : MonoBehaviour
             visKartXRotCatchUpBis -= 8f * Time.fixedDeltaTime;
         }
             visKartXRot = (-currentSpeed / 2) * visKartXRotCatchUpBis;
-        visKartZRot = currentTurnSpeed * (currentSpeed / 3);
+        visKartZRot = currentTurnSpeed * (currentSpeed / 4.5f);
         float nextTotalSpeed = visKartXRot + -currentTurboForce * 2;
         nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -(maxSpeed + 12f), maxSpeed + 12f);
         preOrientation.up = Vector3.RotateTowards(preOrientation.up, groundNormal, 1.5f * Time.fixedDeltaTime, 0.0f);
@@ -502,6 +527,7 @@ public class KartScriptV2 : MonoBehaviour
             nonTurningWheels[i].transform.localRotation = Quaternion.Euler(nonTurningWheelsXRot, 0, 90);
             //turningWheels[i].transform.Rotate(0, 10, 0);
         }
+        
     }
 
     void HandleCameraLocalPosition()
@@ -523,7 +549,7 @@ public class KartScriptV2 : MonoBehaviour
             {
                 nextXpos = camXpos;
             }
-            playerCamera.transform.localPosition = new Vector3(nextXpos, 3.9f, -4.7f);
+            playerCamera.transform.localPosition = new Vector3(nextXpos, 2.46f, -4.75f);
         }
         else if (playerCamera.transform.localPosition.x < camXpos)
         {
@@ -532,7 +558,7 @@ public class KartScriptV2 : MonoBehaviour
             {
                 nextXpos = camXpos;
             }
-            playerCamera.transform.localPosition = new Vector3(nextXpos, 3.9f, -4.7f);
+            playerCamera.transform.localPosition = new Vector3(nextXpos, 2.46f, -4.75f);
         }
         // playerCamera.transform.localRotation = Quaternion.Euler(32, camYRot, 0);
         //playerCamera.transform.localPosition = new Vector3(camXpos, 3.9f, -4.7f);
