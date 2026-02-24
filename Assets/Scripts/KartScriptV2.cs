@@ -89,6 +89,7 @@ public class KartScriptV2 : MonoBehaviour
     public float lowDrift;
     float driftTurboGauge;
     public float gaugeToActivateTurbo;
+    public Transform driftPivot;
 
     private void Awake()
     {
@@ -237,6 +238,12 @@ public class KartScriptV2 : MonoBehaviour
     }       
     void HandleDrift()
     {
+        float turnDir = 0;
+        if (keepDrifting)
+        {
+            turnDir = turnDirection * 0.5f;
+        }
+        driftPivot.forward = Vector3.RotateTowards(driftPivot.forward, new Vector3(driftDir + turnDir, 0, 1).normalized, 0.75f * Time.fixedDeltaTime, 0.0f);
         if (forwardDirection == 0) 
         {
             driftDir = 0;
@@ -246,6 +253,7 @@ public class KartScriptV2 : MonoBehaviour
             for (int i = 0; i < fireWheelEffects.Length; i++)
             {
                 fireWheelEffects[i].SetActive(false);
+                fireWheelEffects[i].transform.localScale = new Vector3(0.5f, 0.05f, 0.5f);
             }
             return; 
         }
@@ -273,6 +281,8 @@ public class KartScriptV2 : MonoBehaviour
             for (int i = 0; i < fireWheelEffects.Length; i++) 
             {
                 fireWheelEffects[i].SetActive(true);
+                float fireWheelSize = Mathf.Clamp(driftTurboGauge / 2, 1.1f, 2f);
+                fireWheelEffects[i].transform.localScale = new Vector3 (fireWheelSize, 0.05f, fireWheelSize);
             }
         }
         if (!keepDrifting) 
@@ -284,10 +294,15 @@ public class KartScriptV2 : MonoBehaviour
             {
                 StartTurbo(driftTurboGauge * 2.2f, driftTurboGauge / 2.6f);
                 driftTurboGauge = 0;
+                Debug.Log(transform.forward + " " + driftPivot.forward);
+                //transform.forward = visualKartBody.transform.forward;//driftPivot.forward;
+                //transform.rotation = Quaternion.Euler(0, visualKartBody.transform.rotation.y , 0);
+                //driftPivot.forward = transform.forward;
             }
             for (int i = 0; i < fireWheelEffects.Length; i++)
             {
                 fireWheelEffects[i].SetActive(false);
+                fireWheelEffects[i].transform.localScale = new Vector3(0.5f, 0.05f, 0.5f);
             }
             for (int i = 0; i < driftParticlesGenerators.Length; i++)
             {
@@ -332,6 +347,7 @@ public class KartScriptV2 : MonoBehaviour
             }
                 currentDriftForce = driftDir * driftCatchUp;
         }
+        
     }
 
     void HandleTurning()
@@ -499,7 +515,7 @@ public class KartScriptV2 : MonoBehaviour
             visKartXRot = (-currentSpeed / 2) * visKartXRotCatchUpBis;
         visKartZRot = currentTurnSpeed * (currentSpeed / 4.5f);
         float nextTotalSpeed = visKartXRot + -currentTurboForce * 2;
-        nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -(maxSpeed + 12f), maxSpeed + 12f);
+        nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -(maxSpeed), maxSpeed + 2f);
         preOrientation.up = Vector3.RotateTowards(preOrientation.up, groundNormal, 1.5f * Time.fixedDeltaTime, 0.0f);
         visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, transform.eulerAngles.y, visKartZRot + (driftCatchUp * 7f * driftDir));
         //visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);

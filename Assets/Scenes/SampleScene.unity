@@ -718,8 +718,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 441255416}
-  - {fileID: 1770855207}
+  - {fileID: 629817242}
   m_Father: {fileID: 498415610}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &152446706
@@ -1723,7 +1722,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 441255415}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1732,7 +1731,7 @@ Transform:
   - {fileID: 1366259911}
   - {fileID: 940978057}
   - {fileID: 1790300510}
-  m_Father: {fileID: 118313280}
+  m_Father: {fileID: 629817242}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &456399110
 GameObject:
@@ -2287,6 +2286,7 @@ MonoBehaviour:
   highDrift: 0
   lowDrift: 0
   gaugeToActivateTurbo: 0.78
+  driftPivot: {fileID: 629817242}
 --- !u!135 &498415612
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -7799,6 +7799,39 @@ ParticleSystem:
         m_PostInfinity: 2
         m_RotationOrder: 4
     vectorLabel1_3: W
+--- !u!1 &629817241
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 629817242}
+  m_Layer: 8
+  m_Name: Drift Rotation Pivot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &629817242
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 629817241}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 441255416}
+  - {fileID: 1770855207}
+  m_Father: {fileID: 118313280}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &656618194
 GameObject:
   m_ObjectHideFlags: 0
@@ -21634,7 +21667,7 @@ Transform:
   - {fileID: 171618160}
   - {fileID: 1733311743}
   - {fileID: 823869690}
-  m_Father: {fileID: 118313280}
+  m_Father: {fileID: 629817242}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1790300509
 GameObject:
