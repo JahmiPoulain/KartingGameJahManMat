@@ -155,15 +155,21 @@ public class KartScriptV2 : MonoBehaviour
         transform.Rotate(0, currentTurnSpeed + currentDriftForce, 0);
         //rb.linearVelocity += Vector3.down * currentFallSpeed;
 
-        HandleWholeKartRotationXZ();
-        HandleVisualKartBody();
-        HandleVisualKartWheels();
-        HandleCameraLocalPosition();
-        SquishAnimation();
-        HandleSmoke();
+        
 
         //Debug.Log(currentSpeed);
 
+    }
+
+    private void LateUpdate()
+    {
+        HandleWholeKartRotationXZ();
+        HandleVisualKartBody();
+        HandleVisualKartWheels();
+        
+        SquishAnimation();
+        HandleSmoke();
+        HandleCameraLocalPosition();
     }
 
     void PlayerInputs()
@@ -316,7 +322,6 @@ public class KartScriptV2 : MonoBehaviour
             {
                 driftTurboGauge += 0.8f * Time.deltaTime;
             }
-
             if (driftCatchUp < nextDriftForceTarget)
             {
                 driftCatchUp += 6f * Time.deltaTime;
