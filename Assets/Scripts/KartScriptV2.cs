@@ -82,6 +82,7 @@ public class KartScriptV2 : MonoBehaviour
     [Header("Drift")]
     bool tryToDrift;
     bool keepDrifting;
+    bool oldKeepD;
     float currentDriftForce;
     float driftCatchUp;
     int driftDir;
@@ -90,6 +91,7 @@ public class KartScriptV2 : MonoBehaviour
     float driftTurboGauge;
     public float gaugeToActivateTurbo;
     public Transform driftPivot;
+    float nextYDriftRot;
 
     private void Awake()
     {
@@ -238,13 +240,65 @@ public class KartScriptV2 : MonoBehaviour
     }       
     void HandleDrift()
     {
-        float turnDir = 0;
+        //float turnDir = 0;
         if (keepDrifting)
         {
-            turnDir = turnDirection * 0.5f;
+            //turnDir = turnDirection * 0.5f;
+            //Debug.Log(driftPivot.localRotation.y);
+            //nextYDriftRot = driftPivot.localRotation.y;
+            float targetYRot = (driftDir + turnDirection) * 30f;
+            
+            if (nextYDriftRot < targetYRot)
+            {
+                nextYDriftRot += 20f * Time.fixedDeltaTime;
+                if (nextYDriftRot > targetYRot)
+                {
+                    nextYDriftRot = targetYRot;
+                }
+            }
+            else if (nextYDriftRot > targetYRot)
+            {
+                nextYDriftRot -= 20f * Time.fixedDeltaTime;
+                if (nextYDriftRot < targetYRot)
+                {
+                    nextYDriftRot = targetYRot;
+                }
+            }
+            Debug.Log(nextYDriftRot);
+            driftPivot.localRotation = Quaternion.Euler(0, nextYDriftRot, 0);
+            oldKeepD = keepDrifting;
         }
-        //driftPivot.forward = Vector3.RotateTowards(driftPivot.forward, new Vector3(driftDir + turnDir, 0, 1).normalized, 0.75f * Time.fixedDeltaTime, 0.0f);
-        if (forwardDirection == 0) 
+        else
+        {
+            nextYDriftRot = 0;
+            if (nextYDriftRot < 0)
+            {
+                nextYDriftRot += 20f * Time.fixedDeltaTime;
+                if (nextYDriftRot > 0)
+                {
+                    nextYDriftRot = 0;
+                }
+            }
+            else if (nextYDriftRot > 0)
+            {
+                nextYDriftRot -= 20f * Time.fixedDeltaTime;
+                if (nextYDriftRot < 0)
+                {
+                    nextYDriftRot = 0;
+                }
+            }
+            
+            /*if (oldKeepD != keepDrifting)
+            {
+                oldKeepD = keepDrifting;
+                
+                transform.forward = driftPivot.forward;
+            }*/
+            driftPivot.localRotation = Quaternion.Euler(0, nextYDriftRot, 0);
+            //transform.forward = driftPivot.forward;
+        }
+        //driftPivot.forward = Vector3.RotateTowards(driftPivot.forward, new Vector3(driftDir + turnDir , 0,1), 0.75f * Time.fixedDeltaTime, 0.0f);
+        if (forwardDirection == 0)
         {
             driftDir = 0;
             currentDriftForce = 0;
@@ -255,7 +309,7 @@ public class KartScriptV2 : MonoBehaviour
                 fireWheelEffects[i].SetActive(false);
                 fireWheelEffects[i].transform.localScale = new Vector3(0.5f, 0.05f, 0.5f);
             }
-            return; 
+            return;
         }
         if (tryToDrift)
         {
@@ -475,8 +529,7 @@ public class KartScriptV2 : MonoBehaviour
     }
 
     void HandleVisualKartBody()
-    {
-        
+    {       
         
         if (currentSpeed > 0)
         {            
@@ -519,6 +572,7 @@ public class KartScriptV2 : MonoBehaviour
         nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -(maxSpeed), maxSpeed + 2f);
         preOrientation.up = Vector3.RotateTowards(preOrientation.up, groundNormal, 1.5f * Time.fixedDeltaTime, 0.0f);
         visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, transform.eulerAngles.y, visKartZRot + (driftCatchUp * 7f * driftDir));
+
         //visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);
         //preOrientation.up = groundNormal;
         
@@ -686,3 +740,9 @@ public class KartScriptV2 : MonoBehaviour
         Gizmos.DrawRay(groundRayOrigin.position, Vector3.down * 0.5f);
     }
 }
+
+/* orientation du kart
+transform.rotation
+    ground normal 
+        
+*/
