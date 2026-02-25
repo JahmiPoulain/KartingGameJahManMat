@@ -243,7 +243,7 @@ public class KartScriptV2 : MonoBehaviour
         {
             turnDir = turnDirection * 0.5f;
         }
-        driftPivot.forward = Vector3.RotateTowards(driftPivot.forward, new Vector3(driftDir + turnDir, 0, 1).normalized, 0.75f * Time.fixedDeltaTime, 0.0f);
+        //driftPivot.forward = Vector3.RotateTowards(driftPivot.forward, new Vector3(driftDir + turnDir, 0, 1).normalized, 0.75f * Time.fixedDeltaTime, 0.0f);
         if (forwardDirection == 0) 
         {
             driftDir = 0;
@@ -297,6 +297,7 @@ public class KartScriptV2 : MonoBehaviour
                 Debug.Log(transform.forward + " " + driftPivot.forward);
                 //transform.forward = visualKartBody.transform.forward;//driftPivot.forward;
                 //transform.rotation = Quaternion.Euler(0, visualKartBody.transform.rotation.y , 0);
+                //transform.forward = visualKartBody.transform.forward;
                 //driftPivot.forward = transform.forward;
             }
             for (int i = 0; i < fireWheelEffects.Length; i++)
@@ -562,6 +563,11 @@ public class KartScriptV2 : MonoBehaviour
         else if (playerCamera.transform.localRotation.y < camXpos)
         {
             playerCamera.transform.Rotate(0, 1f * Time.fixedDeltaTime, 0);
+        }*/
+        /*if (keepDrifting)
+        {
+            playerCamera.transform.localPosition = new Vector3(camXpos * driftDir, visualKartBody.transform.localRotation.y, -4.75f);
+            return;
         }*/
         if (playerCamera.transform.localPosition.x > camXpos)
         {
