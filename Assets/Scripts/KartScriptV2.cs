@@ -250,7 +250,7 @@ public class KartScriptV2 : MonoBehaviour
             
             if (nextYDriftRot < targetYRot)
             {
-                nextYDriftRot += 40f * Time.fixedDeltaTime;
+                nextYDriftRot += 80f * Time.fixedDeltaTime;
                 if (nextYDriftRot > targetYRot)
                 {
                     nextYDriftRot = targetYRot;
@@ -258,7 +258,7 @@ public class KartScriptV2 : MonoBehaviour
             }
             else if (nextYDriftRot > targetYRot)
             {
-                nextYDriftRot += -40f * Time.fixedDeltaTime;
+                nextYDriftRot += -80f * Time.fixedDeltaTime;
                 if (nextYDriftRot < targetYRot)
                 {
                     nextYDriftRot = targetYRot;
@@ -270,10 +270,10 @@ public class KartScriptV2 : MonoBehaviour
         }
         else
         {
-            nextYDriftRot = 0;
+            //nextYDriftRot = 0;
             if (nextYDriftRot < 0)
             {
-                nextYDriftRot += 60f * Time.fixedDeltaTime;
+                nextYDriftRot += 80f * Time.fixedDeltaTime;
                 if (nextYDriftRot > 0)
                 {
                     nextYDriftRot = 0;
@@ -281,20 +281,22 @@ public class KartScriptV2 : MonoBehaviour
             }
             else if (nextYDriftRot > 0)
             {
-                nextYDriftRot += -60f * Time.fixedDeltaTime;
+                nextYDriftRot += -80f * Time.fixedDeltaTime;
                 if (nextYDriftRot < 0)
                 {
                     nextYDriftRot = 0;
                 }
             }
-            
+
             /*if (oldKeepD != keepDrifting)
             {
                 oldKeepD = keepDrifting;
                 
                 transform.forward = driftPivot.forward;
             }*/
+            //transform.forward = driftPivot.forward;
             driftPivot.localRotation = Quaternion.Euler(0, nextYDriftRot, 0);
+
             //transform.forward = driftPivot.forward;
         }
         //driftPivot.forward = Vector3.RotateTowards(driftPivot.forward, new Vector3(driftDir + turnDir , 0,1), 0.75f * Time.fixedDeltaTime, 0.0f);
