@@ -250,7 +250,7 @@ public class KartScriptV2 : MonoBehaviour
             
             if (nextYDriftRot < targetYRot)
             {
-                nextYDriftRot += 20f * Time.fixedDeltaTime;
+                nextYDriftRot += 40f * Time.fixedDeltaTime;
                 if (nextYDriftRot > targetYRot)
                 {
                     nextYDriftRot = targetYRot;
@@ -258,7 +258,7 @@ public class KartScriptV2 : MonoBehaviour
             }
             else if (nextYDriftRot > targetYRot)
             {
-                nextYDriftRot -= 20f * Time.fixedDeltaTime;
+                nextYDriftRot += -40f * Time.fixedDeltaTime;
                 if (nextYDriftRot < targetYRot)
                 {
                     nextYDriftRot = targetYRot;
@@ -273,7 +273,7 @@ public class KartScriptV2 : MonoBehaviour
             nextYDriftRot = 0;
             if (nextYDriftRot < 0)
             {
-                nextYDriftRot += 20f * Time.fixedDeltaTime;
+                nextYDriftRot += 60f * Time.fixedDeltaTime;
                 if (nextYDriftRot > 0)
                 {
                     nextYDriftRot = 0;
@@ -281,7 +281,7 @@ public class KartScriptV2 : MonoBehaviour
             }
             else if (nextYDriftRot > 0)
             {
-                nextYDriftRot -= 20f * Time.fixedDeltaTime;
+                nextYDriftRot += -60f * Time.fixedDeltaTime;
                 if (nextYDriftRot < 0)
                 {
                     nextYDriftRot = 0;
