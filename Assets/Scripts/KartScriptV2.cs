@@ -42,6 +42,7 @@ public class KartScriptV2 : MonoBehaviour
     [Header("Camera")]
     public float camXpos;
     public GameObject playerCamera;
+    public Transform ThirdPersonCamPivot;
     float turboTimer;
     [Header("Visual Kart")]
     public GameObject visualKartBody;
@@ -177,7 +178,7 @@ public class KartScriptV2 : MonoBehaviour
         
         SquishAnimation();
         HandleSmoke();
-        HandleCameraLocalPosition();
+        HandleCameraPosition();
     }
 
     void PlayerInputs()
@@ -253,11 +254,11 @@ public class KartScriptV2 : MonoBehaviour
             //turnDir = turnDirection * 0.5f;
             //Debug.Log(driftPivot.localRotation.y);
             //nextYDriftRot = driftPivot.localRotation.y;
-            float targetYRot = (driftDir + turnDirection) * 30f;
+            float targetYRot = (driftDir + turnDirection) * 18f;
             
             if (nextYDriftRot < targetYRot)
             {
-                nextYDriftRot += 80f * Time.fixedDeltaTime;
+                nextYDriftRot += 40f * Time.fixedDeltaTime;
                 if (nextYDriftRot > targetYRot)
                 {
                     nextYDriftRot = targetYRot;
@@ -265,7 +266,7 @@ public class KartScriptV2 : MonoBehaviour
             }
             else if (nextYDriftRot > targetYRot)
             {
-                nextYDriftRot += -80f * Time.fixedDeltaTime;
+                nextYDriftRot += -40f * Time.fixedDeltaTime;
                 if (nextYDriftRot < targetYRot)
                 {
                     nextYDriftRot = targetYRot;
@@ -280,7 +281,7 @@ public class KartScriptV2 : MonoBehaviour
             //nextYDriftRot = 0;
             if (nextYDriftRot < 0)
             {
-                nextYDriftRot += 80f * Time.fixedDeltaTime;
+                nextYDriftRot += 40f * Time.fixedDeltaTime;
                 if (nextYDriftRot > 0)
                 {
                     nextYDriftRot = 0;
@@ -288,7 +289,7 @@ public class KartScriptV2 : MonoBehaviour
             }
             else if (nextYDriftRot > 0)
             {
-                nextYDriftRot += -80f * Time.fixedDeltaTime;
+                nextYDriftRot += -40f * Time.fixedDeltaTime;
                 if (nextYDriftRot < 0)
                 {
                     nextYDriftRot = 0;
@@ -359,8 +360,11 @@ public class KartScriptV2 : MonoBehaviour
                 StartTurbo(driftTurboGauge * 2.2f, driftTurboGauge / 2.6f);
                 driftTurboGauge = 0;
                 //Debug.Log(transform.forward + " " + driftPivot.forward);
+                Vector3 oldForward = transform.forward;
+                
                 transform.forward = transform.forward + new Vector3 (driftPivot.forward.x, 0, driftPivot.forward.z);
                 driftPivot.forward = transform.forward;
+                ThirdPersonCamPivot.forward = oldForward;
                 //new Vector3(transform.rotation.x,driftPivot.forward.y, transform.rotation.z);
                 //transform.forward = new vector3(driftPivot.forward + transform.forward);
                 //transform.forward = visualKartBody.transform.forward;//driftPivot.forward;
@@ -621,7 +625,7 @@ public class KartScriptV2 : MonoBehaviour
         
     }
 
-    void HandleCameraLocalPosition()
+    void HandleCameraPosition()
     {
         camXpos = currentSpeed * -currentTurnSpeed / 120f * forwardDirection;
         //+ -currentTurnSpeed;
@@ -656,6 +660,9 @@ public class KartScriptV2 : MonoBehaviour
             }
             playerCamera.transform.localPosition = new Vector3(nextXpos, 2.46f, -4.75f);
         }
+
+        ThirdPersonCamPivot.forward = Vector3.RotateTowards(ThirdPersonCamPivot.forward, transform.forward, 0.5f * Time.fixedDeltaTime, 0.0f);
+
         // playerCamera.transform.localRotation = Quaternion.Euler(32, camYRot, 0);
         //playerCamera.transform.localPosition = new Vector3(camXpos, 3.9f, -4.7f);
     }
