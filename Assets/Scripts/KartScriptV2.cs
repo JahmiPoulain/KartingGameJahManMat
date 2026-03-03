@@ -1,6 +1,8 @@
 
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
+using static UnityEngine.GraphicsBuffer;
 
 public class KartScriptV2 : MonoBehaviour
 {
@@ -78,6 +80,7 @@ public class KartScriptV2 : MonoBehaviour
     int minimalGrav;
     Vector3 groundNormal;
     public Transform preOrientation;
+    public Transform groundNormalT;
     public Transform groundRayOrigin;
     bool grounded;
     [Header("Drift")]
@@ -127,16 +130,51 @@ public class KartScriptV2 : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        
+        // On gère la physique du kart
         HandleCurrentSpeed();
         HandleTurning();
         HandleTurbo();
+
+        // ton enleve le signe de currentSpeed
+        //float unsignedCurSpeed = currentSpeed;
+        //if (unsignedCurSpeed < 0) {unsignedCurSpeed = -unsignedCurSpeed;}
+
+        // on gère la force du bounce contre les murs        
+        HandleBounceForce();
+        HandleGravity();
+
+        rb.linearVelocity = (transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
+        transform.Rotate(0, currentTurnSpeed + currentDriftForce, 0);
+
+
+    }
+
+    
+
+    private void LateUpdate()
+    {
+        // on gère les visuels du kart
+        HandleWholeKartRotationXZ();
+        HandleVisualKartBody();
+        HandleVisualKartWheels();
         
-        float unsignedCurSpeed = currentSpeed;
-        if (unsignedCurSpeed < 0)
-        {
-            unsignedCurSpeed = -unsignedCurSpeed;
-        }
+        SquishAnimation();
+        HandleSmoke();
+        HandleCameraTransform();
+    }
+
+    void PlayerInputs()
+    {
+        forwardDirection = Input.GetAxisRaw("Vertical");
+        turnDirection = Input.GetAxisRaw("Horizontal");
+        tryToDrift = Input.GetButtonDown("Drift1");
+        keepDrifting = Input.GetButton("Drift1");
+        //tryToDrift = Input.GetMouseButtonDown(0);
+        //keepDrifting = Input.GetMouseButton(0);      
+    }
+    private void HandleBounceForce()
+    {
+        // on baisse la force jusqu'a qu'elle soit à 0
         float nextBounceForce = bounceForce - (minBounceDecelForce) * Time.fixedDeltaTime;
         if (nextBounceForce > 0)
         {
@@ -147,50 +185,14 @@ public class KartScriptV2 : MonoBehaviour
             bounceForce = 0;
             bounceDirection = Vector3.zero;
         }
-
-        //rb.AddForce(transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce, ForceMode.Acceleration);
-        // rb.linearVelocity = transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce;
-        //if (IsGrounded())
-        if (grounded)
-        {
-            currentFallSpeed = 0;
-        }
-        else
-        {          
-            currentFallSpeed += gravity * Time.fixedDeltaTime;
-        }
-       
-        rb.linearVelocity = (transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f +currentFallSpeed);
-        transform.Rotate(0, currentTurnSpeed + currentDriftForce, 0);
-        //rb.linearVelocity += Vector3.down * currentFallSpeed;
-
-        
-
-        //Debug.Log(currentSpeed);
-
     }
 
-    private void LateUpdate()
+    private void HandleGravity()
     {
-        HandleWholeKartRotationXZ();
-        HandleVisualKartBody();
-        HandleVisualKartWheels();
-        
-        SquishAnimation();
-        HandleSmoke();
-        HandleCameraPosition();
+        // Si on est pas au sol on accelère la vitesse de chute
+        if (grounded) { currentFallSpeed = 0; }
+        else { currentFallSpeed += gravity * Time.fixedDeltaTime; }
     }
-
-    void PlayerInputs()
-    {
-        forwardDirection = Input.GetAxisRaw("Vertical");
-        turnDirection = Input.GetAxisRaw("Horizontal");
-        tryToDrift = Input.GetKeyDown("space");
-        keepDrifting = Input.GetKey("space");
-        //tryToDrift = Input.GetMouseButtonDown(0);
-        //keepDrifting = Input.GetMouseButton(0);      
-    }
-
     bool IsGrounded()
     {
         RaycastHit hit;
@@ -248,40 +250,29 @@ public class KartScriptV2 : MonoBehaviour
     }       
     void HandleDrift()
     {
-        //float turnDir = 0;
         if (keepDrifting)
         {
-            //turnDir = turnDirection * 0.5f;
-            //Debug.Log(driftPivot.localRotation.y);
-            //nextYDriftRot = driftPivot.localRotation.y;
+            // on fait monter ou descendre la rotation Y vers targetYRot
             float targetYRot = (driftDir + turnDirection) * 18f;
             
             if (nextYDriftRot < targetYRot)
             {
-                nextYDriftRot += 40f * Time.fixedDeltaTime;
-                if (nextYDriftRot > targetYRot)
-                {
-                    nextYDriftRot = targetYRot;
-                }
+                nextYDriftRot += 20f * Time.fixedDeltaTime;
+                if (nextYDriftRot > targetYRot) { nextYDriftRot = targetYRot; } // on dépasse pas targetYRot
             }
             else if (nextYDriftRot > targetYRot)
             {
-                nextYDriftRot += -40f * Time.fixedDeltaTime;
-                if (nextYDriftRot < targetYRot)
-                {
-                    nextYDriftRot = targetYRot;
-                }
+                nextYDriftRot += -20f * Time.fixedDeltaTime;
+                if (nextYDriftRot < targetYRot) { nextYDriftRot = targetYRot; } // on dépasse pas targetYRot
             }
-            //Debug.Log(nextYDriftRot);
             driftPivot.localRotation = Quaternion.Euler(0, nextYDriftRot, 0);
             oldKeepD = keepDrifting;
         }
         else
         {
-            //nextYDriftRot = 0;
             if (nextYDriftRot < 0)
             {
-                nextYDriftRot += 40f * Time.fixedDeltaTime;
+                nextYDriftRot += 20f * Time.fixedDeltaTime;
                 if (nextYDriftRot > 0)
                 {
                     nextYDriftRot = 0;
@@ -289,24 +280,39 @@ public class KartScriptV2 : MonoBehaviour
             }
             else if (nextYDriftRot > 0)
             {
-                nextYDriftRot += -40f * Time.fixedDeltaTime;
+                nextYDriftRot += -20f * Time.fixedDeltaTime;
                 if (nextYDriftRot < 0)
                 {
                     nextYDriftRot = 0;
                 }
             }
-
-            /*if (oldKeepD != keepDrifting)
-            {
-                oldKeepD = keepDrifting;
-                
-                transform.forward = driftPivot.forward;
-                Debug.Log("NOT KEET DRIFT");
-            }*/
-            //transform.forward = driftPivot.forward;
             driftPivot.localRotation = Quaternion.Euler(0, nextYDriftRot, 0);
 
-            //transform.forward = driftPivot.forward;
+            currentDriftForce = 0;
+            driftCatchUp = 0;
+            if (driftTurboGauge > gaugeToActivateTurbo)
+            {
+                StartTurbo(driftTurboGauge * 2.2f, driftTurboGauge / 2.6f);
+                driftTurboGauge = 0;
+                Debug.Log(transform.forward + " " + driftPivot.forward);
+                Vector3 oldForward = transform.forward;
+                //Debug.Break();
+                transform.forward = new Vector3 (driftPivot.forward.x, 0, driftPivot.forward.z).normalized;
+                //Debug.Break();
+                driftPivot.forward = transform.forward;
+
+            }
+            driftDir = 0;
+            for (int i = 0; i < fireWheelEffects.Length; i++)
+            {
+                fireWheelEffects[i].SetActive(false);
+                fireWheelEffects[i].transform.localScale = new Vector3(0.5f, 0.05f, 0.5f);
+            }
+            for (int i = 0; i < driftParticlesGenerators.Length; i++)
+            {
+                driftParticlesGenerators[i].gameObject.SetActive(false);
+            }
+            //return; 
         }
         //driftPivot.forward = Vector3.RotateTowards(driftPivot.forward, new Vector3(driftDir + turnDir , 0,1), 0.75f * Time.fixedDeltaTime, 0.0f);
         if (forwardDirection == 0)
@@ -320,7 +326,7 @@ public class KartScriptV2 : MonoBehaviour
                 fireWheelEffects[i].SetActive(false);
                 fireWheelEffects[i].transform.localScale = new Vector3(0.5f, 0.05f, 0.5f);
             }
-            return;
+            //return;
         }
         if (tryToDrift)
         {
@@ -351,38 +357,8 @@ public class KartScriptV2 : MonoBehaviour
             }
         }
         if (!keepDrifting) 
-        {
+        {            
             
-            currentDriftForce = 0;
-            driftCatchUp = 0;
-            if (driftTurboGauge > gaugeToActivateTurbo)
-            {
-                StartTurbo(driftTurboGauge * 2.2f, driftTurboGauge / 2.6f);
-                driftTurboGauge = 0;
-                //Debug.Log(transform.forward + " " + driftPivot.forward);
-                Vector3 oldForward = transform.forward;
-                
-                transform.forward = transform.forward + new Vector3 (driftPivot.forward.x, 0, driftPivot.forward.z);
-                driftPivot.forward = transform.forward;
-                ThirdPersonCamPivot.forward = oldForward;
-                //new Vector3(transform.rotation.x,driftPivot.forward.y, transform.rotation.z);
-                //transform.forward = new vector3(driftPivot.forward + transform.forward);
-                //transform.forward = visualKartBody.transform.forward;//driftPivot.forward;
-                //transform.rotation = Quaternion.Euler(0, visualKartBody.transform.rotation.y , 0);
-                //transform.forward = visualKartBody.transform.forward;
-                //driftPivot.forward = transform.forward;
-            }
-            driftDir = 0;
-            for (int i = 0; i < fireWheelEffects.Length; i++)
-            {
-                fireWheelEffects[i].SetActive(false);
-                fireWheelEffects[i].transform.localScale = new Vector3(0.5f, 0.05f, 0.5f);
-            }
-            for (int i = 0; i < driftParticlesGenerators.Length; i++)
-            {
-                driftParticlesGenerators[i].gameObject.SetActive(false);
-            }
-            return; 
         }
         if (driftDir != 0)
         {
@@ -419,7 +395,7 @@ public class KartScriptV2 : MonoBehaviour
             {
                 driftCatchUp -= 6f * Time.deltaTime;
             }
-                currentDriftForce = driftDir * driftCatchUp;
+            currentDriftForce = driftDir * driftCatchUp;
         }
         
     }
@@ -554,22 +530,22 @@ public class KartScriptV2 : MonoBehaviour
         {            
             if (forwardDirection > 0)
             { 
-                visKartXRotCatchUp = (maxSpeed - currentSpeed) / 3f;
+                visKartXRotCatchUp = (maxSpeed - currentSpeed) / 6f;
             }
             else
             {
-                visKartXRotCatchUp = -(maxSpeed - currentSpeed) / 3f;
+                visKartXRotCatchUp = -(maxSpeed - currentSpeed) / 6f;
             }
         }
         else if (currentSpeed < 0)
         {            
             if (forwardDirection < 0)
             {
-                visKartXRotCatchUp = (maxSpeed + currentSpeed) / 5f;
+                visKartXRotCatchUp = (maxSpeed + currentSpeed) / 10f;
             }
             else
             {
-                visKartXRotCatchUp = -(maxSpeed + currentSpeed) / 5f;
+                visKartXRotCatchUp = -(maxSpeed + currentSpeed) / 10f;
             }            
         }
         else if (visKartXRotCatchUp < 0.05f && visKartXRotCatchUp > -0.05f)
@@ -589,8 +565,12 @@ public class KartScriptV2 : MonoBehaviour
         visKartZRot = currentTurnSpeed * (currentSpeed / 4.5f);
         float nextTotalSpeed = visKartXRot + -currentTurboForce * 2;
         nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -(maxSpeed), maxSpeed + 2f);
-        preOrientation.up = Vector3.RotateTowards(preOrientation.up, groundNormal, 1.5f * Time.fixedDeltaTime, 0.0f);
-        visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, transform.eulerAngles.y, visKartZRot + (driftCatchUp * 7f * driftDir));
+        groundNormalT.transform.rotation = Quaternion.LookRotation( Vector3.Cross(transform.right, groundNormal), groundNormal); // oriente le y vers le haut de la normale et le x vers l'avant du kart ( 2 semaines de galère )
+        preOrientation.localRotation = Quaternion.RotateTowards(preOrientation.localRotation, groundNormalT.localRotation, 1f);
+        //preOrientation.forward = Vector3.RotateTowards(preOrientation.forward, groundNormalT.forward, 1.5f * Time.fixedDeltaTime, 0.0f);
+        //preOrientation.rotation = Quaternion.Euler(preOrientation.rotation.x, 0, preOrientation.rotation.z);
+        //preOrientation.forward = transform.forward;
+        visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot + (driftCatchUp * 7f * driftDir));
 
         //visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);
         //preOrientation.up = groundNormal;
@@ -608,7 +588,7 @@ public class KartScriptV2 : MonoBehaviour
     void HandleVisualKartWheels()
     {
         //visWheelsYRot = currentTurnSpeed * 12;
-        visualKartWheelsParent.transform.localRotation = Quaternion.Euler(0, transform.eulerAngles.y, 0);
+        //visualKartWheelsParent.transform.localRotation = Quaternion.Euler(0, transform.eulerAngles.y, 0);
         turningWheelsXRot += (currentSpeed + currentTurboForce) * turningWheelsRatioScaling * Time.fixedDeltaTime;
         nonTurningWheelsXRot += (currentSpeed + currentTurboForce) * nonTurningWheelsRatioScaling * Time.fixedDeltaTime;
         for (int i = 0; i < turningWheels.Length; i++)
@@ -625,8 +605,9 @@ public class KartScriptV2 : MonoBehaviour
         
     }
 
-    void HandleCameraPosition()
+    void HandleCameraTransform()
     {
+        ThirdPersonCamPivot.position = preOrientation.position;
         camXpos = currentSpeed * -currentTurnSpeed / 120f * forwardDirection;
         //+ -currentTurnSpeed;
         /*if (playerCamera.transform.localRotation.y > camXpos)
@@ -661,7 +642,7 @@ public class KartScriptV2 : MonoBehaviour
             playerCamera.transform.localPosition = new Vector3(nextXpos, 2.46f, -4.75f);
         }
 
-        ThirdPersonCamPivot.forward = Vector3.RotateTowards(ThirdPersonCamPivot.forward, transform.forward, 0.5f * Time.fixedDeltaTime, 0.0f);
+        ThirdPersonCamPivot.forward = Vector3.RotateTowards(ThirdPersonCamPivot.forward, transform.forward, 1f * Time.fixedDeltaTime, 0.0f);
 
         // playerCamera.transform.localRotation = Quaternion.Euler(32, camYRot, 0);
         //playerCamera.transform.localPosition = new Vector3(camXpos, 3.9f, -4.7f);

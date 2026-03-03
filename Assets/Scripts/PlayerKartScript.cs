@@ -1,5 +1,3 @@
-using NUnit.Framework.Internal;
-using UnityEditor.ShaderGraph;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -95,16 +93,7 @@ public class PlayerKartScript : MonoBehaviour
     float nextYDriftRot;
     private void Awake()
     {
-        /*if (instance == null)
-        {
-            instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-        }*/
-        controls = new InputSystem_Actions(); // initialiser input
-        controls.Player.Turn.performed += ctx => HandheldMovePressed(ctx);
+   
     }
     void Start()
     {
@@ -120,37 +109,12 @@ public class PlayerKartScript : MonoBehaviour
             StartTurbo(10f, 1.5f);
         }
     }
-    private void HandheldMovePressed(InputAction.CallbackContext ctx)
-    {
-        Debug.Log("ctx");
-        turnDirection = ctx.ReadValue<int>();
-    }
     private void FixedUpdate()
     {
 
         HandleCurrentSpeed();
         HandleTurning();
         HandleTurbo();
-
-        float unsignedCurSpeed = currentSpeed;
-        if (unsignedCurSpeed < 0)
-        {
-            unsignedCurSpeed = -unsignedCurSpeed;
-        }
-        float nextBounceForce = bounceForce - (minBounceDecelForce) * Time.fixedDeltaTime;
-        if (nextBounceForce > 0)
-        {
-            bounceForce = nextBounceForce;
-        }
-        else
-        {
-            bounceForce = 0;
-            bounceDirection = Vector3.zero;
-        }
-
-        //rb.AddForce(transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce, ForceMode.Acceleration);
-        // rb.linearVelocity = transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce;
-        //if (IsGrounded())
         if (grounded)
         {
             currentFallSpeed = 0;
@@ -159,15 +123,8 @@ public class PlayerKartScript : MonoBehaviour
         {
             currentFallSpeed += gravity * Time.fixedDeltaTime;
         }
-
         rb.linearVelocity = (transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
         transform.Rotate(0, currentTurnSpeed + currentDriftForce, 0);
-        //rb.linearVelocity += Vector3.down * currentFallSpeed;
-
-
-
-        //Debug.Log(currentSpeed);
-
     }
 
     private void LateUpdate()
@@ -185,21 +142,8 @@ public class PlayerKartScript : MonoBehaviour
     {
         forwardDirection = Input.GetAxisRaw("Vertical");
         //turnDirection = Input.GetAxisRaw("Horizontal");
-        tryToDrift = Input.GetMouseButtonDown(0);
-        keepDrifting = Input.GetMouseButton(0);
-    }
-
-    bool IsGrounded()
-    {
-        RaycastHit hit;
-        if (Physics.Raycast(groundRayOrigin.position, Vector3.down, out hit, 0.25f))
-        {
-            groundNormal = hit.normal;
-            transform.position = new Vector3(transform.position.x, hit.point.y + 0.54f, transform.position.z);
-            //Debug.Log("grounded" + (0.5f - hit.distance));
-            return true;
-        }
-        return false;
+        tryToDrift = Input.GetKeyDown("space");
+        keepDrifting = Input.GetKey("space");
     }
     void HandleCurrentSpeed()
     {
@@ -246,244 +190,17 @@ public class PlayerKartScript : MonoBehaviour
     }
     void HandleDrift()
     {
-        //float turnDir = 0;
-        if (keepDrifting)
-        {
-            //turnDir = turnDirection * 0.5f;
-            //Debug.Log(driftPivot.localRotation.y);
-            //nextYDriftRot = driftPivot.localRotation.y;
-            float targetYRot = (driftDir + turnDirection) * 30f;
-
-            if (nextYDriftRot < targetYRot)
-            {
-                nextYDriftRot += 80f * Time.fixedDeltaTime;
-                if (nextYDriftRot > targetYRot)
-                {
-                    nextYDriftRot = targetYRot;
-                }
-            }
-            else if (nextYDriftRot > targetYRot)
-            {
-                nextYDriftRot += -80f * Time.fixedDeltaTime;
-                if (nextYDriftRot < targetYRot)
-                {
-                    nextYDriftRot = targetYRot;
-                }
-            }
-            //Debug.Log(nextYDriftRot);
-            driftPivot.localRotation = Quaternion.Euler(0, nextYDriftRot, 0);
-            oldKeepD = keepDrifting;
-        }
-        else
-        {
-            //nextYDriftRot = 0;
-            if (nextYDriftRot < 0)
-            {
-                nextYDriftRot += 80f * Time.fixedDeltaTime;
-                if (nextYDriftRot > 0)
-                {
-                    nextYDriftRot = 0;
-                }
-            }
-            else if (nextYDriftRot > 0)
-            {
-                nextYDriftRot += -80f * Time.fixedDeltaTime;
-                if (nextYDriftRot < 0)
-                {
-                    nextYDriftRot = 0;
-                }
-            }
-
-            /*if (oldKeepD != keepDrifting)
-            {
-                oldKeepD = keepDrifting;
-                
-                transform.forward = driftPivot.forward;
-            }*/
-            //transform.forward = driftPivot.forward;
-            driftPivot.localRotation = Quaternion.Euler(0, nextYDriftRot, 0);
-
-            //transform.forward = driftPivot.forward;
-        }
-        //driftPivot.forward = Vector3.RotateTowards(driftPivot.forward, new Vector3(driftDir + turnDir , 0,1), 0.75f * Time.fixedDeltaTime, 0.0f);
-        if (forwardDirection == 0)
-        {
-            driftDir = 0;
-            currentDriftForce = 0;
-            driftCatchUp = 0;
-            driftTurboGauge = 0;
-            for (int i = 0; i < fireWheelEffects.Length; i++)
-            {
-                fireWheelEffects[i].SetActive(false);
-                fireWheelEffects[i].transform.localScale = new Vector3(0.5f, 0.05f, 0.5f);
-            }
-            return;
-        }
-        if (tryToDrift)
-        {
-            if (currentTurnSpeed > 0.5f && turnDirection > 0)
-            {
-                driftDir = 1;
-                for (int i = 0; i < driftParticlesGenerators.Length; i++)
-                {
-                    driftParticlesGenerators[i].gameObject.SetActive(true);
-                }
-            }
-            else if (currentTurnSpeed < -0.5f && turnDirection < 0)
-            {
-                driftDir = -1;
-                for (int i = 0; i < driftParticlesGenerators.Length; i++)
-                {
-                    driftParticlesGenerators[i].gameObject.SetActive(true);
-                }
-            }
-        }
-        if (driftTurboGauge > gaugeToActivateTurbo)
-        {
-            for (int i = 0; i < fireWheelEffects.Length; i++)
-            {
-                fireWheelEffects[i].SetActive(true);
-                float fireWheelSize = Mathf.Clamp(driftTurboGauge / 2, 1.1f, 2f);
-                fireWheelEffects[i].transform.localScale = new Vector3(fireWheelSize, 0.05f, fireWheelSize);
-            }
-        }
-        if (!keepDrifting)
-        {
-            driftDir = 0;
-            currentDriftForce = 0;
-            driftCatchUp = 0;
-            if (driftTurboGauge > gaugeToActivateTurbo)
-            {
-                StartTurbo(driftTurboGauge * 2.2f, driftTurboGauge / 2.6f);
-                driftTurboGauge = 0;
-                Debug.Log(transform.forward + " " + driftPivot.forward);
-                //transform.forward = visualKartBody.transform.forward;//driftPivot.forward;
-                //transform.rotation = Quaternion.Euler(0, visualKartBody.transform.rotation.y , 0);
-                //transform.forward = visualKartBody.transform.forward;
-                //driftPivot.forward = transform.forward;
-            }
-            for (int i = 0; i < fireWheelEffects.Length; i++)
-            {
-                fireWheelEffects[i].SetActive(false);
-                fireWheelEffects[i].transform.localScale = new Vector3(0.5f, 0.05f, 0.5f);
-            }
-            for (int i = 0; i < driftParticlesGenerators.Length; i++)
-            {
-                driftParticlesGenerators[i].gameObject.SetActive(false);
-            }
-            return;
-        }
-        if (driftDir != 0)
-        {
-            float nextDriftForceTarget = 1f;
-            if (driftDir > 0 && turnDirection < 0)
-            {
-                nextDriftForceTarget = 3f;
-                driftTurboGauge += 0.2f * Time.deltaTime;
-            }
-            else if (driftDir < 0 && turnDirection > 0)
-            {
-                nextDriftForceTarget = 3f;
-                driftTurboGauge += 0.2f * Time.deltaTime;
-            }
-            else if (driftDir > 0 && turnDirection > 0)
-            {
-
-                driftTurboGauge += 2f * Time.deltaTime;
-            }
-            else if (driftDir < 0 && turnDirection < 0)
-            {
-
-                driftTurboGauge += 2f * Time.deltaTime;
-            }
-            else
-            {
-                driftTurboGauge += 0.8f * Time.deltaTime;
-            }
-            if (driftCatchUp < nextDriftForceTarget)
-            {
-                driftCatchUp += 6f * Time.deltaTime;
-            }
-            else if (driftCatchUp > nextDriftForceTarget)
-            {
-                driftCatchUp -= 6f * Time.deltaTime;
-            }
-            currentDriftForce = driftDir * driftCatchUp;
-        }
 
     }
 
     void HandleTurning()
     {
-        float nextTurnSpeed = currentTurnSpeed;
-
-        if (currentSpeed > 0) // si on avance
-        {
-            nextTurnSpeed += turnDirection * turnAccelSpeed * Time.fixedDeltaTime;
-            visWheelsYRot = currentTurnSpeed * 16;
-        }
-        else if (currentSpeed < 0) // si on recule
-        {
-            nextTurnSpeed += -turnDirection * turnAccelSpeed * Time.fixedDeltaTime;
-            visWheelsYRot = -currentTurnSpeed * 16;
-        }
-
-        if (turnDirection == 0 || currentSpeed == 0) // turn deceleration
-        {
-            if (currentTurnSpeed > 0)
-            {
-                nextTurnSpeed -= turnDecelSpeed * Time.fixedDeltaTime;
-                if (nextTurnSpeed < 0)
-                {
-                    nextTurnSpeed = 0;
-                }
-            }
-            else if (currentTurnSpeed < 0)
-            {
-                nextTurnSpeed += turnDecelSpeed * Time.fixedDeltaTime;
-                if (nextTurnSpeed > 0)
-                {
-                    nextTurnSpeed = 0;
-                }
-            }
-        }
-
-        // on clamp
-        if (nextTurnSpeed > maxTurnSpeed)
-        {
-            nextTurnSpeed = maxTurnSpeed;
-        }
-        else if (nextTurnSpeed < -maxTurnSpeed)
-        {
-            nextTurnSpeed = -maxTurnSpeed;
-        }
-        if (keepDrifting)
-        {
-            if (nextTurnSpeed > maxTurnSpeed)
-            {
-                nextTurnSpeed = maxTurnSpeed;
-            }
-            else if (nextTurnSpeed < -maxTurnSpeed)
-            {
-                nextTurnSpeed = -maxTurnSpeed;
-            }
-        }
-
-        // on applique
-        //Debug.Log(nextTurnSpeed + " + " + currentDriftForce);
-        currentTurnSpeed = nextTurnSpeed;
+ 
     }
 
     void StartDrift()
     {
-        if (currentTurnSpeed > 1f)
-        {
-            driftDir = 1;
-        }
-        else if (currentTurnSpeed < -1f)
-        {
-            driftDir = -1;
-        }
+ 
     }
 
 
@@ -493,132 +210,31 @@ public class PlayerKartScript : MonoBehaviour
         turbo = true;
         turboTimer = time;
         targetTurboForce = force;
-        //float nextTForce = targetTurboForce + force;
-        //if (nextTForce > targetTurboForce)
-        //{
-        //    targetTurboForce = nextTForce;
-        //}
         Debug.Log("turbo");
     }
     void HandleTurbo()
     {
-        if (turbo)
-        {
-            turboTimer -= Time.fixedDeltaTime;
-            if (turboTimer > 0)
-            {
-                float nextTForce = currentTurboForce + turboAccelSpeed * Time.fixedDeltaTime;
-                if (nextTForce < targetTurboForce)
-                {
-                    currentTurboForce = nextTForce;
-                }
-                else
-                {
-                    currentTurboForce = targetTurboForce;
-                }
-            }
-            else
-            {
-                targetTurboForce = 0;
-                currentTurboForce -= 1f + minTurboDecel * minTurboDecel * Time.fixedDeltaTime;
-            }
-            if (currentTurboForce <= 0)
-            {
-                turbo = false;
-                currentTurboForce = 0;
-                targetTurboForce = 0;
-            }
-        }
+       
     }
 
     void HandleWholeKartRotationXZ()
     {
-        //transform.up = new Vector3(goundNormal.x, goundNormal.y, goundNormal.z);
+   
     }
 
     void HandleVisualKartBody()
     {
 
-        if (currentSpeed > 0)
-        {
-            if (forwardDirection > 0)
-            {
-                visKartXRotCatchUp = (maxSpeed - currentSpeed) / 3f;
-            }
-            else
-            {
-                visKartXRotCatchUp = -(maxSpeed - currentSpeed) / 3f;
-            }
-        }
-        else if (currentSpeed < 0)
-        {
-            if (forwardDirection < 0)
-            {
-                visKartXRotCatchUp = (maxSpeed + currentSpeed) / 5f;
-            }
-            else
-            {
-                visKartXRotCatchUp = -(maxSpeed + currentSpeed) / 5f;
-            }
-        }
-        else if (visKartXRotCatchUp < 0.05f && visKartXRotCatchUp > -0.05f)
-        {
-            visKartXRotCatchUp = 0;
-        }
-
-        if (visKartXRotCatchUpBis < visKartXRotCatchUp)
-        {
-            visKartXRotCatchUpBis += 8f * Time.fixedDeltaTime;
-        }
-        else if (visKartXRotCatchUpBis > visKartXRotCatchUp)
-        {
-            visKartXRotCatchUpBis -= 8f * Time.fixedDeltaTime;
-        }
-        visKartXRot = (-currentSpeed / 2) * visKartXRotCatchUpBis;
-        visKartZRot = currentTurnSpeed * (currentSpeed / 4.5f);
-        float nextTotalSpeed = visKartXRot + -currentTurboForce * 2;
-        nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -(maxSpeed), maxSpeed + 2f);
-        preOrientation.up = Vector3.RotateTowards(preOrientation.up, groundNormal, 1.5f * Time.fixedDeltaTime, 0.0f);
-        visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, transform.eulerAngles.y, visKartZRot + (driftCatchUp * 7f * driftDir));
     }
 
     void HandleVisualKartWheels()
     {
-        visualKartWheelsParent.transform.localRotation = Quaternion.Euler(0, transform.eulerAngles.y, 0);
-        turningWheelsXRot += (currentSpeed + currentTurboForce) * turningWheelsRatioScaling * Time.fixedDeltaTime;
-        nonTurningWheelsXRot += (currentSpeed + currentTurboForce) * nonTurningWheelsRatioScaling * Time.fixedDeltaTime;
-        for (int i = 0; i < turningWheels.Length; i++)
-        {
-            turningWheels[i].transform.localRotation = Quaternion.Euler(turningWheelsXRot, visWheelsYRot, 90);
-        }
-        for (int i = 0; i < nonTurningWheels.Length; i++)
-        {
-            nonTurningWheels[i].transform.localRotation = Quaternion.Euler(nonTurningWheelsXRot, 0, 90);
-        }
 
     }
 
     void HandleCameraLocalPosition()
     {
-        camXpos = currentSpeed * -currentTurnSpeed / 120f * forwardDirection;
-        if (playerCamera.transform.localPosition.x > camXpos)
-        {
-            float nextXpos = playerCamera.transform.localPosition.x - 1f * Time.fixedDeltaTime;
-            if (nextXpos < camXpos)
-            {
-                nextXpos = camXpos;
-            }
-            playerCamera.transform.localPosition = new Vector3(nextXpos, 2.46f, -4.75f);
-        }
-        else if (playerCamera.transform.localPosition.x < camXpos)
-        {
-            float nextXpos = playerCamera.transform.localPosition.x + 1f * Time.fixedDeltaTime;
-            if (nextXpos > camXpos)
-            {
-                nextXpos = camXpos;
-            }
-            playerCamera.transform.localPosition = new Vector3(nextXpos, 2.46f, -4.75f);
-        }
+ 
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -655,7 +271,7 @@ public class PlayerKartScript : MonoBehaviour
     }
     void SquishAnimation()
     {
-        if (bounce)
+      /*  if (bounce)
         {
             bounceTimer += Time.fixedDeltaTime;
             if (bounceTimer < 0.05f)
@@ -672,11 +288,11 @@ public class PlayerKartScript : MonoBehaviour
                 bounce = false;
                 bounceTimer = 0;
             }
-        }
+        }*/
     }
     void HandleSmoke()
     {
-        if (turbo)
+     /*   if (turbo)
         {
             var FPemission = fireParticlesGenerator.emission;
             FPemission.rateOverDistance = 3;
@@ -685,11 +301,6 @@ public class PlayerKartScript : MonoBehaviour
         {
             var FPemission = fireParticlesGenerator.emission;
             FPemission.rateOverDistance = 0;
-        }
-    }
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawRay(groundRayOrigin.position, Vector3.down * 0.5f);
+        }*/
     }
 }
