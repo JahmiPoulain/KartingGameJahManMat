@@ -144,13 +144,15 @@ public class KartScriptV2 : MonoBehaviour
         HandleGravity();
 
         rb.linearVelocity = (transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
-        transform.Rotate(0, currentTurnSpeed + currentDriftForce, 0);
-
-
+        if (grounded)
+        {
+            transform.Rotate(0, currentTurnSpeed + currentDriftForce, 0);
+        }
+        else
+        {
+            transform.Rotate(0, (currentTurnSpeed + currentDriftForce) / 3f, 0);
+        }
     }
-
-    
-
     private void LateUpdate()
     {
         // on gère les visuels du kart
@@ -250,7 +252,7 @@ public class KartScriptV2 : MonoBehaviour
     }       
     void HandleDrift()
     {
-        if (keepDrifting)
+        if (keepDrifting && grounded)
         {
             // on fait monter ou descendre la rotation Y vers targetYRot
             float targetYRot = (driftDir + turnDirection) * 18f;
@@ -328,7 +330,7 @@ public class KartScriptV2 : MonoBehaviour
             }
             //return;
         }
-        if (tryToDrift)
+        if (tryToDrift && grounded)
         {
             if (currentTurnSpeed > 0.5f && turnDirection > 0)
             {
@@ -390,8 +392,7 @@ public class KartScriptV2 : MonoBehaviour
                 driftCatchUp -= 6f * Time.deltaTime;
             }
             currentDriftForce = driftDir * driftCatchUp;
-        }
-        
+        }        
     }
 
     void HandleTurning()
@@ -680,7 +681,7 @@ public class KartScriptV2 : MonoBehaviour
         if (collision.gameObject.layer == 7)
         {
             grounded = false;
-            currentFallSpeed += (-groundNormalT.localEulerAngles.x / 70f) * currentSpeed / maxSpeed; // on donne une fausse inertie via la gravité selon l'angle x de la dernière normale
+            currentFallSpeed += (-groundNormalT.localEulerAngles.x / 70f) * currentSpeed / maxSpeed; // on donne une fausse inertie via la gravité selon l'angle x de la dernière normale            
             // si on recule en sortie de sol on tombe bien plus vite!!!            
         }
     }
