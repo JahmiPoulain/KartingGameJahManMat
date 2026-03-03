@@ -592,8 +592,7 @@ public class KartScriptV2 : MonoBehaviour
         turningWheelsXRot += (currentSpeed + currentTurboForce) * turningWheelsRatioScaling * Time.fixedDeltaTime;
         nonTurningWheelsXRot += (currentSpeed + currentTurboForce) * nonTurningWheelsRatioScaling * Time.fixedDeltaTime;
         for (int i = 0; i < turningWheels.Length; i++)
-        {
-           
+        {            
             turningWheels[i].transform.localRotation = Quaternion.Euler(turningWheelsXRot, visWheelsYRot, 90);
             //turningWheels[i].transform.Rotate(0, 10, 0);
         }
@@ -681,6 +680,11 @@ public class KartScriptV2 : MonoBehaviour
         if (collision.gameObject.layer == 7)
         {
             grounded = false;
+            //if (groundNormalT.localEulerAngles.x > 0)
+            //{
+            //    currentFallSpeed = 8f;
+            //    return;
+            //}
             currentFallSpeed += (-groundNormalT.localEulerAngles.x / 70f) * currentSpeed / maxSpeed; // on donne une fausse inertie via la gravité selon l'angle x de la dernière normale            
             // si on recule en sortie de sol on tombe bien plus vite!!!            
         }
