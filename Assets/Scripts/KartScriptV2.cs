@@ -257,12 +257,12 @@ public class KartScriptV2 : MonoBehaviour
             
             if (nextYDriftRot < targetYRot)
             {
-                nextYDriftRot += 20f * Time.fixedDeltaTime;
+                nextYDriftRot += 12f * Time.fixedDeltaTime;
                 if (nextYDriftRot > targetYRot) { nextYDriftRot = targetYRot; } // on dépasse pas targetYRot
             }
             else if (nextYDriftRot > targetYRot)
             {
-                nextYDriftRot += -20f * Time.fixedDeltaTime;
+                nextYDriftRot += -12f * Time.fixedDeltaTime;
                 if (nextYDriftRot < targetYRot) { nextYDriftRot = targetYRot; } // on dépasse pas targetYRot
             }
             driftPivot.localRotation = Quaternion.Euler(0, nextYDriftRot, 0);
@@ -272,7 +272,7 @@ public class KartScriptV2 : MonoBehaviour
         {
             if (nextYDriftRot < 0)
             {
-                nextYDriftRot += 20f * Time.fixedDeltaTime;
+                nextYDriftRot += 12f * Time.fixedDeltaTime;
                 if (nextYDriftRot > 0)
                 {
                     nextYDriftRot = 0;
@@ -280,7 +280,7 @@ public class KartScriptV2 : MonoBehaviour
             }
             else if (nextYDriftRot > 0)
             {
-                nextYDriftRot += -20f * Time.fixedDeltaTime;
+                nextYDriftRot += -12f * Time.fixedDeltaTime;
                 if (nextYDriftRot < 0)
                 {
                     nextYDriftRot = 0;
@@ -352,13 +352,9 @@ public class KartScriptV2 : MonoBehaviour
             for (int i = 0; i < fireWheelEffects.Length; i++) 
             {
                 fireWheelEffects[i].SetActive(true);
-                float fireWheelSize = Mathf.Clamp(driftTurboGauge / 2, 1.1f, 2f);
+                float fireWheelSize = Mathf.Clamp(1 + driftTurboGauge / 6, 1.01f, 1.8f);
                 fireWheelEffects[i].transform.localScale = new Vector3 (fireWheelSize, 0.05f, fireWheelSize);
             }
-        }
-        if (!keepDrifting) 
-        {            
-            
         }
         if (driftDir != 0)
         {
@@ -374,13 +370,11 @@ public class KartScriptV2 : MonoBehaviour
                 driftTurboGauge += 0.2f * Time.deltaTime;
             }
             else if (driftDir > 0 && turnDirection > 0)
-            {
-                
+            {                
                 driftTurboGauge += 2f * Time.deltaTime;
             }
             else if (driftDir < 0 && turnDirection < 0)
-            {
-                
+            {                
                 driftTurboGauge += 2f * Time.deltaTime;
             }
             else
@@ -444,7 +438,7 @@ public class KartScriptV2 : MonoBehaviour
         {
             nextTurnSpeed = -maxTurnSpeed; 
         }
-        if (keepDrifting)
+        /*if (keepDrifting)
         {
             if (nextTurnSpeed > maxTurnSpeed)
             {
@@ -454,7 +448,7 @@ public class KartScriptV2 : MonoBehaviour
             {
                 nextTurnSpeed = -maxTurnSpeed;
             }
-        }
+        }*/
 
         // on applique
         //Debug.Log(nextTurnSpeed + " + " + currentDriftForce);
@@ -478,14 +472,19 @@ public class KartScriptV2 : MonoBehaviour
     public void StartTurbo(float force ,float time)
     {
         turbo = true;
-        turboTimer = time;
-        targetTurboForce = force;
+        if (time > turboTimer)
+        {
+            turboTimer = time;
+        }
+        if (force > targetTurboForce)
+        {
+            targetTurboForce = force;
+        }
+        //turboTimer = time;
+        //targetTurboForce = force;
         //float nextTForce = targetTurboForce + force;
-        //if (nextTForce > targetTurboForce)
-        //{
-        //    targetTurboForce = nextTForce;
-        //}
-        Debug.Log("turbo");
+        
+        //Debug.Log("turbo");
     }
     void HandleTurbo()
     {
@@ -607,7 +606,7 @@ public class KartScriptV2 : MonoBehaviour
 
     void HandleCameraTransform()
     {
-        ThirdPersonCamPivot.position = preOrientation.position;
+        ThirdPersonCamPivot.position = transform.position;
         camXpos = currentSpeed * -currentTurnSpeed / 120f * forwardDirection;
         //+ -currentTurnSpeed;
         /*if (playerCamera.transform.localRotation.y > camXpos)
@@ -671,15 +670,18 @@ public class KartScriptV2 : MonoBehaviour
         if (collision.gameObject.layer == 7)
         {
             grounded = true;
-            groundNormal = collision.contacts[0].normal; // l'orientation du kart
+            groundNormal = collision.contacts[0].normal; // l'orientation du kart visuel
         }
     }
 
     private void OnCollisionExit(Collision collision)
     {
+        // quand on quitte le sol
         if (collision.gameObject.layer == 7)
         {
             grounded = false;
+            currentFallSpeed += (-groundNormalT.localEulerAngles.x / 70f) * currentSpeed / maxSpeed; // on donne une fausse inertie via la gravité selon l'angle x de la dernière normale
+            // si on recule en sortie de sol on tombe bien plus vite!!!            
         }
     }
     void SquishAnimation()
