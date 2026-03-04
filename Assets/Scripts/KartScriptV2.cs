@@ -95,7 +95,9 @@ public class KartScriptV2 : MonoBehaviour
     float driftTurboGauge;
     public float gaugeToActivateTurbo;
     public Transform driftPivot;
-    float nextYDriftRot;    
+    float nextYDriftRot;
+    public float driftCoyoteTime;
+    float driftCoyoteTimer;
     private void Awake()
     {
         if (instance == null)
@@ -171,6 +173,7 @@ public class KartScriptV2 : MonoBehaviour
         turnDirection = Input.GetAxisRaw("Horizontal");
         tryToDrift = Input.GetButtonDown("Drift1");
         keepDrifting = Input.GetButton("Drift1");
+        if (bounce) keepDrifting = false;
         //tryToDrift = Input.GetMouseButtonDown(0);
         //keepDrifting = Input.GetMouseButton(0);      
     }
@@ -296,12 +299,18 @@ public class KartScriptV2 : MonoBehaviour
             {
                 StartTurbo(driftTurboGauge * 2.2f, driftTurboGauge / 2.6f);
                 driftTurboGauge = 0;
-                Debug.Log(transform.forward + " " + driftPivot.forward);
-                Vector3 oldForward = transform.forward;
+                //Debug.Log(transform.forward + " " + driftPivot.forward);
+                Vector3 oldCamForward = ThirdPersonCamPivot.forward;
                 //Debug.Break();
-                transform.forward = new Vector3 (driftPivot.forward.x, 0, driftPivot.forward.z).normalized;
+                //Debug.Log(transform.forward + " 1 " + driftPivot.forward);
+                transform.forward = new Vector3 (driftPivot.forward.x, 0, driftPivot.forward.z);
                 //Debug.Break();
+                //Debug.Log(transform.forward + " 2 " + driftPivot.forward);
                 driftPivot.forward = transform.forward;
+                //Debug.Log(transform.forward + " 3 " + driftPivot.forward);
+                nextYDriftRot = 0;
+                ThirdPersonCamPivot.forward = oldCamForward;
+                //Debug.Break();
 
             }
             driftDir = 0;
@@ -606,7 +615,7 @@ public class KartScriptV2 : MonoBehaviour
 
     void HandleCameraTransform()
     {
-        ThirdPersonCamPivot.position = transform.position;
+        //ThirdPersonCamPivot.position = transform.position;
         camXpos = currentSpeed * -currentTurnSpeed / 120f * forwardDirection;
         //+ -currentTurnSpeed;
         /*if (playerCamera.transform.localRotation.y > camXpos)
@@ -641,7 +650,8 @@ public class KartScriptV2 : MonoBehaviour
             playerCamera.transform.localPosition = new Vector3(nextXpos, 2.46f, -4.75f);
         }
 
-        ThirdPersonCamPivot.forward = Vector3.RotateTowards(ThirdPersonCamPivot.forward, transform.forward, 1f * Time.fixedDeltaTime, 0.0f);
+        float rotSpeed = 0.1f + (ThirdPersonCamPivot.forward - transform.forward).magnitude;
+        ThirdPersonCamPivot.forward = Vector3.RotateTowards(ThirdPersonCamPivot.forward, transform.forward, rotSpeed * Time.fixedDeltaTime, 0.0f);
 
         // playerCamera.transform.localRotation = Quaternion.Euler(32, camYRot, 0);
         //playerCamera.transform.localPosition = new Vector3(camXpos, 3.9f, -4.7f);
@@ -662,6 +672,7 @@ public class KartScriptV2 : MonoBehaviour
             }
             bounceForce = unsignedCurSpeed * 2f;
             currentSpeed *= 0.2f;
+            //keepDrifting = false;
             //rb.AddForce((, ForceMode.Impulse);
         }
     }
