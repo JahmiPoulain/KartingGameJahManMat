@@ -562,24 +562,44 @@ public class KartScriptV2 : MonoBehaviour
             visKartXRotCatchUp = 0;            
         }                    
 
-        if (visKartXRotCatchUpBis < visKartXRotCatchUp)
+        float nextVisKartXRotCatchUpBis = visKartXRotCatchUpBis;
+        if (nextVisKartXRotCatchUpBis < visKartXRotCatchUp)
         {
-            visKartXRotCatchUpBis += 8f * Time.fixedDeltaTime;
+            nextVisKartXRotCatchUpBis += 8f * Time.fixedDeltaTime;
+            if (nextVisKartXRotCatchUpBis < visKartXRotCatchUp) 
+            {
+                visKartXRotCatchUpBis = nextVisKartXRotCatchUpBis;
+            }
+            else
+            {
+                visKartXRotCatchUpBis = visKartXRotCatchUp;
+            }
         }
-        else if (visKartXRotCatchUpBis > visKartXRotCatchUp)
+        else if (nextVisKartXRotCatchUpBis > visKartXRotCatchUp)
         {
-            visKartXRotCatchUpBis -= 8f * Time.fixedDeltaTime;
+            nextVisKartXRotCatchUpBis -= 8f * Time.fixedDeltaTime;
+            if (nextVisKartXRotCatchUpBis > visKartXRotCatchUp)
+            {
+                visKartXRotCatchUpBis = nextVisKartXRotCatchUpBis;
+            }
+            else
+            {
+                visKartXRotCatchUpBis = visKartXRotCatchUp;
+            }
         }
-            visKartXRot = (-currentSpeed / 2) * visKartXRotCatchUpBis;
+        visKartXRot = (-currentSpeed / 2.5f) * visKartXRotCatchUpBis;
         visKartZRot = currentTurnSpeed * (currentSpeed / 4.5f);
-        float nextTotalSpeed = visKartXRot + -currentTurboForce * 2;
+        float nextTotalSpeed = visKartXRot + -currentTurboForce * 0.5f;
         nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -(maxSpeed), maxSpeed + 2f);
         groundNormalT.transform.rotation = Quaternion.LookRotation( Vector3.Cross(transform.right, groundNormal), groundNormal); // oriente le y vers le haut de la normale et le x vers l'avant du kart ( 2 semaines de galère )
         preOrientation.localRotation = Quaternion.RotateTowards(preOrientation.localRotation, groundNormalT.localRotation, 1f);
         //preOrientation.forward = Vector3.RotateTowards(preOrientation.forward, groundNormalT.forward, 1.5f * Time.fixedDeltaTime, 0.0f);
         //preOrientation.rotation = Quaternion.Euler(preOrientation.rotation.x, 0, preOrientation.rotation.z);
         //preOrientation.forward = transform.forward;
-        visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot + (driftCatchUp * 7f * driftDir));
+        Debug.Log(nextTotalSpeed + " " + visualKartBody.transform.localEulerAngles.x);
+        Quaternion rotTarget = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot + (driftCatchUp * 7f * driftDir));
+        visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 1f);
+      
 
         //visualKartBody.transform.localRotation = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);
         //preOrientation.up = groundNormal;
@@ -649,9 +669,9 @@ public class KartScriptV2 : MonoBehaviour
             }
             playerCamera.transform.localPosition = new Vector3(nextXpos, 2.46f, -4.75f);
         }
-
-        float rotSpeed = 0.1f + (ThirdPersonCamPivot.forward - transform.forward).magnitude;
-        ThirdPersonCamPivot.forward = Vector3.RotateTowards(ThirdPersonCamPivot.forward, transform.forward, rotSpeed * Time.fixedDeltaTime, 0.0f);
+        Vector3 targetDir = (transform.forward + transform.right * currentTurnSpeed * 0.05f).normalized;
+        float rotSpeed = 0.1f + (ThirdPersonCamPivot.forward - targetDir).magnitude;
+        ThirdPersonCamPivot.forward = Vector3.RotateTowards(ThirdPersonCamPivot.forward, targetDir, rotSpeed * Time.fixedDeltaTime, 0.0f);
 
         // playerCamera.transform.localRotation = Quaternion.Euler(32, camYRot, 0);
         //playerCamera.transform.localPosition = new Vector3(camXpos, 3.9f, -4.7f);
