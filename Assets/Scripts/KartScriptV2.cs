@@ -169,13 +169,17 @@ public class KartScriptV2 : MonoBehaviour
 
     void PlayerInputs()
     {
-        forwardDirection = Input.GetAxisRaw("Vertical");
+        /*forwardDirection = Input.GetAxisRaw("Vertical");
         turnDirection = Input.GetAxisRaw("Horizontal");
         tryToDrift = Input.GetButtonDown("Drift1");
         keepDrifting = Input.GetButton("Drift1");
-        if (bounce) keepDrifting = false;
+        if (bounce) keepDrifting = false;*/
         //tryToDrift = Input.GetMouseButtonDown(0);
         //keepDrifting = Input.GetMouseButton(0);      
+        forwardDirection = InputSystemHandler.instance.inputForwardDir;
+        turnDirection = InputSystemHandler.instance.inputTurnDir;
+        tryToDrift = InputSystemHandler.instance.inputTryDrift;
+        keepDrifting = InputSystemHandler.instance.inputDrift;
     }
     private void HandleBounceForce()
     {
@@ -339,7 +343,7 @@ public class KartScriptV2 : MonoBehaviour
             }
             //return;
         }
-        if (tryToDrift && grounded)
+        if (tryToDrift && grounded) //if (tryToDrift && grounded)
         {
             if (currentTurnSpeed > 0.5f && turnDirection > 0)
             {

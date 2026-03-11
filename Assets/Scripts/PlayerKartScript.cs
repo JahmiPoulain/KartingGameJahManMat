@@ -140,10 +140,13 @@ public class PlayerKartScript : MonoBehaviour
 
     void PlayerInputs()
     {
-        forwardDirection = Input.GetAxisRaw("Vertical");
+        /*forwardDirection = Input.GetAxisRaw("Vertical");
         //turnDirection = Input.GetAxisRaw("Horizontal");
         tryToDrift = Input.GetKeyDown("space");
-        keepDrifting = Input.GetKey("space");
+        keepDrifting = Input.GetKey("space");*/
+        forwardDirection = InputSystemHandler.instance.inputForwardDir;
+        turnDirection = InputSystemHandler.instance.inputTurnDir;
+        keepDrifting = InputSystemHandler.instance.inputDrift;
     }
     void HandleCurrentSpeed()
     {
