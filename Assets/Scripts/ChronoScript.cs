@@ -1,49 +1,45 @@
 using UnityEngine;
-using UnityEngine.UIElements;
 using TMPro;
 
 public class ChronoScript : MonoBehaviour
 {
-
     [SerializeField]
     private TextMeshProUGUI chronoUI;
 
-    private float delta = 0;
-    private float seconds = 0;
-    private int minutes = 0;
+    private float delta = 0f;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    private string _currentTime;
+
+    private bool isRunning = true;
+    public string CurrentTime
     {
-        
+        get { return _currentTime; }
+        private set { _currentTime = value; }
     }
 
-    // Update is called once per frame
     void Update()
     {
+        if (!isRunning)
+        {
+            return;  
+        }
+        UpdateChrono();
+    }
 
+    private void UpdateChrono()
+    {
         delta += Time.deltaTime;
 
-        minutes = (int)(delta / 60);
-        seconds = delta % 60;
+        int minutes = (int)(delta / 60);
+        float seconds = delta % 60;
 
-        if (minutes <= 10 && seconds <= 10)
-        {
-            chronoUI.text = $"0{minutes} : 0{seconds.ToString("F3")}";
-        }
-        else if (minutes <= 10)
-        {
-            chronoUI.text = $"0{minutes} : {seconds.ToString("F3")}";
-        }
-        else if (seconds <= 10)
-        {
-            chronoUI.text = $"{minutes} : 0{seconds.ToString("F3")}";
-        }
-        else
-        {
-            chronoUI.text = $"{minutes} : {seconds.ToString("F3")}";
-        }
+        CurrentTime = $"{minutes:00} : {seconds:00.000}";
 
+        chronoUI.text = CurrentTime;
+    }
 
+    public void ResetChrono()
+    {
+        delta = 0f;
     }
 }
