@@ -8,7 +8,7 @@ public class CheckpointManager : MonoBehaviour
 
     public void CompareCheckpoint(Checkpoint checkpoint)
     {
-        if(checkpoint.Index <= NextIndex)
+        if(checkpoint.Index == NextIndex)
         {
             NextIndex++;
         }

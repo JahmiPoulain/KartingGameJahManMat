@@ -12,9 +12,10 @@ public class LapManager : MonoBehaviour
     private TextMeshProUGUI chronoUI;
 
     private int currentLap = 0;
-    private string[] lapTimes = new string[3];
+    private float[] lapTimes = new float[3];
 
     public int CurrentLap { get => currentLap; private set => currentLap = value; }
+    public float[] LapTimes { get => lapTimes; private set => lapTimes = value; }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -39,7 +40,7 @@ public class LapManager : MonoBehaviour
     {
         if (checkpointManager.NextIndex >= checkpoints.Length)
         {
-            lapTimes[CurrentLap] = chrono.CurrentTime;
+            LapTimes[CurrentLap-1] = chrono.CurrentTime;
             CurrentLap++;
             StartCoroutine(ShowLapTime());
             chrono.ResetChrono();
