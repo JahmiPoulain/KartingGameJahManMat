@@ -11,7 +11,7 @@ public class LapManager : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI chronoUI;
 
-    private int currentLap = 0;
+    private int currentLap = 1;
     private float[] lapTimes = new float[3];
 
     public int CurrentLap { get => currentLap; private set => currentLap = value; }
@@ -43,8 +43,7 @@ public class LapManager : MonoBehaviour
             LapTimes[CurrentLap-1] = chrono.CurrentTime;
             CurrentLap++;
             StartCoroutine(ShowLapTime());
-            chrono.ResetChrono();
-            chronoUI.text = "";
+
         }
         else
         {
@@ -60,5 +59,7 @@ public class LapManager : MonoBehaviour
             yield return new WaitForSeconds(0.3f);
             chronoUI.text = "";
         }
+        chrono.ResetChrono();
+        chronoUI.text = "";
     }
 }

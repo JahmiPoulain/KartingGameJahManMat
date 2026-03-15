@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class CheckpointManager : MonoBehaviour
 {
-    private int nextIndex;
+    private int nextIndex = 1;
 
     public int NextIndex { get => nextIndex; private set => nextIndex = value; }
 

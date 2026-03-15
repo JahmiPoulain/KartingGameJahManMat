@@ -12,7 +12,7 @@ public class Checkpoint : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            checkpointManager.CompareCheckpoint(gameObject.GetComponent<Checkpoint>());
+            checkpointManager.CompareCheckpoint(this);
             Debug.Log("Tu as traversé le checkpoint n" + Index);
 
         }
