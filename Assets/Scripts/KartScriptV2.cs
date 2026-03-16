@@ -7,6 +7,8 @@ using static UnityEngine.GraphicsBuffer;
 public class KartScriptV2 : MonoBehaviour
 {
     public static KartScriptV2 instance;
+    public bool canDrive = true;
+    private Vector3 startPosition;
     [Header("Components")]
     public Rigidbody rb;
     [Header("Inputs")]
@@ -98,8 +100,12 @@ public class KartScriptV2 : MonoBehaviour
     float nextYDriftRot;
     public float driftCoyoteTime;
     float driftCoyoteTimer;
+
+    public  Vector3 StartPosition { get => startPosition; set => startPosition = value; }
+
     private void Awake()
     {
+        StartPosition = gameObject.transform.position;
         if (instance == null)
         {
             instance = this;
@@ -124,6 +130,7 @@ public class KartScriptV2 : MonoBehaviour
         {
             StartTurbo(10f, 1.5f);
         }
+
     }
     private void HandheldMovePressed(InputAction.CallbackContext ctx)
     {
@@ -169,13 +176,19 @@ public class KartScriptV2 : MonoBehaviour
 
     void PlayerInputs()
     {
+        if (!canDrive)
+        {
+            forwardDirection = 0;
+            turnDirection = 0;
+            return;
+        }
+
         forwardDirection = Input.GetAxisRaw("Vertical");
         turnDirection = Input.GetAxisRaw("Horizontal");
         tryToDrift = Input.GetButtonDown("Drift1");
         keepDrifting = Input.GetButton("Drift1");
+
         if (bounce) keepDrifting = false;
-        //tryToDrift = Input.GetMouseButtonDown(0);
-        //keepDrifting = Input.GetMouseButton(0);      
     }
     private void HandleBounceForce()
     {

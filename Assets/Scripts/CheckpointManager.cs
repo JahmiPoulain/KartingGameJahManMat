@@ -3,7 +3,8 @@ using UnityEngine;
 public class CheckpointManager : MonoBehaviour
 {
     [SerializeField] private LapManager lapManager;
-    [SerializeField] private KartScriptV2 kart;
+    [SerializeField] private KartScriptV2 kartScript;
+
     private int nextIndex = 1;
 
 
@@ -17,30 +18,16 @@ public class CheckpointManager : MonoBehaviour
         }
     }
 
-    private void Update()
-    {
-        if (kart.currentSpeed <=-1)
-        {
-            foreach (Checkpoint checkpoint in lapManager.Checkpoints)
-            {
-                checkpoint.gameObject.SetActive(false);
-            }
-        }
-        else
-        {
-            foreach (Checkpoint checkpoint in lapManager.Checkpoints)
-            {
-                checkpoint.gameObject.SetActive(true);
-            }
-        }
-    }
+
 
 
     public void CompareCheckpoint(Checkpoint checkpoint)
     {
-        if(checkpoint.Index == NextIndex)
+        if (checkpoint.Index == NextIndex)
         {
             NextIndex++;
+            Vector3 newPos = checkpoint.gameObject.transform.position;
+            kartScript.StartPosition = newPos;
         }
         else
         {

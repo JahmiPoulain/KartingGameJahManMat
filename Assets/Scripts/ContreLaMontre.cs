@@ -1,51 +1,95 @@
 using System;
 using UnityEngine;
 using TMPro;
+using System.Collections;
 
 public class ContreLaMontre : MonoBehaviour
 {
 
     [SerializeField] LapManager lapManager;
+    [SerializeField] private KartScriptV2 kart;
 
-    [SerializeField]
-    private TextMeshProUGUI scoreUI;
+    [SerializeField] private TextMeshProUGUI scoreUI;
+    [SerializeField] private TextMeshProUGUI startUI;
+
+    bool boostWindow = false;
+    bool playerPressed = false;
+
+
+
 
     private int maxLaps = 3;
     private bool raceFinished = false;
 
     public bool RaceFinished { get => raceFinished; private set => raceFinished = value; }
+    public int MaxLaps { get => maxLaps; private set => maxLaps = value; }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        
+        StartCoroutine(StartCountdown());
     }
 
     // Update is called once per frame
+
     void Update()
     {
+        if (boostWindow && Input.GetAxisRaw("Vertical") > 0)
+        {
+            playerPressed = true;
+        }
         CheckRaceCompletion();
-
     }
 
     private void CheckRaceCompletion()
     {
-        if (!raceFinished && lapManager.CurrentLap -1 >= maxLaps)
+        if (!raceFinished && lapManager.CurrentLap -1 >= MaxLaps)
         {
+            kart.canDrive = false;
             CompleteRace();
         }
     }
 
     private void CompleteRace()
     {
+
         raceFinished = true;
         float totalTime = 0;
-        for (int i = 0; i < maxLaps; i++)
+        for (int i = 0; i < MaxLaps; i++)
         {
             totalTime += lapManager.LapTimes[i];
         }
         int minutes = (int)(totalTime / 60);
         float seconds = totalTime % 60;
-        scoreUI.text = $"{minutes : 00}:{seconds:00.000}";
+        scoreUI.text = $"Temps total : \n {minutes : 00}:{seconds:00.000}";
+        
+    }
+
+    IEnumerator StartCountdown()
+    {
+        kart.canDrive = false;
+
+        startUI.text = "3";
+        yield return new WaitForSeconds(1);
+
+        startUI.text = "2";
+        boostWindow = true;
+        yield return new WaitForSeconds(1);
+
+        startUI.text = "1";
+        yield return new WaitForSeconds(1);
+
+        startUI.text = "GO!";
+
+        kart.canDrive = true;
+
+        if (boostWindow && playerPressed)
+        {
+            kart.StartTurbo(8f, 1.2f);
+        }
+
+        yield return new WaitForSeconds(1);
+
+        startUI.text = "";
     }
 }

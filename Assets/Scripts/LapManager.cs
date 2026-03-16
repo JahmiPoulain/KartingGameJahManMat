@@ -7,12 +7,16 @@ public class LapManager : MonoBehaviour
     [SerializeField] private ChronoScript chrono;
     [SerializeField] private Checkpoint[] checkpoints;
     [SerializeField] CheckpointManager checkpointManager;
+    [SerializeField] ContreLaMontre contreLaMontre;
 
     [SerializeField]
     private TextMeshProUGUI chronoUI;
+    [SerializeField]
+    private TextMeshProUGUI lapUI;
 
-    public int _currentLap = 1;
-    public float[] _lapTimes = new float[3];
+    private int _currentLap = 1;
+    private float[] _lapTimes = new float[3];
+    private float lapTime = 0f;
     private bool _isChecking = false;
 
     public int CurrentLap { get => _currentLap; private set => _currentLap = value; }
@@ -23,7 +27,8 @@ public class LapManager : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        
+        _lapTimes = new float[contreLaMontre.MaxLaps];
+        lapUI.text = $"Tour {_currentLap}/{contreLaMontre.MaxLaps}";
     }
 
     // Update is called once per frame
@@ -33,7 +38,7 @@ public class LapManager : MonoBehaviour
     }
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") && !IsChecking)
         {
             CompleteLap();
         }
@@ -41,36 +46,60 @@ public class LapManager : MonoBehaviour
 
     private void CompleteLap()
     {
-        if (checkpointManager.NextIndex >= Checkpoints.Length+1)
+        if (checkpointManager.NextIndex > Checkpoints.Length)
         {
+            FinishLapLogic();
+            StartCoroutine(LapCompletionAnimation());
 
-            StartCoroutine(LapCompletion());
-
-
+            foreach (Checkpoint checkpoint in Checkpoints)
+            {
+                checkpoint.gameObject.SetActive(true);
+            }
         }
-        else
+
+    }
+
+    private void FinishLapLogic()
+    {
+        lapTime = chrono.CurrentTime;
+        LapTimes[CurrentLap - 1] = lapTime;
+
+        chrono.ResetChrono();
+
+        chrono.ResetChrono();
+
+        checkpointManager.NextIndex = 1;
+
+        CurrentLap++;
+
+        lapUI.text = $"Tour {CurrentLap}/{contreLaMontre.MaxLaps}";
+
+        if (CurrentLap >= contreLaMontre.MaxLaps)
         {
-            return;
+            lapUI.text = $"Tour {contreLaMontre.MaxLaps}/{contreLaMontre.MaxLaps}";
+        }
+
+        if (CurrentLap > LapTimes.Length)
+        {
+            Debug.Log("Course terminée !");
         }
     }
 
-    private IEnumerator LapCompletion()
+    private IEnumerator LapCompletionAnimation()
     {
         IsChecking = true;
-        yield return new WaitForSeconds(0.1f);
-        LapTimes[CurrentLap - 1] = chrono.CurrentTime;
+
         for (int i = 0; i < 3; i++)
         {
-            yield return new WaitForSeconds(0.1f);
-            chronoUI.text = chrono.CurrentTime.ToString("F3");
+            chronoUI.text =lapTime.ToString("F3");
             yield return new WaitForSeconds(0.3f);
+
             chronoUI.text = "";
             yield return new WaitForSeconds(0.3f);
         }
-        yield return new WaitForSeconds(0.1f);
-        chrono.ResetChrono();
+
         chronoUI.text = "";
-        checkpointManager.NextIndex = 1;
-        CurrentLap++;
+
+        IsChecking = false;
     }
 }
