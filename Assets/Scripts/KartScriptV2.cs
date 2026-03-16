@@ -60,6 +60,7 @@ public class KartScriptV2 : MonoBehaviour
     public float visWheelsYRot;
     float turningWheelsXRot;
     float nonTurningWheelsXRot;
+    float[] wheelsYPosTarget;
     public float turningWheelsRatioScaling;
     public float nonTurningWheelsRatioScaling;
     [Header("Bounce Animation")]
@@ -98,6 +99,8 @@ public class KartScriptV2 : MonoBehaviour
     float nextYDriftRot;
     public float driftCoyoteTime;
     float driftCoyoteTimer;
+    [Header("Flight")]
+    bool isFlying;
     private void Awake()
     {
         if (instance == null)
@@ -145,7 +148,14 @@ public class KartScriptV2 : MonoBehaviour
         HandleBounceForce();
         HandleGravity();
 
-        rb.linearVelocity = (transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
+        if (!isFlying)
+        {
+            rb.linearVelocity = (transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
+        }
+        else
+        {
+
+        }
         if (grounded)
         {
             transform.Rotate(0, currentTurnSpeed + currentDriftForce, 0);
@@ -626,15 +636,21 @@ public class KartScriptV2 : MonoBehaviour
         nonTurningWheelsXRot += (currentSpeed + currentTurboForce) * nonTurningWheelsRatioScaling * Time.fixedDeltaTime;
         for (int i = 0; i < turningWheels.Length; i++)
         {            
-            turningWheels[i].transform.localRotation = Quaternion.Euler(turningWheelsXRot, visWheelsYRot, 90);
+            turningWheels[i].transform.localRotation = Quaternion.Euler(turningWheelsXRot, visWheelsYRot, 90);      
             //turningWheels[i].transform.Rotate(0, 10, 0);
+            /*RaycastHit hit;
+            if (Physics.Raycast(turningWheels[i].transform.position, new Vector3(0,-1f,0), out hit, 0.4f))
+            {
+                //Vector3 startPos = turningWheels[i].transform.localPosition;
+                turningWheels[i].transform.localPosition = new Vector3(0f, (transform.position - hit.point).magnitude - turningWheels[i].transform.localScale.x, 0f);//new Vector3(-0.54f, -((transform.position - hit.point).magnitude + turningWheels[i].transform.localScale.x), - 0.126f);
+                Debug.Log(hit.point);
+            }*/
         }
         for (int i = 0; i < nonTurningWheels.Length; i++)
         {
             nonTurningWheels[i].transform.localRotation = Quaternion.Euler(nonTurningWheelsXRot, 0, 90);
             //turningWheels[i].transform.Rotate(0, 10, 0);
         }
-        
     }
 
     void HandleCameraTransform()
@@ -646,7 +662,7 @@ public class KartScriptV2 : MonoBehaviour
             driftForce = -driftForce;
         }
         camXpos = Mathf.Clamp((currentSpeed * -currentTurnSpeed / 120f * forwardDirection) + (turnDirection * driftForce), -1f, 1f);//(currentSpeed * -currentTurnSpeed / 120f * forwardDirection);// + turnDirection * currentDriftForce;
-        Debug.Log(camXpos + " driftForce = " + currentDriftForce + " turn dir = " + turnDirection);
+        //Debug.Log(camXpos + " driftForce = " + currentDriftForce + " turn dir = " + turnDirection);
         //+ -currentTurnSpeed;
         /*if (playerCamera.transform.localRotation.y > camXpos)
         {
