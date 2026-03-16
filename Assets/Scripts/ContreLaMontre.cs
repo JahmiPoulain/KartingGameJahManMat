@@ -7,7 +7,7 @@ public class ContreLaMontre : MonoBehaviour
 {
 
     [SerializeField] LapManager lapManager;
-    [SerializeField] private KartScriptV2 kart;
+    [SerializeField] private KartScriptV2 kartScript;
 
     [SerializeField] private TextMeshProUGUI scoreUI;
     [SerializeField] private TextMeshProUGUI startUI;
@@ -45,7 +45,7 @@ public class ContreLaMontre : MonoBehaviour
     {
         if (!raceFinished && lapManager.CurrentLap -1 >= MaxLaps)
         {
-            kart.canDrive = false;
+            kartScript.canDrive = false;
             CompleteRace();
         }
     }
@@ -67,7 +67,7 @@ public class ContreLaMontre : MonoBehaviour
 
     IEnumerator StartCountdown()
     {
-        kart.canDrive = false;
+        kartScript.canDrive = false;
 
         startUI.text = "3";
         yield return new WaitForSeconds(1);
@@ -81,11 +81,11 @@ public class ContreLaMontre : MonoBehaviour
 
         startUI.text = "GO!";
 
-        kart.canDrive = true;
+        kartScript.canDrive = true;
 
         if (boostWindow && playerPressed)
         {
-            kart.StartTurbo(8f, 1.2f);
+            kartScript.StartTurbo(8f, 1.2f);
         }
 
         yield return new WaitForSeconds(1);

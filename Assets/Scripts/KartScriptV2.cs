@@ -100,6 +100,12 @@ public class KartScriptV2 : MonoBehaviour
     float nextYDriftRot;
     public float driftCoyoteTime;
     float driftCoyoteTimer;
+    [Header("Ghost")]
+    [SerializeField] ContreLaMontre contreLaMontre;
+    [SerializeField] private GameObject trackPath;
+    public bool ghostMode = false;
+    public Transform[] waypoints;
+    int currentWaypoint = 0;
 
     public  Vector3 StartPosition { get => startPosition; set => startPosition = value; }
 
@@ -115,7 +121,8 @@ public class KartScriptV2 : MonoBehaviour
             Destroy(gameObject);
         }
         controls = new InputSystem_Actions(); // initialiser input
-        controls.Player.Turn.performed += ctx => HandheldMovePressed(ctx);        
+        controls.Player.Turn.performed += ctx => HandheldMovePressed(ctx);
+        waypoints = trackPath.GetComponentsInChildren<Transform>();
     }
     void Start()
     {
@@ -129,6 +136,10 @@ public class KartScriptV2 : MonoBehaviour
         if (Input.GetMouseButtonDown(1))
         {
             StartTurbo(10f, 1.5f);
+        }
+        if (contreLaMontre.RaceFinished)
+        {
+            ghostMode = true;
         }
 
     }
@@ -176,6 +187,12 @@ public class KartScriptV2 : MonoBehaviour
 
     void PlayerInputs()
     {
+        if (ghostMode)
+        {
+            GhostDrive();
+            return;
+        }
+
         if (!canDrive)
         {
             forwardDirection = 0;
@@ -792,5 +809,23 @@ public class KartScriptV2 : MonoBehaviour
     {
         Gizmos.color = Color.red;
         Gizmos.DrawRay(groundRayOrigin.position, Vector3.down * 0.5f);
+    }
+
+    void GhostDrive()
+    {
+        Transform target = waypoints[currentWaypoint];
+
+        Vector3 dir = target.position - transform.position;
+
+        float angle = Vector3.SignedAngle(transform.forward, dir, Vector3.up);
+
+        turnDirection = Mathf.Clamp(angle / 45f, -1f, 1f);
+
+        forwardDirection = 1f;
+
+        if (Vector3.Distance(transform.position, target.position) < 3f)
+        {
+            currentWaypoint = (currentWaypoint + 1) % waypoints.Length;
+        }
     }
 }
