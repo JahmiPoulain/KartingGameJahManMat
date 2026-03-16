@@ -13,7 +13,7 @@ public class KartScript : MonoBehaviour
     public float maxAccelSpeed;
     public float currentAccelSpeed;
     [Header("Deceleration")]
-    bool decelerate;
+    public bool decelerate;
     public float maxDecelSpeed;
     [Header("Turning")]
     public float maxTurnSpeed;

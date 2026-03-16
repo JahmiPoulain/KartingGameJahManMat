@@ -5,17 +5,20 @@ using System.Collections;
 public class LapManager : MonoBehaviour
 {
     [SerializeField] private ChronoScript chrono;
-    [SerializeField] Checkpoint[] checkpoints;
+    [SerializeField] private Checkpoint[] checkpoints;
     [SerializeField] CheckpointManager checkpointManager;
 
     [SerializeField]
     private TextMeshProUGUI chronoUI;
 
-    private int currentLap = 1;
-    private float[] lapTimes = new float[3];
+    public int _currentLap = 1;
+    public float[] _lapTimes = new float[3];
+    private bool _isChecking = false;
 
-    public int CurrentLap { get => currentLap; private set => currentLap = value; }
-    public float[] LapTimes { get => lapTimes; private set => lapTimes = value; }
+    public int CurrentLap { get => _currentLap; private set => _currentLap = value; }
+    public float[] LapTimes { get => _lapTimes; private set => _lapTimes = value; }
+    public bool IsChecking { get => _isChecking; set => _isChecking = value; }
+    public Checkpoint[] Checkpoints { get => checkpoints; set => checkpoints = value; }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -38,11 +41,11 @@ public class LapManager : MonoBehaviour
 
     private void CompleteLap()
     {
-        if (checkpointManager.NextIndex >= checkpoints.Length)
+        if (checkpointManager.NextIndex >= Checkpoints.Length+1)
         {
-            LapTimes[CurrentLap-1] = chrono.CurrentTime;
-            CurrentLap++;
-            StartCoroutine(ShowLapTime());
+
+            StartCoroutine(LapCompletion());
+
 
         }
         else
@@ -51,15 +54,23 @@ public class LapManager : MonoBehaviour
         }
     }
 
-    private IEnumerator ShowLapTime()
+    private IEnumerator LapCompletion()
     {
-        for (int i = 0; i < 5; i++)
+        IsChecking = true;
+        yield return new WaitForSeconds(0.1f);
+        LapTimes[CurrentLap - 1] = chrono.CurrentTime;
+        for (int i = 0; i < 3; i++)
         {
-            chronoUI.text = chrono.CurrentTime.ToString();
+            yield return new WaitForSeconds(0.1f);
+            chronoUI.text = chrono.CurrentTime.ToString("F3");
             yield return new WaitForSeconds(0.3f);
             chronoUI.text = "";
+            yield return new WaitForSeconds(0.3f);
         }
+        yield return new WaitForSeconds(0.1f);
         chrono.ResetChrono();
         chronoUI.text = "";
+        checkpointManager.NextIndex = 1;
+        CurrentLap++;
     }
 }

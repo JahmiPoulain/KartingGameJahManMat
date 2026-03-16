@@ -4,11 +4,12 @@ using TMPro;
 public class ChronoScript : MonoBehaviour
 {
     [SerializeField] private ContreLaMontre contreLaMontre;
+    [SerializeField] private LapManager lapManager;
 
 
-    private float delta = 0f;
+    public float delta = 0f;
 
-    private float _currentTime;
+    public float _currentTime;
 
     public float CurrentTime
     {
@@ -31,7 +32,11 @@ public class ChronoScript : MonoBehaviour
 
         int minutes = (int)(delta / 60);
         float seconds = delta % 60;
-        
+        if (lapManager.IsChecking)
+        {
+            CurrentTime = delta;
+            lapManager.IsChecking = false;
+        }
 
     }
 

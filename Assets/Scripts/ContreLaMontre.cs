@@ -30,7 +30,7 @@ public class ContreLaMontre : MonoBehaviour
 
     private void CheckRaceCompletion()
     {
-        if (!raceFinished && lapManager.CurrentLap >= maxLaps)
+        if (!raceFinished && lapManager.CurrentLap -1 >= maxLaps)
         {
             CompleteRace();
         }

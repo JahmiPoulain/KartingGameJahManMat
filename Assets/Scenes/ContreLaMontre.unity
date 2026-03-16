@@ -2504,6 +2504,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f3f7e21dc53b3f40a714f3aa53fc312, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  lapManager: {fileID: 1006235664}
+  kart: {fileID: 498415611}
 --- !u!1 &168698315
 GameObject:
   m_ObjectHideFlags: 0
@@ -4394,6 +4396,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   contreLaMontre: {fileID: 400256309}
+  lapManager: {fileID: 1006235664}
+  delta: 0
+  _currentTime: 0
 --- !u!4 &400256308
 Transform:
   m_ObjectHideFlags: 0
@@ -6270,6 +6275,7 @@ MonoBehaviour:
   accelerate: 0
   maxAccelSpeed: 10
   currentAccelSpeed: 0
+  decelerate: 0
   maxDecelSpeed: 5
   maxTurnSpeed: 2
   currentTurnSpeed: 0
@@ -23805,6 +23811,11 @@ MonoBehaviour:
   - {fileID: 1979035905}
   checkpointManager: {fileID: 168289238}
   chronoUI: {fileID: 1818052787}
+  _currentLap: 1
+  _lapTimes:
+  - 0
+  - 0
+  - 0
 --- !u!65 &1006235665
 BoxCollider:
   m_ObjectHideFlags: 0
