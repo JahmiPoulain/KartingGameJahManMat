@@ -100,7 +100,8 @@ public class KartScriptV2 : MonoBehaviour
     public float driftCoyoteTime;
     float driftCoyoteTimer;
     [Header("Flight")]
-    bool isFlying;
+    public bool isFlying;
+    public float flightSpeed;
     private void Awake()
     {
         if (instance == null)
@@ -154,7 +155,28 @@ public class KartScriptV2 : MonoBehaviour
         }
         else
         {
+            currentSpeed = 25f;
+            if (transform.eulerAngles.x > 0f && transform.eulerAngles.x < 180f)
+            {
+                flightSpeed += transform.eulerAngles.x * 0.25f * Time.fixedDeltaTime;
+                if (flightSpeed > 30f)
+                {
+                    flightSpeed = 30f;
+                }
+            }
+            else if (transform.eulerAngles.x > 180f && transform.eulerAngles.x < 360f)
+            {
+                flightSpeed += (transform.eulerAngles.x - 360f) * 0.25f * Time.fixedDeltaTime;
+                if (flightSpeed < 0f)
+                {
+                    flightSpeed = 0f;
+                }
+            }
 
+            
+                Debug.Log(transform.eulerAngles.x);
+            rb.linearVelocity = (transform.forward * (flightSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * 1f / (flightSpeed + 0.1f);           
+            transform.Rotate(1f * forwardDirection, 0, 0);            
         }
         if (grounded)
         {

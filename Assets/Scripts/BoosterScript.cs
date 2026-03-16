@@ -9,6 +9,7 @@ public class BoosterScript : MonoBehaviour
         if (collision.gameObject.layer == 8)
         {
             KartScriptV2.instance.StartTurbo(boostForce, boostTime);
+            KartScriptV2.instance.isFlying = true;
         }
     }
     
