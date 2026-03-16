@@ -17,6 +17,10 @@ public class MainMenuScript : MonoBehaviour
     public GameObject CreditsPanel;
     public GameObject GameModesPanel;
 
+    public GameObject ControlsPanel;
+    public GameObject AudioPanel;
+    public GameObject VisualsPanel;
+
     [Header("FadeInOut effect")]
     public float fadeDuration = 1f;
     public CanvasGroup FadeCanva;
@@ -41,6 +45,11 @@ public class MainMenuScript : MonoBehaviour
     {
         if (currentFade != null) StopCoroutine(currentFade);
         currentFade = StartCoroutine(Fade(1f, 0f));
+    }
+
+    public void TogglePanel(GameObject panel)
+    {
+        panel.SetActive(!panel.activeSelf);
     }
 
     IEnumerator Fade(float start, float end)
@@ -77,10 +86,6 @@ public class MainMenuScript : MonoBehaviour
         StartCoroutine(StartGameRoutine());
     }
 
-    public void TogglePanel(GameObject Panel)
-    {
-        Panel.SetActive(!Panel.activeSelf);
-    }
 
     public void OpenSettings()
     {
