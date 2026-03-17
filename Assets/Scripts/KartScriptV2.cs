@@ -102,6 +102,7 @@ public class KartScriptV2 : MonoBehaviour
     [Header("Flight")]
     public bool isFlying;
     public float flightSpeed;
+    float inputGlideUpDown;
     private void Awake()
     {
         if (instance == null)
@@ -176,11 +177,12 @@ public class KartScriptV2 : MonoBehaviour
             
                 Debug.Log(transform.eulerAngles.x);
             rb.linearVelocity = (transform.forward * (flightSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * 1f / (flightSpeed + 0.1f);           
-            transform.Rotate(1f * forwardDirection, 0, 0);            
+            transform.Rotate(1f * inputGlideUpDown, 0, 0);            
         }
         if (grounded)
         {
             transform.Rotate(0, currentTurnSpeed + currentDriftForce, 0);
+            //isFlying = false;
         }
         else
         {
@@ -212,6 +214,8 @@ public class KartScriptV2 : MonoBehaviour
         turnDirection = InputSystemHandler.instance.inputTurnDir;
         tryToDrift = InputSystemHandler.instance.inputTryDrift;
         keepDrifting = InputSystemHandler.instance.inputDrift;
+
+        inputGlideUpDown = InputSystemHandler.instance.inputGlideUpDownDir;
     }
     private void HandleBounceForce()
     {

@@ -10,6 +10,7 @@ public class BoosterScript : MonoBehaviour
         {
             KartScriptV2.instance.StartTurbo(boostForce, boostTime);
             KartScriptV2.instance.isFlying = true;
+            KartScriptV2.instance.flightSpeed = 30f;
         }
     }
     

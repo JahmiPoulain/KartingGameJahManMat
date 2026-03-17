@@ -102,6 +102,15 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": true
                 },
                 {
+                    ""name"": ""GlideTurn"",
+                    ""type"": ""Value"",
+                    ""id"": ""1df08c70-5b61-410b-8bea-bc53ff6ad490"",
+                    ""expectedControlType"": ""Axis"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
                     ""name"": ""GoForward"",
                     ""type"": ""Button"",
                     ""id"": ""7ebfba2d-569c-4aca-aca2-0d3298c7a915"",
@@ -111,9 +120,27 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": true
                 },
                 {
+                    ""name"": ""GlideDown"",
+                    ""type"": ""Button"",
+                    ""id"": ""01e35bac-27e0-4c4f-a57b-d16ff015cf32"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
                     ""name"": ""GoBackward"",
                     ""type"": ""Button"",
                     ""id"": ""cafab1a8-7e1b-430b-8581-66f6c7f76fc0"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""GlideUp"",
+                    ""type"": ""Button"",
+                    ""id"": ""61945542-73e8-429d-b86b-5e8f8e46b5a0"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
@@ -227,6 +254,61 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": ""XR"",
                     ""action"": ""Turn"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""a710b08d-5f75-469e-b85c-a8901791aef5"",
+                    ""path"": ""<Gamepad>/leftStick/x"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""GlideTurn"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""WASD"",
+                    ""id"": ""b1c3253c-68d4-4c16-b6bc-d7313fc94da0"",
+                    ""path"": ""1DAxis"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GlideTurn"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""Negative"",
+                    ""id"": ""606f1936-1ee2-4c01-b52c-a0b9a1cb5fa9"",
+                    ""path"": ""<Keyboard>/a"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""GlideTurn"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""Positive"",
+                    ""id"": ""8d872f5b-40e7-4899-862f-9fba5e549a42"",
+                    ""path"": ""<Keyboard>/d"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""GlideTurn"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c7177a58-d67c-400e-b8e6-92dbfb3d95ca"",
+                    ""path"": ""<XRController>/{Primary2DAxis}"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""XR"",
+                    ""action"": ""GlideTurn"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -375,6 +457,28 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""de781387-2046-4b46-bb61-adcaf2e55ff5"",
+                    ""path"": ""<Keyboard>/w"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""GlideDown"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""844a2d3a-9a18-47a6-90a2-234b22d6f1de"",
+                    ""path"": ""<Gamepad>/leftStick/up"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GlideDown"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""a5d0fc1c-cbd0-4602-ad9d-45a71b18e248"",
                     ""path"": ""<Keyboard>/s"",
                     ""interactions"": """",
@@ -403,6 +507,28 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": "";Gamepad"",
                     ""action"": ""GoBackward"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""070833eb-4b95-42f1-85d7-c6e1721d2211"",
+                    ""path"": ""<Keyboard>/s"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""GlideUp"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e992ddc2-16c9-49ba-a8b8-eb8bd86bc31e"",
+                    ""path"": ""<Gamepad>/leftStick/down"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""GlideUp"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -1046,8 +1172,11 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         // Player
         m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
         m_Player_Turn = m_Player.FindAction("Turn", throwIfNotFound: true);
+        m_Player_GlideTurn = m_Player.FindAction("GlideTurn", throwIfNotFound: true);
         m_Player_GoForward = m_Player.FindAction("GoForward", throwIfNotFound: true);
+        m_Player_GlideDown = m_Player.FindAction("GlideDown", throwIfNotFound: true);
         m_Player_GoBackward = m_Player.FindAction("GoBackward", throwIfNotFound: true);
+        m_Player_GlideUp = m_Player.FindAction("GlideUp", throwIfNotFound: true);
         m_Player_Drift = m_Player.FindAction("Drift", throwIfNotFound: true);
         m_Player_SwitchCamera = m_Player.FindAction("SwitchCamera", throwIfNotFound: true);
         m_Player_Look = m_Player.FindAction("Look", throwIfNotFound: true);
@@ -1148,8 +1277,11 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private readonly InputActionMap m_Player;
     private List<IPlayerActions> m_PlayerActionsCallbackInterfaces = new List<IPlayerActions>();
     private readonly InputAction m_Player_Turn;
+    private readonly InputAction m_Player_GlideTurn;
     private readonly InputAction m_Player_GoForward;
+    private readonly InputAction m_Player_GlideDown;
     private readonly InputAction m_Player_GoBackward;
+    private readonly InputAction m_Player_GlideUp;
     private readonly InputAction m_Player_Drift;
     private readonly InputAction m_Player_SwitchCamera;
     private readonly InputAction m_Player_Look;
@@ -1172,13 +1304,25 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @Turn => m_Wrapper.m_Player_Turn;
         /// <summary>
+        /// Provides access to the underlying input action "Player/GlideTurn".
+        /// </summary>
+        public InputAction @GlideTurn => m_Wrapper.m_Player_GlideTurn;
+        /// <summary>
         /// Provides access to the underlying input action "Player/GoForward".
         /// </summary>
         public InputAction @GoForward => m_Wrapper.m_Player_GoForward;
         /// <summary>
+        /// Provides access to the underlying input action "Player/GlideDown".
+        /// </summary>
+        public InputAction @GlideDown => m_Wrapper.m_Player_GlideDown;
+        /// <summary>
         /// Provides access to the underlying input action "Player/GoBackward".
         /// </summary>
         public InputAction @GoBackward => m_Wrapper.m_Player_GoBackward;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/GlideUp".
+        /// </summary>
+        public InputAction @GlideUp => m_Wrapper.m_Player_GlideUp;
         /// <summary>
         /// Provides access to the underlying input action "Player/Drift".
         /// </summary>
@@ -1232,12 +1376,21 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @Turn.started += instance.OnTurn;
             @Turn.performed += instance.OnTurn;
             @Turn.canceled += instance.OnTurn;
+            @GlideTurn.started += instance.OnGlideTurn;
+            @GlideTurn.performed += instance.OnGlideTurn;
+            @GlideTurn.canceled += instance.OnGlideTurn;
             @GoForward.started += instance.OnGoForward;
             @GoForward.performed += instance.OnGoForward;
             @GoForward.canceled += instance.OnGoForward;
+            @GlideDown.started += instance.OnGlideDown;
+            @GlideDown.performed += instance.OnGlideDown;
+            @GlideDown.canceled += instance.OnGlideDown;
             @GoBackward.started += instance.OnGoBackward;
             @GoBackward.performed += instance.OnGoBackward;
             @GoBackward.canceled += instance.OnGoBackward;
+            @GlideUp.started += instance.OnGlideUp;
+            @GlideUp.performed += instance.OnGlideUp;
+            @GlideUp.canceled += instance.OnGlideUp;
             @Drift.started += instance.OnDrift;
             @Drift.performed += instance.OnDrift;
             @Drift.canceled += instance.OnDrift;
@@ -1270,12 +1423,21 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @Turn.started -= instance.OnTurn;
             @Turn.performed -= instance.OnTurn;
             @Turn.canceled -= instance.OnTurn;
+            @GlideTurn.started -= instance.OnGlideTurn;
+            @GlideTurn.performed -= instance.OnGlideTurn;
+            @GlideTurn.canceled -= instance.OnGlideTurn;
             @GoForward.started -= instance.OnGoForward;
             @GoForward.performed -= instance.OnGoForward;
             @GoForward.canceled -= instance.OnGoForward;
+            @GlideDown.started -= instance.OnGlideDown;
+            @GlideDown.performed -= instance.OnGlideDown;
+            @GlideDown.canceled -= instance.OnGlideDown;
             @GoBackward.started -= instance.OnGoBackward;
             @GoBackward.performed -= instance.OnGoBackward;
             @GoBackward.canceled -= instance.OnGoBackward;
+            @GlideUp.started -= instance.OnGlideUp;
+            @GlideUp.performed -= instance.OnGlideUp;
+            @GlideUp.canceled -= instance.OnGlideUp;
             @Drift.started -= instance.OnDrift;
             @Drift.performed -= instance.OnDrift;
             @Drift.canceled -= instance.OnDrift;
@@ -1602,6 +1764,13 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnTurn(InputAction.CallbackContext context);
         /// <summary>
+        /// Method invoked when associated input action "GlideTurn" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnGlideTurn(InputAction.CallbackContext context);
+        /// <summary>
         /// Method invoked when associated input action "GoForward" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
@@ -1609,12 +1778,26 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnGoForward(InputAction.CallbackContext context);
         /// <summary>
+        /// Method invoked when associated input action "GlideDown" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnGlideDown(InputAction.CallbackContext context);
+        /// <summary>
         /// Method invoked when associated input action "GoBackward" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnGoBackward(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "GlideUp" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnGlideUp(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "Drift" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>

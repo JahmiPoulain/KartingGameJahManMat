@@ -19,6 +19,17 @@ public class InputSystemHandler : MonoBehaviour
     public bool inputDrift;
     public bool inputTryDrift;
 
+    InputAction glideTurnAction;
+    public float inputGlideTurnDir;
+
+    InputAction glideUpAction;
+    public int inputGlideUp;
+
+    InputAction glideDownAction;
+    public int inputGlideDown;
+
+
+    public int inputGlideUpDownDir;
     public int inputForwardDir;
     public bool inputCameraMode;
     void Awake()
@@ -35,7 +46,7 @@ public class InputSystemHandler : MonoBehaviour
     void Update()
     {
         inputForwardDir = inputForward + inputBackward;
-        
+        inputGlideUpDownDir = inputGlideUp + inputGlideDown;
     }
 
     private void LateUpdate()
@@ -68,6 +79,22 @@ public class InputSystemHandler : MonoBehaviour
         driftAction.performed += inputInfo => inputDrift = true;
         driftAction.canceled += inputInfo => inputDrift = false;
         driftAction.started += inputInfo => inputTryDrift = true;
+
+        // L'action "GlideTurn"
+        glideTurnAction = reference.FindAction("GlideTurn");
+        glideTurnAction.performed += inputInfo => inputGlideTurnDir = inputInfo.ReadValue<float>();
+        glideTurnAction.canceled += inputInfo => inputGlideTurnDir = 0f;
+
+        // L'action "GlideUp"
+        glideUpAction = reference.FindAction("GlideUp");
+        glideUpAction.performed += inputInfo => inputGlideUp = -1;
+        glideUpAction.canceled += inputInfo => inputGlideUp = 0;
+
+        // L'action "GlideUp"
+        glideDownAction = reference.FindAction("GlideDown");
+        glideDownAction.performed += inputInfo => inputGlideDown = 1;
+        glideDownAction.canceled += inputInfo => inputGlideDown = 0;
+
         // manière plus directe de faire, idéal si on veut juste faire un bool qui switch
         // Dans l'action map "Player"        Quand l'action "SwitchCamera" est faite        Le bool inputCameraMode = !inputCameraMode
         playerInputs.FindActionMap("Player").FindAction("SwitchCamera").performed += autoInputInfo => inputCameraMode = !inputCameraMode; // boutton toggle
