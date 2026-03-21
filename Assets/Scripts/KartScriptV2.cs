@@ -17,6 +17,7 @@ public class KartScriptV2 : MonoBehaviour
     public float maxSpeed;
     public float currentSpeed;
     public float maxBackSpeed;
+    float airSpeed;
     [Header("Acceleration")]
     public bool accelerate;
     public float accelSpeed;
@@ -150,11 +151,11 @@ public class KartScriptV2 : MonoBehaviour
         HandleBounceForce();
         HandleGravity();
 
-        if (!isFlying)
-        {
-            rb.linearVelocity = (transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
-        }
-        else
+        //if (!isFlying)
+        //{
+            //rb.linearVelocity = (groundNormalT.transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
+        //}
+        /*else
         {
             currentSpeed = 25f;
             if (transform.eulerAngles.x > 0f && transform.eulerAngles.x < 180f)
@@ -173,20 +174,23 @@ public class KartScriptV2 : MonoBehaviour
                     flightSpeed = 0f;
                 }
             }
-
+        
             
                 Debug.Log(transform.eulerAngles.x);
             rb.linearVelocity = (transform.forward * (flightSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * 1f / (flightSpeed + 0.1f);           
             transform.Rotate(1f * inputGlideUpDown, 0, 0);            
-        }
+        }*/
         if (grounded)
         {
+            rb.linearVelocity = (groundNormalT.transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
             transform.Rotate(0, currentTurnSpeed + currentDriftForce, 0);
             //isFlying = false;
         }
         else
         {
+            rb.linearVelocity = (groundNormalT.transform.forward * (airSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
             transform.Rotate(0, (currentTurnSpeed + currentDriftForce) / 3f, 0);
+            
         }
     }
     private void LateUpdate()
@@ -765,12 +769,13 @@ public class KartScriptV2 : MonoBehaviour
         if (collision.gameObject.layer == 7)
         {
             grounded = false;
+            airSpeed = currentSpeed;
             //if (groundNormalT.localEulerAngles.x > 0)
             //{
             //    currentFallSpeed = 8f;
             //    return;
             //}
-            currentFallSpeed += (-groundNormalT.localEulerAngles.x / 70f) * currentSpeed / maxSpeed; // on donne une fausse inertie via la gravité selon l'angle x de la dernière normale            
+            //currentFallSpeed += (-groundNormalT.localEulerAngles.x / 70f) * currentSpeed / maxSpeed; // on donne une fausse inertie via la gravité selon l'angle x de la dernière normale            
             // si on recule en sortie de sol on tombe bien plus vite!!!            
         }
     }
