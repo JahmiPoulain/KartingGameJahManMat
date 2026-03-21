@@ -12,6 +12,7 @@ public class KartScriptV2 : MonoBehaviour
     [Header("Inputs")]
     float forwardDirection;
     float turnDirection; // la direction de la rotation du vollant
+    float inputGlideTurn;
     InputSystem_Actions controls;
     [Header("Speed")]
     public float maxSpeed;
@@ -103,7 +104,9 @@ public class KartScriptV2 : MonoBehaviour
     [Header("Flight")]
     public bool isFlying;
     public float flightSpeed;
+    public Transform flightDir;
     float inputGlideUpDown;
+    public GameObject gliderGO;
     private void Awake()
     {
         if (instance == null)
@@ -153,7 +156,7 @@ public class KartScriptV2 : MonoBehaviour
 
         //if (!isFlying)
         //{
-            //rb.linearVelocity = (groundNormalT.transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
+        //rb.linearVelocity = (groundNormalT.transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
         //}
         /*else
         {
@@ -182,15 +185,58 @@ public class KartScriptV2 : MonoBehaviour
         }*/
         if (grounded)
         {
-            rb.linearVelocity = (groundNormalT.transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
+            gliderGO.SetActive(false);
             transform.Rotate(0, currentTurnSpeed + currentDriftForce, 0);
+            rb.linearVelocity = (groundNormalT.transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
+
             //isFlying = false;
+        }
+        else if (!isFlying)
+        {
+            transform.Rotate(0, (currentTurnSpeed + currentDriftForce) / 3f, 0);
+            rb.linearVelocity = (groundNormalT.transform.forward * (airSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
+
+            if (currentTurboForce <= 0) airSpeed -= 5f * Time.fixedDeltaTime;
+            if (airSpeed < 0) airSpeed = 0;
         }
         else
         {
-            rb.linearVelocity = (groundNormalT.transform.forward * (airSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
-            transform.Rotate(0, (currentTurnSpeed + currentDriftForce) / 3f, 0);
-            
+            gliderGO.SetActive(true);
+            if (flightDir.transform.eulerAngles.x > 0f && flightDir.transform.eulerAngles.x < 180f)
+            {
+                flightSpeed += (flightDir.transform.eulerAngles.x) * 0.2f * Time.fixedDeltaTime;
+                //Debug.Log("BAS" + flightDir.transform.eulerAngles.x);
+                if (flightSpeed > 30f)
+                {
+                    flightSpeed = 30f;
+                }
+            }
+            else if (flightDir.transform.eulerAngles.x > 180f && flightDir.transform.eulerAngles.x < 360f)
+            {
+                flightSpeed += (flightDir.transform.eulerAngles.x - 360f) * 0.2f * Time.fixedDeltaTime;
+                //Debug.Log("HAUT" + (flightDir.transform.eulerAngles.x - 360f));
+                if (flightSpeed < 0.1f)
+                {
+                    flightSpeed = 0.1f;
+                }
+            }
+            //Debug.Log(flightDir.transform.eulerAngles.x);
+            if (inputGlideUpDown == 0)
+            {
+                if (flightDir.transform.eulerAngles.x > 180f && flightDir.transform.eulerAngles.x < 360f)
+                {
+                    flightDir.transform.Rotate(0.6f, 0, 0);
+                }
+            }
+            else
+            {
+                flightDir.transform.Rotate(inputGlideUpDown, 0, 0);
+            }
+            transform.Rotate(0, (currentTurnSpeed + currentDriftForce) / 1.5f, 0);
+            rb.linearVelocity = (flightDir.forward * (flightSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed / (1f + flightSpeed / 2.5f));
+            //Debug.Log(flightSpeed);
+            //if (currentTurboForce <= 0) airSpeed -= 5f * Time.fixedDeltaTime;
+            //if (airSpeed < 0) airSpeed = 0;
         }
     }
     private void LateUpdate()
@@ -220,6 +266,8 @@ public class KartScriptV2 : MonoBehaviour
         keepDrifting = InputSystemHandler.instance.inputDrift;
 
         inputGlideUpDown = InputSystemHandler.instance.inputGlideUpDownDir;
+        inputGlideTurn = InputSystemHandler.instance.inputGlideTurnDir;
+        //Debug.Log(InputSystemHandler.instance.inputGlideTurnDir);
     }
     private void HandleBounceForce()
     {
@@ -240,7 +288,7 @@ public class KartScriptV2 : MonoBehaviour
     {
         // Si on est pas au sol on accelère la vitesse de chute
         if (grounded) { currentFallSpeed = 0; }
-        else { currentFallSpeed += gravity * Time.fixedDeltaTime; }
+        else if (currentFallSpeed < 32f) { currentFallSpeed += gravity * Time.fixedDeltaTime; }
     }
     bool IsGrounded()
     {
@@ -579,6 +627,16 @@ public class KartScriptV2 : MonoBehaviour
     void HandleVisualKartBody()
     {       
         
+        if (isFlying && !grounded)
+        {
+            visualKartBody.transform.forward = flightDir.forward;//Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 0.7f);
+            //Quaternion rotTarget1 = Quaternion.Euler(0, 0,inputGlideTurn * 50f);
+            //visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget1, 0.7f);
+            //Debug.Log(rotTarget1);
+            visualKartBody.transform.Rotate(0,0, -inputGlideTurn * 30f);
+            Debug.Log(inputGlideTurn);
+            return;
+        }
         if (currentSpeed > 0)
         {            
             if (forwardDirection > 0)
@@ -632,7 +690,8 @@ public class KartScriptV2 : MonoBehaviour
             }
         }
         visKartXRot = (-currentSpeed / 2.5f) * visKartXRotCatchUpBis;
-        visKartZRot = currentTurnSpeed * (currentSpeed / 4.5f);
+        visKartZRot = currentTurnSpeed * (currentSpeed / 4.5f) + (driftCatchUp * 7f * driftDir);
+        
         float nextTotalSpeed = visKartXRot + -currentTurboForce * 0.5f;
         nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -(maxSpeed), maxSpeed + 2f);
         groundNormalT.transform.rotation = Quaternion.LookRotation( Vector3.Cross(transform.right, groundNormal), groundNormal); // oriente le y vers le haut de la normale et le x vers l'avant du kart ( 2 semaines de galère )
@@ -641,7 +700,7 @@ public class KartScriptV2 : MonoBehaviour
         //preOrientation.rotation = Quaternion.Euler(preOrientation.rotation.x, 0, preOrientation.rotation.z);
         //preOrientation.forward = transform.forward;
         //Debug.Log(nextTotalSpeed + " " + visualKartBody.transform.localEulerAngles.x);
-        Quaternion rotTarget = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot + (driftCatchUp * 7f * driftDir));
+        Quaternion rotTarget = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot );
         visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 0.7f);
       
 
@@ -738,8 +797,10 @@ public class KartScriptV2 : MonoBehaviour
     private void OnCollisionEnter(Collision collision)
     {
         //Debug.Log(collision.gameObject.layer);
+        isFlying = false;
         if (collision.gameObject.layer == 6)
         { 
+            
             bounce = true;
             Vector3 rawDir = transform.position - collision.contacts[0].point;
             bounceDirection = new Vector3(rawDir.x, 0, rawDir.z).normalized;
@@ -770,6 +831,8 @@ public class KartScriptV2 : MonoBehaviour
         {
             grounded = false;
             airSpeed = currentSpeed;
+            flightSpeed = currentSpeed;
+            flightDir.forward = visualKartBody.transform.forward;
             //if (groundNormalT.localEulerAngles.x > 0)
             //{
             //    currentFallSpeed = 8f;
