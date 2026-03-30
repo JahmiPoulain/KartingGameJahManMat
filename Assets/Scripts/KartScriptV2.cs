@@ -268,7 +268,7 @@ public class KartScriptV2 : MonoBehaviour
                 if (currentFlightTurnForce > 0) { currentFlightTurnForce = 0; }
             }
             transform.Rotate(0, currentFlightTurnForce, 0);//(0, (currentTurnSpeed + currentDriftForce) / 1.5f, 0);
-            flightDir.eulerAngles = new Vector3 (flightDir.eulerAngles.x, flightDir.eulerAngles.y, currentFlightTurnForce * 10f);
+            flightDir.localEulerAngles = new Vector3 (flightDir.localEulerAngles.x, 0f, currentFlightTurnForce * 10f);
             //flightDir.Rotate(0, 0, currentFlightTurnForce);
             rb.linearVelocity = (flightDir.forward * (flightSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + (currentFallSpeed / (1f + flightSpeed / 2.5f)) / 1.2f);
             //Debug.Log(flightSpeed);
@@ -305,6 +305,14 @@ public class KartScriptV2 : MonoBehaviour
         inputGlideUpDown = InputSystemHandler.instance.inputGlideUpDownDir;
         inputGlideTurn = InputSystemHandler.instance.inputGlideTurnDir;
         //Debug.Log(InputSystemHandler.instance.inputGlideTurnDir);
+    }
+
+    public void StartFlight(float fSpeed)
+    {
+        isFlying = true;
+        flightSpeed = fSpeed;
+        groundNormalT.transform.eulerAngles = Vector3.zero;
+        visualKartBody.transform.eulerAngles = Vector3.zero;
     }
     private void HandleBounceForce()
     {
@@ -741,7 +749,7 @@ public class KartScriptV2 : MonoBehaviour
         //Debug.Log(nextTotalSpeed + " " + visualKartBody.transform.localEulerAngles.x);
         Quaternion rotTarget = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot );
         //if (!grounded)
-        visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 1.4f);
+        visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 10f);
 
         
       
