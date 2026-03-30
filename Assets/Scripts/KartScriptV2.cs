@@ -109,6 +109,7 @@ public class KartScriptV2 : MonoBehaviour
     float currentFlightTurnForce;
     float inputGlideUpDown;
     public GameObject gliderGO;
+    float tryFlightTimer;
     private void Awake()
     {
         if (instance == null)
@@ -307,6 +308,10 @@ public class KartScriptV2 : MonoBehaviour
         //Debug.Log(InputSystemHandler.instance.inputGlideTurnDir);
     }
 
+    public void TryStartFlight(float fSpeed)
+    {
+        tryFlightTimer = 1.5f;
+    }
     public void StartFlight(float fSpeed)
     {
         isFlying = true;
