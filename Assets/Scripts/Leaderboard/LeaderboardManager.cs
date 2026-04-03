@@ -2,13 +2,13 @@ using UnityEngine;
 using LootLocker.Requests;
 using TMPro;
 
-public class ScoreManager : MonoBehaviour
+public class LeaderboardManager : MonoBehaviour
 {
-    public static ScoreManager Instance;
+    public static LeaderboardManager Instance;
     public string leaderboardKey = "main_race";
     
     [Header("UI Setup")]
-    public LeaderboardEntryUI[] entries = new LeaderboardEntryUI[5]; // Glisse tes 15 TMP ici (3x5)
+    public LeaderboardEntryUI[] entries = new LeaderboardEntryUI[5];
     
     private bool isConnected = false;
 
@@ -68,7 +68,7 @@ public class ScoreManager : MonoBehaviour
                 {
                     if (i < items.Length) // Si un joueur existe à cette position
                     {
-                        entries[i].rankText.text = items[i].rank.ToString();
+                        entries[i].rankText.text = "#" + items[i].rank.ToString();
                         
                         // On récupère le nom (soit le pseudo, soit l'ID si pas de nom)
                         string name = items[i].player.name;
@@ -79,7 +79,7 @@ public class ScoreManager : MonoBehaviour
                     }
                     else // Si la place est vide (moins de 5 joueurs au total)
                     {
-                        entries[i].rankText.text = (i + 1).ToString();
+                        entries[i].rankText.text = "#" + (i + 1).ToString();
                         entries[i].nameText.text = "---";
                         entries[i].scoreText.text = "--:--";
                     }
