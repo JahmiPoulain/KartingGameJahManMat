@@ -46,7 +46,9 @@ public class KartScriptV2 : MonoBehaviour
     [Header("Camera")]
     public float camXpos;
     public GameObject playerCamera;
-    public Transform ThirdPersonCamPivot;
+    public Transform camPivot;
+    public Vector3 thirdPersonCamPos;
+    public Vector3 firstPersonCamPos;
     float turboTimer;
     [Header("Visual Kart")]
     public GameObject visualKartBody;
@@ -205,6 +207,7 @@ public class KartScriptV2 : MonoBehaviour
         else
         {
             gliderGO.SetActive(true);
+            //groundNormalT.transform.localEulerAngles = Vector3.zero;
             if (flightDir.eulerAngles.x > 0f && flightDir.eulerAngles.x < 180f)
             {
                 flightSpeed += (flightDir.eulerAngles.x) * 0.8f * Time.fixedDeltaTime;
@@ -249,8 +252,16 @@ public class KartScriptV2 : MonoBehaviour
             }
             else
             {
-                flightDir.Rotate(inputGlideUpDown, 0, 0);
+                //if (flightDir.eulerAngles.x > 45f && flightDir.eulerAngles.x < 180f || flightDir.eulerAngles.x > 360 && flightDir.eulerAngles.x < 180f)
+                //{
+                    flightDir.Rotate(inputGlideUpDown, 0, 0);
+                //}       
+                //else
+                //{
+                //    flightDir.eulerAngles = new Vector3(45f ,flightDir.eulerAngles.y, flightDir.eulerAngles.z);
+                //}
             }
+            //Mathf.Clamp(flightDir.rotation.x, -45f, 90f);
             if (turnDirection != 0f)
             {
                 
@@ -316,8 +327,10 @@ public class KartScriptV2 : MonoBehaviour
     {
         isFlying = true;
         flightSpeed = fSpeed;
-        groundNormalT.transform.eulerAngles = Vector3.zero;
-        visualKartBody.transform.eulerAngles = Vector3.zero;
+        groundNormalT.transform.localEulerAngles = Vector3.zero;
+        visualKartBody.transform.localEulerAngles = Vector3.zero;
+        visualKartWheelsParent.transform.localEulerAngles = Vector3.zero;
+        preOrientation.transform.localEulerAngles = Vector3.zero;
     }
     private void HandleBounceForce()
     {
@@ -397,6 +410,7 @@ public class KartScriptV2 : MonoBehaviour
     }       
     void HandleDrift()
     {
+
         if (keepDrifting && grounded)
         {
             // on fait monter ou descendre la rotation Y vers targetYRot
@@ -414,10 +428,16 @@ public class KartScriptV2 : MonoBehaviour
             }
             driftPivot.localRotation = Quaternion.Euler(0, nextYDriftRot, 0);
             oldKeepD = keepDrifting;
+            driftCoyoteTime = 0.12f;
         }
         else
         {
-            if (nextYDriftRot < 0)
+            if (driftCoyoteTime > 0f)
+            {
+                driftCoyoteTime -= Time.deltaTime;
+                return;
+            }
+                if (nextYDriftRot < 0)
             {
                 nextYDriftRot += 12f * Time.fixedDeltaTime;
                 if (nextYDriftRot > 0)
@@ -442,7 +462,7 @@ public class KartScriptV2 : MonoBehaviour
                 StartTurbo(driftTurboGauge * 2.2f, driftTurboGauge / 2.6f);
                 driftTurboGauge = 0;
                 //Debug.Log(transform.forward + " " + driftPivot.forward);
-                Vector3 oldCamForward = ThirdPersonCamPivot.forward;
+                Vector3 oldCamForward = camPivot.forward;
                 //Debug.Break();
                 //Debug.Log(transform.forward + " 1 " + driftPivot.forward);
                 transform.forward = new Vector3 (driftPivot.forward.x, 0, driftPivot.forward.z);
@@ -451,7 +471,7 @@ public class KartScriptV2 : MonoBehaviour
                 driftPivot.forward = transform.forward;
                 //Debug.Log(transform.forward + " 3 " + driftPivot.forward);
                 nextYDriftRot = 0;
-                ThirdPersonCamPivot.forward = oldCamForward;
+                camPivot.forward = oldCamForward;
                 //Debug.Break();
 
             }
@@ -835,7 +855,7 @@ public class KartScriptV2 : MonoBehaviour
             {
                 nextXpos = camXpos;
             }
-            playerCamera.transform.localPosition = new Vector3(nextXpos, 2.46f, -4.75f);
+            playerCamera.transform.localPosition = new Vector3(nextXpos, playerCamera.transform.localPosition.y, playerCamera.transform.localPosition.z);
         }
         else if (playerCamera.transform.localPosition.x < camXpos)
         {
@@ -844,14 +864,40 @@ public class KartScriptV2 : MonoBehaviour
             {
                 nextXpos = camXpos;
             }
-            playerCamera.transform.localPosition = new Vector3(nextXpos, 2.46f, -4.75f);            
+            playerCamera.transform.localPosition = new Vector3(nextXpos, playerCamera.transform.localPosition.y, playerCamera.transform.localPosition.z);            
         }
         //Debug.Log(transform.right * driftDir * currentDriftForce * 0.05f);
         Vector3 targetDir = (transform.forward + (transform.right * currentTurnSpeed * Mathf.Clamp(currentDriftForce, -1f, 1f) * 0.05f)).normalized;
-        float rotSpeed = 0.1f + (ThirdPersonCamPivot.forward - targetDir).magnitude * 0.08f;
+        float rotSpeed = 0.1f + (camPivot.forward - targetDir).magnitude * 0.08f;
         //Debug.Log(" targetDir = "+ targetDir + "  turn = " + (currentTurnSpeed * 0.05f) + "  drift = " +(currentDriftForce * 1f));
-        ThirdPersonCamPivot.forward = Vector3.RotateTowards(ThirdPersonCamPivot.forward, targetDir, rotSpeed * Time.fixedDeltaTime, 0.0f);
+        camPivot.forward = Vector3.RotateTowards(camPivot.forward, targetDir, rotSpeed * Time.fixedDeltaTime, 0.0f);
 
+        if (InputSystemHandler.instance.inputCameraMode)
+        {
+            Vector3 nextDir = thirdPersonCamPos - playerCamera.transform.localPosition;
+            Vector3 nextPos = nextDir.normalized * 3f * Time.fixedDeltaTime;
+            if (nextDir.sqrMagnitude > 0.2f)
+            {
+                playerCamera.transform.localPosition += nextPos;
+            }
+            else
+            {
+                playerCamera.transform.localPosition = thirdPersonCamPos;
+            }
+        }
+        else
+        {
+            Vector3 nextDir = firstPersonCamPos - playerCamera.transform.localPosition;
+            Vector3 nextPos = nextDir.normalized * 3f * Time.fixedDeltaTime;
+            if (nextDir.sqrMagnitude > 0.2f)
+            {
+                playerCamera.transform.localPosition += nextPos;
+            }
+            else
+            {
+                playerCamera.transform.localPosition = firstPersonCamPos;
+            }
+        }
         // playerCamera.transform.localRotation = Quaternion.Euler(32, camYRot, 0);
         //playerCamera.transform.localPosition = new Vector3(camXpos, 3.9f, -4.7f);
     }
