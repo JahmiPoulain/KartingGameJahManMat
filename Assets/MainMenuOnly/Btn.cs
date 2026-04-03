@@ -37,10 +37,10 @@ public class Btn : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPo
             if (rotateOnHover) targetRotation = Quaternion.Euler(valueRotateOnHover); targetColor = colorOnHover; 
         }
 
-        effectedObject.localScale = Vector3.Lerp(effectedObject.localScale, targetScale, Time.deltaTime * speed);
-        effectedObject.localRotation = Quaternion.Lerp(effectedObject.localRotation, targetRotation, Time.deltaTime * speed);
+        effectedObject.localScale = Vector3.Lerp(effectedObject.localScale, targetScale, Time.fixedDeltaTime * speed);
+        effectedObject.localRotation = Quaternion.Lerp(effectedObject.localRotation, targetRotation, Time.fixedDeltaTime * speed);
 
-        if (image) image.color = Color.Lerp(image.color, targetColor, Time.deltaTime * speed);
+        if (image) image.color = Color.Lerp(image.color, targetColor, Time.fixedDeltaTime * speed);
     }
 
     public void OnPointerEnter(PointerEventData e) 

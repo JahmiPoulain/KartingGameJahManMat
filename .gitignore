@@ -28,6 +28,10 @@
 # Visual Studio cache directory
 .vs/
 
+# Masquer ces fichiers indésirables de MacOs
+.vscode/
+.DS_Store
+
 # Gradle cache directory
 .gradle/
 
