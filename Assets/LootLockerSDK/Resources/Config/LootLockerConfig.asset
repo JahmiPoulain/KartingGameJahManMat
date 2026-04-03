@@ -12,17 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 182cd195a28310e479cddf7ff82822f8, type: 3}
   m_Name: LootLockerConfig
   m_EditorClassIdentifier: 
-  apiKey: dev_3c4618fd7ae34068a8891dd75abc4dd1
+  apiKey: 
   adminToken: 
-  domainKey: kral7rzw
+  domainKey: 
   game_version: 1.0.0.0
-  sdk_version: 7.1.1
+  sdk_version: 
   url: https://api.lootlocker.com/v1
-  adminUrl: https://kral7rzw.api.lootlocker.com/admin
-  playerUrl: https://kral7rzw.api.lootlocker.com/player
-  userUrl: https://kral7rzw.api.lootlocker.com/game
-  webSocketBaseUrl: wss://kral7rzw.api.lootlocker.com/game
-  baseUrl: https://kral7rzw.api.lootlocker.com
+  adminUrl: https://api.lootlocker.com/admin
+  playerUrl: https://api.lootlocker.com/player
+  userUrl: https://api.lootlocker.com/game
+  webSocketBaseUrl: wss://api.lootlocker.com/game
+  baseUrl: https://api.lootlocker.com
   clientSideRequestTimeOut: 180
   logLevel: 2
   prettifyJson: 1
