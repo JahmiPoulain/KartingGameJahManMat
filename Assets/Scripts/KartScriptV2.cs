@@ -1,4 +1,5 @@
 
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
@@ -8,9 +9,13 @@ public class KartScriptV2 : MonoBehaviour
 {
     public static KartScriptV2 instance;
     public bool canDrive = true;
+
+    float respawnCooldown = 0f;
     private Vector3 startPosition;
+    private Vector3 currentPosition;
     [Header("Components")]
     public Rigidbody rb;
+    [SerializeField] private CheckpointManager checkPointManager;
     [Header("Inputs")]
     float forwardDirection;
     float turnDirection; // la direction de la rotation du vollant
@@ -40,6 +45,7 @@ public class KartScriptV2 : MonoBehaviour
     bool turbo;    
     [Header("Colisions")]
     public LayerMask wallLayer;
+    public LayerMask trackLayer;
     public Vector3 bounceDirection;
     public float bounceForce;
     public float minBounceDecelForce;
@@ -104,13 +110,15 @@ public class KartScriptV2 : MonoBehaviour
     [SerializeField] ContreLaMontre contreLaMontre;
     [SerializeField] private GameObject trackPath;
     public bool ghostMode = false;
-    public Transform[] waypoints;
-    int currentWaypoint = 0;
+    public Transform currentWaypoint;
+    public Transform firstWaypoint;
 
     public  Vector3 StartPosition { get => startPosition; set => startPosition = value; }
+    public Vector3 CurrentPosition { get => currentPosition; set => currentPosition = value; }
 
     private void Awake()
     {
+        currentPosition = transform.position;
         StartPosition = gameObject.transform.position;
         if (instance == null)
         {
@@ -122,25 +130,25 @@ public class KartScriptV2 : MonoBehaviour
         }
         controls = new InputSystem_Actions(); // initialiser input
         controls.Player.Turn.performed += ctx => HandheldMovePressed(ctx);
-        waypoints = trackPath.GetComponentsInChildren<Transform>();
+
     }
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        ghostMode = false; // IMPORTANT
+        currentWaypoint = firstWaypoint;
     }
 
     void Update()
     {
+        currentPosition = transform.position;
         PlayerInputs();
         HandleDrift();
         if (Input.GetMouseButtonDown(1))
         {
             StartTurbo(10f, 1.5f);
         }
-        if (contreLaMontre.RaceFinished)
-        {
-            ghostMode = true;
-        }
+        Debug.Log("GhostMode: " + ghostMode);
 
     }
     private void HandheldMovePressed(InputAction.CallbackContext ctx)
@@ -172,6 +180,7 @@ public class KartScriptV2 : MonoBehaviour
         {
             transform.Rotate(0, (currentTurnSpeed + currentDriftForce) / 3f, 0);
         }
+        CheckIfOffTrack();
     }
     private void LateUpdate()
     {
@@ -187,7 +196,7 @@ public class KartScriptV2 : MonoBehaviour
 
     void PlayerInputs()
     {
-        if (ghostMode)
+        if (ghostMode == true)
         {
             GhostDrive();
             return;
@@ -811,21 +820,50 @@ public class KartScriptV2 : MonoBehaviour
         Gizmos.DrawRay(groundRayOrigin.position, Vector3.down * 0.5f);
     }
 
+    void CheckIfOffTrack()
+    {
+        Debug.Log("je suis appeler");
+        if (respawnCooldown > 0)
+        {
+            respawnCooldown -= Time.fixedDeltaTime;
+            return;
+        }
+
+        if (Physics.Raycast(groundRayOrigin.position, Vector3.down, 5f))
+        {
+            Debug.Log("Je touche quelque chose");
+        }
+        else
+        {
+            Debug.Log("Je touche RIEN");
+        }
+        if (!Physics.Raycast(groundRayOrigin.position, Vector3.down, 5f, trackLayer))
+        {
+            Debug.Log("cacacacacacaca");
+            checkPointManager.Respawn();
+            transform.position = startPosition;
+            respawnCooldown = 1.5f;
+        }
+    }
+
     void GhostDrive()
     {
-        Transform target = waypoints[currentWaypoint];
+        if (currentWaypoint == null)
+        {
+            currentWaypoint = firstWaypoint;
+            return;
+        }
 
-        Vector3 dir = target.position - transform.position;
+        Vector3 dir = currentWaypoint.position - transform.position;
 
         float angle = Vector3.SignedAngle(transform.forward, dir, Vector3.up);
 
-        turnDirection = Mathf.Clamp(angle / 45f, -1f, 1f);
-
+        turnDirection = Mathf.Clamp(angle / 30f, -1f, 1f);
         forwardDirection = 1f;
 
-        if (Vector3.Distance(transform.position, target.position) < 3f)
+        if (dir.magnitude < 4f)
         {
-            currentWaypoint = (currentWaypoint + 1) % waypoints.Length;
+            currentWaypoint = currentWaypoint.GetComponent<Waypoints>().nextWaypoint;
         }
     }
 }

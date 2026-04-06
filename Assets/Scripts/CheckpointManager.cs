@@ -6,6 +6,7 @@ public class CheckpointManager : MonoBehaviour
     [SerializeField] private KartScriptV2 kartScript;
 
     private int nextIndex = 1;
+    private Vector3 newPos;
 
 
     public int NextIndex { get => nextIndex; set => nextIndex = value; }
@@ -26,12 +27,23 @@ public class CheckpointManager : MonoBehaviour
         if (checkpoint.Index == NextIndex)
         {
             NextIndex++;
-            Vector3 newPos = checkpoint.gameObject.transform.position;
-            kartScript.StartPosition = newPos;
+            newPos = checkpoint.gameObject.transform.position;
+
         }
         else
         {
             return;
         }
+    }
+    public void Respawn()
+    {
+        if (newPos != null)
+        {
+            kartScript.StartPosition = newPos;
+            kartScript.CurrentPosition = kartScript.StartPosition;
+            kartScript.rb.linearVelocity = Vector3.zero;
+            kartScript.currentSpeed = 0;
+        }
+        kartScript.CurrentPosition = kartScript.StartPosition;
     }
 }

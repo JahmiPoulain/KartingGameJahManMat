@@ -62,7 +62,9 @@ public class ContreLaMontre : MonoBehaviour
         int minutes = (int)(totalTime / 60);
         float seconds = totalTime % 60;
         scoreUI.text = $"Temps total : \n {minutes : 00}:{seconds:00.000}";
-        
+        kartScript.ghostMode = true;
+
+
     }
 
     IEnumerator StartCountdown()
