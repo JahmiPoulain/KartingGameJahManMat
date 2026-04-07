@@ -3,7 +3,7 @@ using UnityEngine;
 public class CheckpointManager : MonoBehaviour
 {
     [SerializeField] private LapManager lapManager;
-    [SerializeField] private KartScriptV2 kartScript;
+    [SerializeField] private KartScriptV3 kartScript;
 
     private int nextIndex = 1;
     private Vector3 newPos;

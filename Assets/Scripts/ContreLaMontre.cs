@@ -7,7 +7,7 @@ public class ContreLaMontre : MonoBehaviour
 {
 
     [SerializeField] LapManager lapManager;
-    [SerializeField] private KartScriptV2 kartScript;
+    [SerializeField] private KartScriptV3 kartScript;
 
     [SerializeField] private TextMeshProUGUI scoreUI;
     [SerializeField] private TextMeshProUGUI startUI;

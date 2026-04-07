@@ -2550,7 +2550,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lapManager: {fileID: 1006235664}
-  kartScript: {fileID: 498415611}
+  kartScript: {fileID: 498415613}
 --- !u!1 &168698315
 GameObject:
   m_ObjectHideFlags: 0
@@ -4516,7 +4516,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lapManager: {fileID: 1006235664}
-  kartScript: {fileID: 498415611}
+  kartScript: {fileID: 498415613}
   scoreUI: {fileID: 966019785}
   startUI: {fileID: 1656960882}
 --- !u!1 &404928067
@@ -6310,6 +6310,7 @@ GameObject:
   - component: {fileID: 498415610}
   - component: {fileID: 498415609}
   - component: {fileID: 498415611}
+  - component: {fileID: 498415613}
   - component: {fileID: 498415607}
   - component: {fileID: 498415612}
   m_Layer: 8
@@ -6398,14 +6399,14 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 498415606}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 104209061407fac4fac9cc83a8f6dfb6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   canDrive: 1
   rb: {fileID: 498415607}
-  checkPointManager: {fileID: 168289238}
+  checkPointManager: {fileID: 0}
   maxSpeed: 25
   currentSpeed: 0
   maxBackSpeed: 8
@@ -6426,13 +6427,13 @@ MonoBehaviour:
     m_Bits: 64
   trackLayer:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 0
   bounceDirection: {x: 0, y: 0, z: 0}
   bounceForce: 0
   minBounceDecelForce: 200
   camXpos: 0
   playerCamera: {fileID: 330585543}
-  ThirdPersonCamPivot: {fileID: 1219606186}
+  ThirdPersonCamPivot: {fileID: 0}
   visualKartBody: {fileID: 441255415}
   visualKartWheelsParent: {fileID: 1770855206}
   visKartZRot: 0
@@ -6472,11 +6473,11 @@ MonoBehaviour:
   gaugeToActivateTurbo: 0.78
   driftPivot: {fileID: 629817242}
   driftCoyoteTime: 0
-  contreLaMontre: {fileID: 400256309}
-  trackPath: {fileID: 2078482557}
+  contreLaMontre: {fileID: 0}
+  trackPath: {fileID: 0}
   ghostMode: 0
   currentWaypoint: {fileID: 0}
-  firstWaypoint: {fileID: 884256432}
+  firstWaypoint: {fileID: 0}
 --- !u!135 &498415612
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -6498,6 +6499,91 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0.225, z: 0}
+--- !u!114 &498415613
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 498415606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa2601e40c4e7714fb8436e8b3665e80, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  canDrive: 1
+  rb: {fileID: 0}
+  checkPointManager: {fileID: 168289238}
+  maxSpeed: 25
+  currentSpeed: 0
+  maxBackSpeed: 8
+  accelerate: 0
+  accelSpeed: 0.008
+  flatAccelSpeed: 0.22
+  decelSpeed: 0.0001
+  flatDecelSpeed: 0.15
+  maxTurnSpeed: 1.75
+  currentTurnSpeed: 0
+  turnAccelSpeed: 15
+  turnDecelSpeed: 25
+  currentTurboForce: 0
+  turboAccelSpeed: 45
+  minTurboDecel: 0.5
+  wallLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  trackLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  bounceDirection: {x: 0, y: 0, z: 0}
+  bounceForce: 0
+  minBounceDecelForce: 200
+  camXpos: 0
+  playerCamera: {fileID: 330585543}
+  camPivot: {fileID: 1219606186}
+  thirdPersonCamPos: {x: 0, y: 0, z: 0}
+  firstPersonCamPos: {x: 0, y: 0, z: 0}
+  visualKartBody: {fileID: 441255415}
+  visualKartWheelsParent: {fileID: 1770855206}
+  visKartZRot: 0
+  visKartXRot: 0
+  visKartXRotCatchUp: 0
+  visKartTurboXRotCatchUp: 0
+  turningWheels: []
+  nonTurningWheels: []
+  fireWheelEffects: []
+  visWheelsYRot: 0
+  turningWheelsRatioScaling: 70
+  nonTurningWheelsRatioScaling: 80
+  bounce: 0
+  smokePrefab: {fileID: 1323057935}
+  smokeOrigin: {fileID: 1952493910}
+  baseSmokeMat: {fileID: 2100000, guid: aa7b70ec96d663740b306c193ab0ba90, type: 2}
+  fireSmokeMat: {fileID: 2100000, guid: 632ee81195b274c44aa9d2b9c4a01af4, type: 2}
+  smokeParticlesGenerator: {fileID: 1952493912}
+  fireParticlesGenerator: {fileID: 829169390}
+  driftParticlesGenerators: []
+  gravity: 12
+  currentFallSpeed: 0
+  preOrientation: {fileID: 118313280}
+  groundNormalT: {fileID: 1837971670}
+  groundRayOrigin: {fileID: 118313280}
+  keepDrifting: 0
+  highDrift: 0
+  lowDrift: 0
+  gaugeToActivateTurbo: 0.78
+  driftPivot: {fileID: 629817242}
+  driftCoyoteTime: 0
+  isFlying: 0
+  flightSpeed: 0
+  flightDir: {fileID: 0}
+  maxFlightTurnForce: 0
+  gliderGO: {fileID: 0}
+  contreLaMontre: {fileID: 400256309}
+  trackPath: {fileID: 2078482557}
+  ghostMode: 0
+  currentWaypoint: {fileID: 0}
+  firstWaypoint: {fileID: 884256432}
 --- !u!1 &499588288
 GameObject:
   m_ObjectHideFlags: 0
@@ -25923,6 +26009,11 @@ Transform:
   - {fileID: 1698488890}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1323057935 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8390876692391091962, guid: 8337be2acc838da409777d083ab08fa6, type: 3}
+  m_PrefabInstance: {fileID: 196952573797897424}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1327899954
 GameObject:
   m_ObjectHideFlags: 0
