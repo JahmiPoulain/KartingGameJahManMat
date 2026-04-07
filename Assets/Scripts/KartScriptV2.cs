@@ -119,7 +119,7 @@ public class KartScriptV2 : MonoBehaviour
     private void Awake()
     {
         currentPosition = transform.position;
-        StartPosition = gameObject.transform.position;
+        StartPosition = groundRayOrigin.gameObject.transform.position;
         if (instance == null)
         {
             instance = this;
