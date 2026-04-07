@@ -11,86 +11,53 @@ public class PlayerKartScript : MonoBehaviour
     float turnDirection; // la direction de la rotation du vollant
     InputSystem_Actions controls;
     [Header("Speed")]
-    public float maxSpeed;
+    public float maxForwardSpeed;
+    //public float maxBackwardSpeed;
     public float currentSpeed;
-    public float maxBackSpeed;
+    public float currentSpeedTarget;
     [Header("Acceleration")]
-    public bool accelerate;
-    public float accelSpeed;
-    public float flatAccelSpeed;
-    //public float currentAccelSpeed;
-    [Header("Deceleration")]
-    public float decelSpeed;
-    public float flatDecelSpeed;
-    [Header("Turning")]
-    public float maxTurnSpeed;
-    public float currentTurnSpeed; // c'est l'equivalent de la rotation du vollant
-    public float turnAccelSpeed;
-    public float turnDecelSpeed;
-    [Header("Turbo")]
-    public float currentTurboForce;
-    public float turboAccelSpeed;
-    float targetTurboForce;
-    public float minTurboDecel;
-    bool turbo;
-    [Header("Colisions")]
-    public LayerMask wallLayer;
-    public Vector3 bounceDirection;
-    public float bounceForce;
-    public float minBounceDecelForce;
-    [Header("Camera")]
-    public float camXpos;
-    public GameObject playerCamera;
-    float turboTimer;
-    [Header("Visual Kart")]
-    public GameObject visualKartBody;
-    public GameObject visualKartWheelsParent;
-    public float visKartZRot;
-    public float visKartXRot;
-    public float visKartXRotCatchUp;
-    float visKartXRotCatchUpBis;
-    public float visKartTurboXRotCatchUp;
-    public GameObject[] turningWheels;
-    public GameObject[] nonTurningWheels;
-    public GameObject[] fireWheelEffects;
-    public float visWheelsYRot;
-    float turningWheelsXRot;
-    float nonTurningWheelsXRot;
-    public float turningWheelsRatioScaling;
-    public float nonTurningWheelsRatioScaling;
-    [Header("Bounce Animation")]
-    public bool bounce;
-    float bounceTimer;
-    [Header("Smoke")]
-    public GameObject smokePrefab;
-    public Transform smokeOrigin;
-    public Material baseSmokeMat;
-    public Material fireSmokeMat;
-    float smokeTimer;
-    public ParticleSystem smokeParticlesGenerator;
-    public ParticleSystem fireParticlesGenerator;
-    public ParticleSystem[] driftParticlesGenerators;
-    [Header("Gravity")]
-    public float gravity;
-    public float currentFallSpeed;
-    int minimalGrav;
-    Vector3 groundNormal;
-    public Transform preOrientation;
-    public Transform groundRayOrigin;
+    public float accelForce;
+
+    [Header("Ground")]
     bool grounded;
+    Vector3 groundNormal;
+    public Transform groundNormalT;
+
+    [Header("Wheels")]
+    public Transform frontLeftWheel;
+    public Transform frontRightWheel;
+    public Transform backLeftWheel;
+    public Transform backRightWheel;
+
+    public Transform frontLeftWheelPivot;
+    public Transform frontRightWheelPivot;
+    public Transform backLeftWheelPivot;
+    public Transform backRightWheelPivot;
+
+    float[] wheelDistFromPivots;
+
+    [Header("Deceleration")]
+    
+    [Header("Turning")]
+    
+    [Header("Turbo")]
+    
+    [Header("Colisions")]
+    
+    [Header("Camera")]
+   
+    [Header("Visual Kart")]
+   
+    [Header("Bounce Animation")]
+   
+    [Header("Smoke")]
+  
+    [Header("Gravity")]
+  
     [Header("Drift")]
-    bool tryToDrift;
-    public bool keepDrifting;
-    bool oldKeepD;
-    float currentDriftForce;
-    float driftCatchUp;
-    int driftDir;
-    public float highDrift;
-    public float lowDrift;
-    float driftTurboGauge;
-    public float gaugeToActivateTurbo;
+    
     public Transform driftPivot;
-    float nextYDriftRot;
+
     private void Awake()
     {
    
@@ -110,21 +77,26 @@ public class PlayerKartScript : MonoBehaviour
         }
     }
     private void FixedUpdate()
-    {
+    {        
+        //HandleAccelerationForceTarget();
+        //HandleCurrentAccelForce();
 
+        HandleCurrentSpeedTarget();
         HandleCurrentSpeed();
+
         HandleTurning();
-        HandleTurbo();
-        if (grounded)
+
+        
+        rb.linearVelocity = transform.forward * currentSpeed;
+
+        for (int i = 0; i < wheelDistFromPivots.Length; i++)
         {
-            currentFallSpeed = 0;
+
         }
-        else
-        {
-            currentFallSpeed += gravity * Time.fixedDeltaTime;
-        }
-        rb.linearVelocity = (transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
-        transform.Rotate(0, currentTurnSpeed + currentDriftForce, 0);
+        //groundNormalT.transform.localRotation = Quaternion.LookRotation(Vector3.Cross(transform.right, groundNormal), groundNormal);//Quaternion.LookRotation(Vector3.Cross(transform.right, groundNormal), groundNormal); // oriente le y vers le haut de la normale et le x vers l'avant du kart ( 2 semaines de galère )
+        //transform.rotation = Quaternion.LookRotation(Vector3.Cross(transform.forward, groundNormalT.localEulerAngles), groundNormalT.localEulerAngles);//Quaternion.RotateTowards(transform.rotation, groundNormalT.localRotation, 1f);
+
+        transform.Rotate(0, turnDirection, 0);
     }
 
     private void LateUpdate()
@@ -140,77 +112,78 @@ public class PlayerKartScript : MonoBehaviour
 
     void PlayerInputs()
     {
-        forwardDirection = Input.GetAxisRaw("Vertical");
+        /*forwardDirection = Input.GetAxisRaw("Vertical");
         //turnDirection = Input.GetAxisRaw("Horizontal");
         tryToDrift = Input.GetKeyDown("space");
-        keepDrifting = Input.GetKey("space");
+        keepDrifting = Input.GetKey("space");*/
+        forwardDirection = InputSystemHandler.instance.inputForwardDir;
+        turnDirection = InputSystemHandler.instance.inputTurnDir;
+        //keepDrifting = InputSystemHandler.instance.inputDrift;
     }
     void HandleCurrentSpeed()
     {
         float nextSpeed = currentSpeed;
-        if (forwardDirection > 0) // si on veut accelerer en avant
-        {
-            nextSpeed += flatAccelSpeed + (maxSpeed - currentSpeed) * accelSpeed * Time.fixedDeltaTime;
+        //si la vitesse est plus basse que la vitesse cible on fait monter la vitesse
+        if (currentSpeed < currentSpeedTarget)
+        { 
+            nextSpeed += accelForce * Time.fixedDeltaTime; 
+            if (nextSpeed > currentSpeedTarget) { nextSpeed = currentSpeedTarget; }
         }
-        else if (forwardDirection < 0) // si on veut accelerer en arière
+        //si la vitesse est plus haute que la vitesse cible on fait baisser la vitesse
+        else if (currentSpeed > currentSpeedTarget)
         {
-            nextSpeed -= flatAccelSpeed + (maxSpeed - currentSpeed) * accelSpeed * Time.fixedDeltaTime;
+            nextSpeed -= accelForce * Time.fixedDeltaTime;
+            if (nextSpeed < currentSpeedTarget) { nextSpeed = currentSpeedTarget; }
         }
-        else // si on ne veut pas accelerer
-        {
-            if (currentSpeed > 0) // si on avance
-            {
-                nextSpeed -= flatDecelSpeed + (maxSpeed - currentSpeed) * decelSpeed * Time.fixedDeltaTime;
-                if (nextSpeed < 0)
-                {
-                    nextSpeed = 0;
-                }
-            }
-            else if (currentSpeed < 0) // si on  recule
-            {
-                nextSpeed += flatDecelSpeed + (maxSpeed - currentSpeed) * decelSpeed * Time.fixedDeltaTime;
-                if (nextSpeed > 0)
-                {
-                    nextSpeed = 0;
-                }
-            }
-        }
-
-        // on clamp
-        if (nextSpeed > maxSpeed)
-        {
-            nextSpeed = maxSpeed;
-        }
-        else if (nextSpeed < -maxBackSpeed)
-        {
-            nextSpeed = -maxBackSpeed;
-        }
-
+        // on applique la nouvelle vitesse
         currentSpeed = nextSpeed;
     }
+    void HandleCurrentSpeedTarget()
+    {
+        currentSpeedTarget = forwardDirection * maxForwardSpeed;
+    }
+    void HandleTurning()
+    {
+ 
+    }
+    /*void HandleAccelerationForceTarget()
+    {
+        if (forwardDirection > 0) { currentAccelForceTarget = maxAccelerationForce; }
+        else if (forwardDirection < 0) { currentAccelForceTarget = -maxAccelerationForce; }
+        else { currentAccelForceTarget = 0; }
+    }
+
+    void HandleCurrentAccelForce()
+    {
+        // fait monter ou descendre la force d'acceleration pour ateindre la force cible
+        float nextAccelForce = accelForce;
+        if (accelForce < currentAccelForceTarget)
+        {
+            nextAccelForce += maxAccelerationForce * Time.fixedDeltaTime;
+            if (nextAccelForce > currentAccelForceTarget) { nextAccelForce = currentAccelForceTarget; }            
+        }
+        else if (accelForce > currentAccelForceTarget)
+        {
+            nextAccelForce -= maxAccelerationForce * Time.fixedDeltaTime;
+            if (nextAccelForce < currentAccelForceTarget){nextAccelForce = currentAccelForceTarget;}
+        }
+        accelForce = nextAccelForce;
+    }*/
     void HandleDrift()
     {
 
     }
 
-    void HandleTurning()
-    {
- 
-    }
+    
 
     void StartDrift()
     {
  
     }
 
-
-
     public void StartTurbo(float force, float time)
     {
-        turbo = true;
-        turboTimer = time;
-        targetTurboForce = force;
-        Debug.Log("turbo");
+       
     }
     void HandleTurbo()
     {
@@ -237,9 +210,9 @@ public class PlayerKartScript : MonoBehaviour
  
     }
 
-    private void OnCollisionEnter(Collision collision)
+    /*private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.layer == 6)
+       if (collision.gameObject.layer == 6)
         {
             bounce = true;
             Vector3 rawDir = transform.position - collision.contacts[0].point;
@@ -252,7 +225,7 @@ public class PlayerKartScript : MonoBehaviour
             bounceForce = unsignedCurSpeed * 2f;
             currentSpeed *= 0.2f;
         }
-    }
+    }*/
     private void OnCollisionStay(Collision collision)
     {
         if (collision.gameObject.layer == 7)
