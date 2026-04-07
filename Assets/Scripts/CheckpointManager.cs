@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class CheckpointManager : MonoBehaviour
 {
@@ -6,8 +6,9 @@ public class CheckpointManager : MonoBehaviour
     [SerializeField] private KartScriptV3 kartScript;
 
     private int nextIndex = 1;
-    private Vector3 newPos;
 
+    private Vector3 newPos;
+    private bool hasCheckpoint = false; // ✅ savoir si un checkpoint a été validé
 
     public int NextIndex { get => nextIndex; set => nextIndex = value; }
 
@@ -19,31 +20,30 @@ public class CheckpointManager : MonoBehaviour
         }
     }
 
-
-
-
     public void CompareCheckpoint(Checkpoint checkpoint)
     {
         if (checkpoint.Index == NextIndex)
         {
             NextIndex++;
-            newPos = checkpoint.gameObject.transform.position;
 
-        }
-        else
-        {
-            return;
+            // ✅ on enregistre la position + petit offset pour éviter les murs/sol
+            newPos = checkpoint.transform.position + Vector3.up * 0.5f;
+
+            hasCheckpoint = true; // ✅ checkpoint valide
         }
     }
+
     public void Respawn()
     {
-        if (newPos != null)
+        // ✅ si aucun checkpoint → on utilise la position de départ
+        if (hasCheckpoint)
         {
             kartScript.StartPosition = newPos;
-            kartScript.CurrentPosition = kartScript.StartPosition;
-            kartScript.rb.linearVelocity = Vector3.zero;
-            kartScript.currentSpeed = 0;
         }
+
+        // ✅ reset physique propre
         kartScript.CurrentPosition = kartScript.StartPosition;
+        kartScript.rb.linearVelocity = Vector3.zero;
+        kartScript.currentSpeed = 0;
     }
 }

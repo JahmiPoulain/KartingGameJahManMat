@@ -306,6 +306,7 @@ public class KartScriptV3 : MonoBehaviour
             //if (currentTurboForce <= 0) airSpeed -= 5f * Time.fixedDeltaTime;
             //if (airSpeed < 0) airSpeed = 0;
         }
+        CheckIfOffTrack();
     }
     private void LateUpdate()
     {
@@ -1044,24 +1045,17 @@ public class KartScriptV3 : MonoBehaviour
     }
     void CheckIfOffTrack()
     {
-        Debug.Log("je suis appeler");
+
         if (respawnCooldown > 0)
         {
             respawnCooldown -= Time.fixedDeltaTime;
             return;
         }
 
-        if (Physics.Raycast(groundRayOrigin.position, Vector3.down, 5f))
-        {
-            Debug.Log("Je touche quelque chose");
-        }
-        else
-        {
-            Debug.Log("Je touche RIEN");
-        }
+
         if (!Physics.Raycast(groundRayOrigin.position, Vector3.down, 5f, trackLayer))
         {
-            Debug.Log("cacacacacacaca");
+
             checkPointManager.Respawn();
             transform.position = startPosition;
             respawnCooldown = 1.5f;
