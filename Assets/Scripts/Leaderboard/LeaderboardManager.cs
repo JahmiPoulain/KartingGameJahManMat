@@ -1,16 +1,27 @@
 using UnityEngine;
+using UnityEngine.UI;
 using LootLocker.Requests;
-using TMPro;
+using System.Collections.Generic;
+using LootLocker.Extension.DataTypes;
 
 public class LeaderboardManager : MonoBehaviour
 {
     public static LeaderboardManager Instance;
-    public string leaderboardKey = "main_race";
     
-    [Header("UI Setup")]
-    public LeaderboardEntryUI[] entries = new LeaderboardEntryUI[5];
-    
+    [Header("Leaderboard Setup")]
+    [SerializeField] private string leaderboardKey;
+    [SerializeField] private Transform contentParent;
+    [SerializeField] private GameObject entryPrefab;
+    [SerializeField] private ScrollRect scrollRect;
+    [SerializeField] private GameObject scrollbar;
+    [SerializeField] private int maxResults;
+      
+    private readonly List<GameObject> spawnedEntries = new();
+
     private bool isConnected = false;
+    private bool isLoading = false;
+    private int localPlayerId;
+    private Pcg32 rng; 
 
     void Awake()
     {
@@ -20,87 +31,149 @@ public class LeaderboardManager : MonoBehaviour
 
     void Start()
     {
-        // On commence par connecter le joueur
+        rng = Pcg32.CreateCombined();
+
+        // Expression Lambda / Fonction Callback
         LootLockerSDKManager.StartGuestSession((response) =>
         {
-            if (response.success)
+            // Si le joueur n'a pas encore de nom
+            if (string.IsNullOrEmpty(response.player_name))
             {
-                Debug.Log("Connexion LootLocker réussie !");
-                isConnected = true;
-                RefreshLeaderboard(); // On affiche le classement dès la connexion
-            }
-        });
-    }
+                // On fabrique son nom unique à partir de son ID LootLocker publique
+                // On prend les 5 premiers caractères de cet ID pour pas que ce soit trop long
+                string uniqueName = "Joueur_" + response.public_uid[..4];
 
-    // Fonction pour envoyer le score ET le nom du joueur
-    public void SubmitScoreAndRefresh(string playerName, int timeInSeconds)
-    {
-        if (!isConnected) return;
-
-        // 1. On définit d'abord le nom du joueur sur LootLocker
-        LootLockerSDKManager.SetPlayerName(playerName, (nameResponse) =>
-        {
-            if (nameResponse.success)
-            {
-                // 2. On envoie le score (LootLocker gère si c'est un record ou non selon tes settings)
-                LootLockerSDKManager.SubmitScore("", timeInSeconds, leaderboardKey, (scoreResponse) =>
+                // On envoie ce nom au serveur
+                LootLockerSDKManager.SetPlayerName(uniqueName, (nameResponse) =>
                 {
-                    if (scoreResponse.success)
+                    if (nameResponse.success)
                     {
-                        Debug.Log("Score envoyé, actualisation du classement...");
-                        RefreshLeaderboard();
+                        Debug.Log("Nom unique enregistré : " + uniqueName);
                     }
                 });
             }
+
+            localPlayerId = response.player_id;
+            isConnected = true;
+            RefreshLeaderboard();
+        });
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.T) && isConnected)
+        {
+            SubmitScoreAndRefresh(rng.Range(10000, 200000)); 
+        }
+    }
+
+    public void SubmitScoreAndRefresh(int timeInMilliseconds)
+    {
+        if (!isConnected) return;
+
+        LootLockerSDKManager.SubmitScore("", timeInMilliseconds, leaderboardKey, (scoreResponse) =>
+        {
+            if (scoreResponse.success)
+                RefreshLeaderboard();
         });
     }
 
     public void RefreshLeaderboard()
     {
-        // On demande les 5 meilleurs scores
-        LootLockerSDKManager.GetScoreList(leaderboardKey, 5, 0, (response) =>
-        {
-            if (response.success)
-            {
-                LootLockerLeaderboardMember[] items = response.items;
+        if (isLoading) return;
+        isLoading = true;
 
-                for (int i = 0; i < entries.Length; i++)
-                {
-                    if (i < items.Length) // Si un joueur existe à cette position
-                    {
-                        entries[i].rankText.text = "#" + items[i].rank.ToString();
-                        
-                        // On récupère le nom (soit le pseudo, soit l'ID si pas de nom)
-                        string name = items[i].player.name;
-                        if (string.IsNullOrEmpty(name)) name = "Player " + items[i].player.id;
-                        
-                        entries[i].nameText.text = name;
-                        entries[i].scoreText.text = FormatTime(items[i].score);
-                    }
-                    else // Si la place est vide (moins de 5 joueurs au total)
-                    {
-                        entries[i].rankText.text = "#" + (i + 1).ToString();
-                        entries[i].nameText.text = "---";
-                        entries[i].scoreText.text = "--:--";
-                    }
-                }
+        LootLockerSDKManager.GetScoreList(leaderboardKey, maxResults, 0, (response) =>
+        {
+            if (!response.success)
+            {
+                isLoading = false;
+                return;
             }
+
+            LootLockerLeaderboardMember[] items = response.items ?? new LootLockerLeaderboardMember[0];
+
+            // Nettoyage des anciennes entrées
+            foreach (var obj in spawnedEntries)
+            {
+                Destroy(obj);
+            }
+            spawnedEntries.Clear();
+
+            int displayCount = Mathf.Max(items.Length, 5);
+
+            for (int i = 0; i < displayCount; i++)
+            {
+                GameObject obj = Instantiate(entryPrefab, contentParent);
+                spawnedEntries.Add(obj);
+
+                LeaderboardEntryUI entry = obj.GetComponent<LeaderboardEntryUI>();
+
+                if (entry == null)
+                {
+                    Debug.LogError("Prefab sans LeaderboardEntryUI !");
+                    continue;
+                }
+
+                if (i < items.Length)
+                {
+                    var item = items[i];
+
+                    // Couleur joueur local
+                    if (item.player != null && item.player.id == localPlayerId)
+                        entry.SetColor(Color.yellow);
+                    else
+                        entry.SetColor(Color.white);
+
+                    // Rank
+                    entry.rankText.text = "#" + item.rank;
+
+                    // Nom
+                    string displayName = "Unknown";
+                    if (item.player != null)
+                    {
+                        if (!string.IsNullOrEmpty(item.player.name))
+                            displayName = item.player.name;
+                        else
+                            displayName = "Player " + item.player.id;
+                    }
+                    entry.nameText.text = displayName;
+
+                    // Score
+                    entry.scoreText.text = FormatTime(item.score);
+                }
+                else
+                {
+                    // Ligne vide
+                    entry.rankText.text = "#" + (i + 1);
+                    entry.nameText.text = "--";
+                    entry.scoreText.text = "--:--.--";
+                }
+
+                // Alternance visuelle
+                Image bg = obj.GetComponent<Image>();
+                if (bg != null && i % 2 == 0)
+                    bg.color = new Color(1f, 1f, 1f, 0.05f);
+            }
+
+            // Activation du scroll si nécessaire
+            bool needScroll = items.Length > 5;
+            scrollRect.vertical = needScroll;
+            scrollbar.SetActive(needScroll);
+
+            Canvas.ForceUpdateCanvases();
+            scrollRect.verticalNormalizedPosition = 1f;
+
+            isLoading = false;
         });
     }
 
-    // Petit utilitaire pour transformer des secondes en format 00:00
-    private string FormatTime(int seconds)
+    private string FormatTime(int milliseconds)
     {
-        int min = seconds / 60;
-        int sec = seconds % 60;
-        return string.Format("{0:00}:{1:00}", min, sec);
-    }
-}
+        int min = milliseconds / 60000;
+        int sec = milliseconds / 1000 % 60;
+        int ms = milliseconds % 1000;
 
-[System.Serializable]
-public class LeaderboardEntryUI
-{
-    public TextMeshProUGUI rankText;
-    public TextMeshProUGUI nameText;
-    public TextMeshProUGUI scoreText;
+        return string.Format("{0:00}:{1:00}.{2:000}", min, sec, ms);
+    }
 }
