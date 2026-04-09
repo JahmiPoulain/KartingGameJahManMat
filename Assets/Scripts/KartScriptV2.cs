@@ -128,6 +128,7 @@ public class KartScriptV2 : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        groundNormal = new Vector3(0,1,0);
     }
 
     void Update()

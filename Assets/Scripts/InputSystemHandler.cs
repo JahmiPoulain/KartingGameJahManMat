@@ -31,7 +31,7 @@ public class InputSystemHandler : MonoBehaviour
 
     public int inputGlideUpDownDir;
     public int inputForwardDir;
-    public bool inputCameraMode;
+    public bool inputCameraMode = true;
     void Awake()
     {
         if (instance == null) { instance = this; }
@@ -40,7 +40,7 @@ public class InputSystemHandler : MonoBehaviour
     }
     void Start()
     {
-        
+        inputCameraMode = true;
     }
 
     void Update()
