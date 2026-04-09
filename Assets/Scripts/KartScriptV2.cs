@@ -708,9 +708,20 @@ public class KartScriptV2 : MonoBehaviour
             }
             playerCamera.transform.localPosition = new Vector3(nextXpos, 2.46f, -4.75f);
         }
+<<<<<<< Updated upstream
         Vector3 targetDir = (transform.forward + transform.right * currentTurnSpeed * 0.05f).normalized;
         float rotSpeed = 0.1f + (ThirdPersonCamPivot.forward - targetDir).magnitude;
         ThirdPersonCamPivot.forward = Vector3.RotateTowards(ThirdPersonCamPivot.forward, targetDir, rotSpeed * Time.fixedDeltaTime, 0.0f);
+=======
+        //Debug.Log(transform.right * driftDir * currentDriftForce * 0.05f);
+        Vector3 targetDir = (transform.forward + (transform.right * currentTurnSpeed * Mathf.Clamp(currentDriftForce, -1f, 1f) * 0.05f)).normalized;
+        float rotSpeed = 0.1f + (camPivot.forward - targetDir).magnitude * 0.08f;
+        //Debug.Log(" targetDir = "+ targetDir + "  turn = " + (currentTurnSpeed * 0.05f) + "  drift = " +(currentDriftForce * 1f));
+        camPivot.forward = Vector3.RotateTowards(camPivot.forward, targetDir, rotSpeed * Time.fixedDeltaTime, 0.0f);
+        //Vector3 targetCamLocalRot = (transform.up + (transform.right * currentTurnSpeed * Mathf.Clamp(currentDriftForce, -1f, 1f) * 0.05f)).normalized;
+        //playerCamera.transform.up = Vector3.RotateTowards(playerCamera.transform.up, targetCamLocalRot, 1f, 0f);
+        playerCamera.transform.localEulerAngles = new Vector3(playerCamera.transform.localEulerAngles.x, playerCamera.transform.localEulerAngles.y, -(currentTurnSpeed + currentDriftForce) * (currentSpeed + currentTurboForce) * 0.75f); //* Mathf.Clamp(currentDriftForce, -1f, 1f) * 0.05f);
+>>>>>>> Stashed changes
 
         // playerCamera.transform.localRotation = Quaternion.Euler(32, camYRot, 0);
         //playerCamera.transform.localPosition = new Vector3(camXpos, 3.9f, -4.7f);
