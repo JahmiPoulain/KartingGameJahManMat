@@ -34,7 +34,7 @@ public class ContreLaMontre : MonoBehaviour
 
     void Update()
     {
-        if (boostWindow && Input.GetAxisRaw("Vertical") > 0)
+        if (boostWindow && InputSystemHandler.instance.inputForward > 0)
         {
             playerPressed = true;
         }

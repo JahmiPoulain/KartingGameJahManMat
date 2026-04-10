@@ -10,9 +10,10 @@ public class KartScriptV3 : MonoBehaviour
     public static KartScriptV3 instance;
     public bool canDrive = true;
 
-    float respawnCooldown = 2f;
+    float respawnCooldown = 1.5f;
     private Vector3 startPosition;
     private Vector3 currentPosition;
+    private float security = 8f;
     [Header("Components")]
     public Rigidbody rb;
     [SerializeField] private CheckpointManager checkPointManager;
@@ -1054,12 +1055,27 @@ public class KartScriptV3 : MonoBehaviour
         }
 
 
-        if (!Physics.Raycast(groundRayOrigin.position, Vector3.down, 5f, trackLayer))
+        if (!Physics.Raycast(groundRayOrigin.position, Vector3.down, 50f, trackLayer))
         {
 
-//            checkPointManager.StartCoroutine(Respawn());
-            transform.position = startPosition;
-            respawnCooldown = 1.5f;
+            while(security >= 0)
+            {
+                Debug.Log("Petite sécurité");
+                security -= Time.fixedDeltaTime;
+                if (security < 0)
+                {
+                    Debug.Log("Hors piste donc respawn");
+                    checkPointManager.IsOffTrack = true;
+                    transform.position = startPosition;
+                    respawnCooldown = 1.5f;
+                    
+                    return;
+                }
+                else return;
+            }
+            security = 8f;
+
+
         }
     }
 

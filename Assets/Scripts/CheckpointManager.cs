@@ -11,13 +11,25 @@ public class CheckpointManager : MonoBehaviour
     private Vector3 newPos;
     private bool hasCheckpoint = false; // ✅ savoir si un checkpoint a été validé
 
+    private bool isOffTrack = false;
+
     public int NextIndex { get => nextIndex; set => nextIndex = value; }
+    public bool IsOffTrack { get => isOffTrack; set => isOffTrack = value; }
 
     private void Awake()
     {
         foreach (Checkpoint checkpoint in lapManager.Checkpoints)
         {
             checkpoint.gameObject.SetActive(true);
+        }
+    }
+
+    public void Update()
+    {
+        if (isOffTrack)
+        {
+            StartCoroutine(Respawn());
+            isOffTrack = false;
         }
     }
 
@@ -37,17 +49,22 @@ public class CheckpointManager : MonoBehaviour
     public IEnumerator Respawn()
     {
         kartScript.canDrive = false;
-        yield return new WaitForSeconds(2);
+        yield return new WaitForSeconds(1);
         // ✅ si aucun checkpoint → on utilise la position de départ
         if (hasCheckpoint)
         {
-            kartScript.StartPosition = newPos;
-        }
 
+            kartScript.StartPosition = newPos;
+            kartScript.currentSpeed = 0;
+            yield return new WaitForSeconds(0.5f);
+            kartScript.canDrive = true;
+        }
+        yield return new WaitForSeconds(1);
         // ✅ reset physique propre
         kartScript.CurrentPosition = kartScript.StartPosition;
+        kartScript.currentSpeed = 0;
         kartScript.rb.linearVelocity = Vector3.zero;
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(0.5f);
         kartScript.canDrive = true;
 
     }
