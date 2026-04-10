@@ -2,7 +2,17 @@ using UnityEngine;
 using UnityEngine.UI;
 using LootLocker.Requests;
 using System.Collections.Generic;
-using LootLocker.Extension.DataTypes;
+
+// Fonction à placer dans le script qui gère la fin de la course :
+
+// void OnRaceFinished(float totalTime)
+// {
+//     // Conversion secondes → millisecondes
+//     int finalTime = Mathf.RoundToInt(totalTime * 1000f);
+
+//     // Envoi au leaderboard
+//     LeaderboardManager.Instance.SubmitScoreAndRefresh(finalTime);
+// }
 
 public class LeaderboardManager : MonoBehaviour
 {
@@ -104,9 +114,8 @@ public class LeaderboardManager : MonoBehaviour
                 GameObject obj = Instantiate(entryPrefab, contentParent);
                 spawnedEntries.Add(obj);
 
-                LeaderboardEntryUI entry = obj.GetComponent<LeaderboardEntryUI>();
-
-                if (entry == null)
+                
+                if (!obj.TryGetComponent<LeaderboardEntryUI>(out var entry))
                 {
                     Debug.LogError("Prefab sans LeaderboardEntryUI !");
                     continue;
