@@ -1,5 +1,6 @@
 
 using UnityEngine;
+using System.Collections;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
 using static UnityEngine.GraphicsBuffer;
@@ -9,7 +10,7 @@ public class KartScriptV3 : MonoBehaviour
     public static KartScriptV3 instance;
     public bool canDrive = true;
 
-    float respawnCooldown = 0f;
+    float respawnCooldown = 2f;
     private Vector3 startPosition;
     private Vector3 currentPosition;
     [Header("Components")]
@@ -1056,7 +1057,7 @@ public class KartScriptV3 : MonoBehaviour
         if (!Physics.Raycast(groundRayOrigin.position, Vector3.down, 5f, trackLayer))
         {
 
-            checkPointManager.Respawn();
+//            checkPointManager.StartCoroutine(Respawn());
             transform.position = startPosition;
             respawnCooldown = 1.5f;
         }

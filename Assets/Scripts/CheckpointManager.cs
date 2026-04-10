@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections;
 
 public class CheckpointManager : MonoBehaviour
 {
@@ -33,8 +34,10 @@ public class CheckpointManager : MonoBehaviour
         }
     }
 
-    public void Respawn()
+    public IEnumerator Respawn()
     {
+        kartScript.canDrive = false;
+        yield return new WaitForSeconds(2);
         // ✅ si aucun checkpoint → on utilise la position de départ
         if (hasCheckpoint)
         {
@@ -44,6 +47,8 @@ public class CheckpointManager : MonoBehaviour
         // ✅ reset physique propre
         kartScript.CurrentPosition = kartScript.StartPosition;
         kartScript.rb.linearVelocity = Vector3.zero;
-        kartScript.currentSpeed = 0;
+        yield return new WaitForSeconds(1);
+        kartScript.canDrive = true;
+
     }
 }
