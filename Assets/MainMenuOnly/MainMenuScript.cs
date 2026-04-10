@@ -58,6 +58,12 @@ public class MainMenuScript : MonoBehaviour
         currentFade = StartCoroutine(Fade(1f, 0f));
     }
 
+
+    public void SetCursorAt(GameObject b)
+    {
+        EventSystem.current.SetSelectedGameObject(b);
+    }
+
     public void TogglePanel(GameObject panel)
     {
         panel.SetActive(!panel.activeSelf);
