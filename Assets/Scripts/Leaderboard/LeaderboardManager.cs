@@ -21,7 +21,6 @@ public class LeaderboardManager : MonoBehaviour
     private bool isConnected = false;
     private bool isLoading = false;
     private int localPlayerId;
-    private Pcg32 rng; 
 
     void Awake()
     {
@@ -31,8 +30,6 @@ public class LeaderboardManager : MonoBehaviour
 
     void Start()
     {
-        rng = Pcg32.CreateCombined();
-
         // Expression Lambda / Fonction Callback
         LootLockerSDKManager.StartGuestSession((response) =>
         {
@@ -63,7 +60,7 @@ public class LeaderboardManager : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.T) && isConnected)
         {
-            SubmitScoreAndRefresh(rng.Range(10000, 200000)); 
+            SubmitScoreAndRefresh(GlobalRng.Range(10000, 200000)); 
         }
     }
 

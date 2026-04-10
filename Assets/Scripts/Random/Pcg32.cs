@@ -1,95 +1,101 @@
 using System;
-using System.Runtime.InteropServices;
-using UnityEngine;
+using System.Security.Cryptography;
 
-public struct Pcg32
+public class Pcg32
 {
+    // Etat interne (équivalent struct C)
     private ulong state;
     private ulong inc;
 
+    // Constante LCG
     private const ulong PCG32_MULT = 6364136223846793005UL;
 
-    /// <summary>
-    /// Initialise le générateur avec une graine (state) et une séquence (inc).
-    /// </summary>
+    // -------- INITIALISATION --------
+    public void Init()
+    {
+        // Génère 128 bits aléatoires
+        // Cryptographically Secure Pseudo-Random Number Generator
+        byte[] buffer = new byte[16];
+
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(buffer);
+        }
+
+        ulong initstate = BitConverter.ToUInt64(buffer, 0);
+        ulong initseq   = BitConverter.ToUInt64(buffer, 8);
+
+        Seed(initstate, initseq);
+    }
+
+    // -------- SEED --------
     public void Seed(ulong initstate, ulong initseq)
     {
-        state = 0U;
-        inc = (initseq << 1) | 1U;
-        Next();
-        unchecked { state += initstate; }
-        Next();
+        // On s'assure de commencer avec un état connu pour éviter les effets imprévisibles
+        state = 0;
+
+        // On force le nombre de la séquence à être impair
+        // Pour ça on décale tous les bits vers la gauche, puis on force le bit de droite à 1
+        inc = (initseq << 1) | 1;
+
+        // On fait évoluer l'état du générateur une première fois
+        NextUInt();
+
+        // On injecte maintenant initstate pour décorréler state et inc.
+        state += initstate;
+
+        // On fait évoluer l'état une deuxième fois 
+        NextUInt();
     }
 
-    /// <summary>
-    /// Génère un nombre aléatoire 32-bit (équivalent de pcg32)
-    /// </summary>
-    public uint Next()
+    // -------- PCG32 ALGORYTHME --------
+    // Retourne un entier 32 bits : 0 → 4 294 967 295
+    public uint NextUInt()
     {
-        unchecked
-        {
-            ulong oldstate = state;
-            state = oldstate * PCG32_MULT + inc;
+        ulong oldstate = state;
 
-            uint xorshifted = (uint)(((oldstate >> 18) ^ oldstate) >> 27);
-            int rot = (int)(oldstate >> 59);
-            return (xorshifted >> rot) | (xorshifted << ((-rot) & 31));
-        }
+        // LCG 64 bits
+        state = oldstate * PCG32_MULT + inc;
+
+        // Transformation PCG
+        uint xorshifted = (uint)(((oldstate >> 18) ^ oldstate) >> 27);
+        uint rot = (uint)(oldstate >> 59);
+
+        return (xorshifted >> (int)rot) | (xorshifted << (int)((-rot) & 31));
     }
 
-    #region Helpers (Gamme de nombres)
-
-    // [0, max[
+    // -------- RANGE [0, max[ --------
     public uint Range(uint max)
     {
+        // Si la valeur transmise est 0, on renvoie juste 0
         if (max == 0) return 0;
-        uint threshold = (uint)((-(int)max) % max);
+
+        uint threshold = (uint)(-max % max);
         uint r;
-        do { r = Next(); } while (r < threshold);
+
+        do
+        {
+            r = NextUInt();
+        } while (r < threshold);
+
         return r % max;
     }
 
-    // [min, max[
+    // -------- RANGE [min, max[ --------
     public int Range(int min, int max)
     {
+        // Si max est plus petit que min, on renvoie juste min
         if (max <= min) return min;
+
         return min + (int)Range((uint)(max - min));
     }
 
-    // [0.0f, 1.0f[
+    // -------- FLOAT [0,1[ --------
     public float NextFloat()
     {
-        return (Next() >> 8) * (1.0f / 16777216.0f);
+        // On enlève les 8 bits de poids faible pour en garder 24 / 32
+        // Car un float IEEE 754 = 23 bits de mantisse + 1 implicite
+        // ON fait la division de avec 16777216 qui vaut 2^24
+        return (NextUInt() >> 8) * (1.0f / 16777216.0f);
     }
-
-    #endregion
-
-    #region Initialisations (Équivalents C)
-
-    /// <summary>
-    /// Méthode recommandée pour Unity : mélange l'heure, le temps écoulé et l'ID d'instance.
-    /// </summary>
-    public static Pcg32 CreateCombined()
-    {
-        Pcg32 rng = new Pcg32();
-        
-        // On récupère des données qui varient
-        ulong t = (ulong)DateTime.Now.Ticks;
-        ulong clock = (ulong)(Time.realtimeSinceStartupAsDouble * 1000000);
-        
-        // Utilisation de System.Security.Cryptography pour une graine "vraiment" aléatoire (équivalent v4 /dev/urandom)
-        byte[] buffer = new byte[16];
-        using (var crypto = System.Security.Cryptography.RandomNumberGenerator.Create())
-        {
-            crypto.GetBytes(buffer);
-        }
-
-        ulong s1 = BitConverter.ToUInt64(buffer, 0);
-        ulong s2 = BitConverter.ToUInt64(buffer, 8);
-
-        rng.Seed(s1 ^ t, s2 ^ clock);
-        return rng;
-    }
-
-    #endregion
 }
