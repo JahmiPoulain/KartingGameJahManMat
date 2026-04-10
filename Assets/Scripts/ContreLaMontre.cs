@@ -64,7 +64,14 @@ public class ContreLaMontre : MonoBehaviour
         scoreUI.text = $"Temps total : \n {minutes : 00}:{seconds:00.000}";
         kartScript.ghostMode = true;
 
+        OnRaceFinished(totalTime);
+    }
 
+    void OnRaceFinished(float totalTime)
+    {
+        int finalTime = Mathf.RoundToInt(totalTime * 1000f);
+
+        //LeaderboardManager.Instance.SubmitScoreAndRefresh(finalTime);
     }
 
     IEnumerator StartCountdown()

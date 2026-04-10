@@ -66,8 +66,6 @@ public class LapManager : MonoBehaviour
 
         chrono.ResetChrono();
 
-        chrono.ResetChrono();
-
         checkpointManager.NextIndex = 1;
 
         CurrentLap++;
