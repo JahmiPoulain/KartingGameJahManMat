@@ -7526,7 +7526,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 498415610}
-  - component: {fileID: 498415609}
   - component: {fileID: 498415611}
   - component: {fileID: 498415607}
   - component: {fileID: 498415612}
@@ -7564,29 +7563,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 1
---- !u!114 &498415609
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 498415606}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 758d6762ace2641458edb97ff7f9d440, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  rb: {fileID: 0}
-  maxSpeed: 15
-  maxBackSpeed: 5
-  accelerate: 0
-  maxAccelSpeed: 10
-  currentAccelSpeed: 0
-  maxDecelSpeed: 5
-  maxTurnSpeed: 2
-  currentTurnSpeed: 0
-  turnAccelSpeed: 5
-  turnDecelSpeed: 5
 --- !u!4 &498415610
 Transform:
   m_ObjectHideFlags: 0

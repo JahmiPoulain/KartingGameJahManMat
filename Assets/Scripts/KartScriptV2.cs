@@ -111,6 +111,8 @@ public class KartScriptV2 : MonoBehaviour
     float inputGlideUpDown;
     public GameObject gliderGO;
     float tryFlightTimer;
+    // visual flight
+    float visualFlightRotSpeedZ;
 
     // MATHIS
 
@@ -226,88 +228,94 @@ public class KartScriptV2 : MonoBehaviour
         }
         else
         {
-            gliderGO.SetActive(true);
-            //groundNormalT.transform.localEulerAngles = Vector3.zero;
-            if (flightDir.eulerAngles.x > 0f && flightDir.eulerAngles.x < 180f)
-            {
-                flightSpeed += (flightDir.eulerAngles.x) * 0.8f * Time.fixedDeltaTime;
-                //Debug.Log("BAS" + flightDir.transform.eulerAngles.x);
-                if (flightSpeed > 30f)
-                {
-                    flightSpeed = 30f;
-                }
-            }
-            else if (flightDir.eulerAngles.x > 180f && flightDir.eulerAngles.x < 360f)
-            {
-                flightSpeed += (flightDir.eulerAngles.x - 360f) * 0.25f * Time.fixedDeltaTime;
-                //Debug.Log("HAUT" + (flightDir.transform.eulerAngles.x - 360f));
-                if (flightSpeed < 0.8f)
-                {
-                    flightSpeed = 0.8f;
-                }
-            }
-            if (flightSpeed < currentTurboForce)
-            {
-                flightSpeed = currentTurboForce;
-            }
-            //Debug.Log(flightDir.transform.eulerAngles.x);
-            if (inputGlideUpDown == 0)
-            {
-                float extraNoseSpeed = 0f;
-                if (flightDir.eulerAngles.x > 180f && flightDir.eulerAngles.x < 360f)
-                {
-                    extraNoseSpeed = (360f - flightDir.eulerAngles.x) / 35f;
-                    flightDir.Rotate(0.1f + extraNoseSpeed, 0, 0);
-                }
-                else if (flightDir.eulerAngles.x > 0 && flightDir.eulerAngles.x < 5f)
-                {
-                    extraNoseSpeed = -flightDir.eulerAngles.x / 35f;
-                    flightDir.Rotate(0.1f + extraNoseSpeed, 0, 0);
-                }
-                else if (flightDir.eulerAngles.x < 90f && flightDir.eulerAngles.x > 5f)
-                {
-                    extraNoseSpeed = -flightDir.eulerAngles.x / 35f;
-                    flightDir.Rotate(-0.1f + extraNoseSpeed, 0, 0);
-                }
-            }
-            else
-            {
-                //if (flightDir.eulerAngles.x > 45f && flightDir.eulerAngles.x < 180f || flightDir.eulerAngles.x > 360 && flightDir.eulerAngles.x < 180f)
-                //{
-                    flightDir.Rotate(inputGlideUpDown, 0, 0);
-                //}       
-                //else
-                //{
-                //    flightDir.eulerAngles = new Vector3(45f ,flightDir.eulerAngles.y, flightDir.eulerAngles.z);
-                //}
-            }
-            //Mathf.Clamp(flightDir.rotation.x, -45f, 90f);
-            if (turnDirection != 0f)
-            {
-                
-                currentFlightTurnForce += (0.1f * turnDirection + maxFlightTurnForce) * turnDirection * Time.fixedDeltaTime;
-                if (currentFlightTurnForce < -maxFlightTurnForce) currentFlightTurnForce = -maxFlightTurnForce;
-                else if (currentFlightTurnForce > maxFlightTurnForce) currentFlightTurnForce = maxFlightTurnForce;
-            }
-            else if (currentFlightTurnForce > 0f)
-            {
-                currentFlightTurnForce -= 3f * Time.fixedDeltaTime;
-                if (currentFlightTurnForce < 0) { currentFlightTurnForce = 0; }
-            }
-            else if (currentFlightTurnForce < 0f)
-            {
-                currentFlightTurnForce += 3f * Time.fixedDeltaTime;
-                if (currentFlightTurnForce > 0) { currentFlightTurnForce = 0; }
-            }
-            transform.Rotate(0, currentFlightTurnForce, 0);//(0, (currentTurnSpeed + currentDriftForce) / 1.5f, 0);
-            flightDir.localEulerAngles = new Vector3 (flightDir.localEulerAngles.x, 0f, currentFlightTurnForce * 10f);
-            //flightDir.Rotate(0, 0, currentFlightTurnForce);
-            rb.linearVelocity = (flightDir.forward * (flightSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + (currentFallSpeed / (1f + flightSpeed / 2.5f)) / 1.2f);
-            //Debug.Log(flightSpeed);
-            //if (currentTurboForce <= 0) airSpeed -= 5f * Time.fixedDeltaTime;
-            //if (airSpeed < 0) airSpeed = 0;
+            HandleGliderFlight();
         }
     }
+
+    private void HandleGliderFlight()
+    {
+        gliderGO.SetActive(true);
+        //groundNormalT.transform.localEulerAngles = Vector3.zero;
+        if (flightDir.eulerAngles.x > 0f && flightDir.eulerAngles.x < 180f)
+        {
+            flightSpeed += (flightDir.eulerAngles.x) * 0.8f * Time.fixedDeltaTime;
+            //Debug.Log("BAS" + flightDir.transform.eulerAngles.x);
+            if (flightSpeed > 30f)
+            {
+                flightSpeed = 30f;
+            }
+        }
+        else if (flightDir.eulerAngles.x > 180f && flightDir.eulerAngles.x < 360f)
+        {
+            flightSpeed += (flightDir.eulerAngles.x - 360f) * 0.25f * Time.fixedDeltaTime;
+            //Debug.Log("HAUT" + (flightDir.transform.eulerAngles.x - 360f));
+            if (flightSpeed < 0.8f)
+            {
+                flightSpeed = 0.8f;
+            }
+        }
+        if (flightSpeed < currentTurboForce)
+        {
+            flightSpeed = currentTurboForce;
+        }
+        //Debug.Log(flightDir.transform.eulerAngles.x);
+        if (inputGlideUpDown == 0)
+        {
+            float extraNoseSpeed = 0f;
+            if (flightDir.eulerAngles.x > 180f && flightDir.eulerAngles.x < 360f)
+            {
+                extraNoseSpeed = (360f - flightDir.eulerAngles.x) / 35f;
+                flightDir.Rotate(0.1f + extraNoseSpeed, 0, 0);
+            }
+            else if (flightDir.eulerAngles.x > 0 && flightDir.eulerAngles.x < 5f)
+            {
+                extraNoseSpeed = -flightDir.eulerAngles.x / 35f;
+                flightDir.Rotate(0.1f + extraNoseSpeed, 0, 0);
+            }
+            else if (flightDir.eulerAngles.x < 90f && flightDir.eulerAngles.x > 5f)
+            {
+                extraNoseSpeed = -flightDir.eulerAngles.x / 35f;
+                flightDir.Rotate(-0.1f + extraNoseSpeed, 0, 0);
+            }
+        }
+        else
+        {
+            //if (flightDir.eulerAngles.x > 45f && flightDir.eulerAngles.x < 180f || flightDir.eulerAngles.x > 360 && flightDir.eulerAngles.x < 180f)
+            //{
+            flightDir.Rotate(inputGlideUpDown, 0, 0);
+            //}       
+            //else
+            //{
+            //    flightDir.eulerAngles = new Vector3(45f ,flightDir.eulerAngles.y, flightDir.eulerAngles.z);
+            //}
+        }
+        //Mathf.Clamp(flightDir.rotation.x, -45f, 90f);
+        if (turnDirection != 0f)
+        {
+
+            currentFlightTurnForce += (0.1f * turnDirection + maxFlightTurnForce) * turnDirection * Time.fixedDeltaTime;
+            if (currentFlightTurnForce < -maxFlightTurnForce) currentFlightTurnForce = -maxFlightTurnForce;
+            else if (currentFlightTurnForce > maxFlightTurnForce) currentFlightTurnForce = maxFlightTurnForce;
+        }
+        else if (currentFlightTurnForce > 0f)
+        {
+            currentFlightTurnForce -= 3f * Time.fixedDeltaTime;
+            if (currentFlightTurnForce < 0) { currentFlightTurnForce = 0; }
+        }
+        else if (currentFlightTurnForce < 0f)
+        {
+            currentFlightTurnForce += 3f * Time.fixedDeltaTime;
+            if (currentFlightTurnForce > 0) { currentFlightTurnForce = 0; }
+        }
+        transform.Rotate(0, currentFlightTurnForce, 0);//(0, (currentTurnSpeed + currentDriftForce) / 1.5f, 0);
+        flightDir.localEulerAngles = new Vector3(flightDir.localEulerAngles.x, 0f, currentFlightTurnForce * 10f);
+        //flightDir.Rotate(0, 0, currentFlightTurnForce);
+        rb.linearVelocity = (flightDir.forward * (flightSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + (currentFallSpeed / (1f + flightSpeed / 2.5f)) / 1.2f);
+        //Debug.Log(flightSpeed);
+        //if (currentTurboForce <= 0) airSpeed -= 5f * Time.fixedDeltaTime;
+        //if (airSpeed < 0) airSpeed = 0;
+    }
+
     private void LateUpdate()
     {
         // on gère les visuels du kart
@@ -740,7 +748,32 @@ public class KartScriptV2 : MonoBehaviour
             //Debug.Log(rotTarget1);
             //visualKartBody.transform.Rotate(0,0, -inputGlideTurn * 30f);
             //visualKartBody.transform.localEulerAngles = Vector3.RotateTowards(visualKartBody.transform.localEulerAngles, new Vector3(visualKartBody.transform.localEulerAngles.x, visualKartBody.transform.localEulerAngles.y, -currentFlightTurnForce * 20f), 1f,0f);
-            visualKartBody.transform.localEulerAngles = new Vector3(visualKartBody.transform.localEulerAngles.x, visualKartBody.transform.localEulerAngles.y, -currentFlightTurnForce * 20f);
+            /*float zRotTarget = -currentFlightTurnForce * 32f;
+            float zRot = visualKartBody.transform.localEulerAngles.z;
+            if (zRot > zRotTarget)
+            {
+                Debug.Log("too right");
+                visualFlightRotSpeedZ -= 12f * Time.deltaTime;
+                visualKartBody.transform.localEulerAngles = new Vector3(visualKartBody.transform.localEulerAngles.x, visualKartBody.transform.localEulerAngles.y, zRot + visualFlightRotSpeedZ);
+                if (zRot < zRotTarget)
+                { 
+                    //visualKartBody.transform.localEulerAngles = new Vector3(visualKartBody.transform.localEulerAngles.x, visualKartBody.transform.localEulerAngles.y,zRotTarget); 
+                }
+            }
+            else if (visualKartBody.transform.localEulerAngles.z < zRotTarget)
+            {
+                Debug.Log("too left");
+                visualFlightRotSpeedZ += 12f * Time.deltaTime;
+                visualKartBody.transform.localEulerAngles = new Vector3(visualKartBody.transform.localEulerAngles.x, visualKartBody.transform.localEulerAngles.y, zRot + visualFlightRotSpeedZ);
+                if (zRot > zRotTarget)
+                { 
+                    //visualKartBody.transform.localEulerAngles = new Vector3(visualKartBody.transform.localEulerAngles.x, visualKartBody.transform.localEulerAngles.y, zRotTarget); 
+                }
+
+            }*/
+
+
+            visualKartBody.transform.localEulerAngles = new Vector3(visualKartBody.transform.localEulerAngles.x, visualKartBody.transform.localEulerAngles.y, -currentFlightTurnForce * 32f);
             //Debug.Log(inputGlideTurn);
             return;
         }
