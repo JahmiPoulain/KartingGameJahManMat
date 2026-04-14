@@ -873,8 +873,8 @@ public class KartScriptV2 : MonoBehaviour
                 return;
         }
         visualKartWheelsParent.transform.localRotation = Quaternion.Euler(0, 0, 0);
-        turningWheelsXRot += (currentSpeed + currentTurboForce) * turningWheelsRatioScaling * Time.fixedDeltaTime;
-        nonTurningWheelsXRot += (currentSpeed + currentTurboForce) * nonTurningWheelsRatioScaling * Time.fixedDeltaTime;
+        turningWheelsXRot += (currentSpeed + currentTurboForce) * turningWheelsRatioScaling * Time.deltaTime;
+        nonTurningWheelsXRot += (currentSpeed + currentTurboForce) * nonTurningWheelsRatioScaling * Time.deltaTime;
         for (int i = 0; i < turningWheels.Length; i++)
         {            
             turningWheels[i].transform.localRotation = Quaternion.Euler(turningWheelsXRot, visWheelsYRot, 90);      
@@ -920,7 +920,7 @@ public class KartScriptV2 : MonoBehaviour
         }*/
         if (playerCamera.transform.localPosition.x > camXpos)
         {
-            float nextXpos = playerCamera.transform.localPosition.x - 0.15f * Time.fixedDeltaTime;
+            float nextXpos = playerCamera.transform.localPosition.x - 0.15f * Time.deltaTime;
             if (nextXpos < camXpos)
             {
                 nextXpos = camXpos;
@@ -929,7 +929,7 @@ public class KartScriptV2 : MonoBehaviour
         }
         else if (playerCamera.transform.localPosition.x < camXpos)
         {
-            float nextXpos = playerCamera.transform.localPosition.x + 0.15f * Time.fixedDeltaTime;
+            float nextXpos = playerCamera.transform.localPosition.x + 0.15f * Time.deltaTime;
             if ( nextXpos > camXpos)
             {
                 nextXpos = camXpos;
@@ -938,14 +938,14 @@ public class KartScriptV2 : MonoBehaviour
         }
         //Debug.Log(transform.right * driftDir * currentDriftForce * 0.05f);
         Vector3 targetDir = (transform.forward + (transform.right * currentTurnSpeed * Mathf.Clamp(currentDriftForce, -1f, 1f) * 0.05f)).normalized;
-        float rotSpeed = 0.1f + (camPivot.forward - targetDir).magnitude * 0.08f;
+        float rotSpeed = 0.1f + (camPivot.forward - targetDir).magnitude * 2f;
         //Debug.Log(" targetDir = "+ targetDir + "  turn = " + (currentTurnSpeed * 0.05f) + "  drift = " +(currentDriftForce * 1f));
-        camPivot.forward = Vector3.RotateTowards(camPivot.forward, targetDir, rotSpeed * Time.fixedDeltaTime, 0.0f);
+        camPivot.forward = Vector3.RotateTowards(camPivot.forward, targetDir, rotSpeed * Time.deltaTime, 0.0f);
 
         if (InputSystemHandler.instance.inputCameraMode)
         {
             Vector3 nextDir = thirdPersonCamPos - playerCamera.transform.localPosition;
-            Vector3 nextPos = nextDir.normalized * 3f * Time.fixedDeltaTime;
+            Vector3 nextPos = nextDir.normalized * 3f * Time.deltaTime;
             if (nextDir.sqrMagnitude > 0.2f)
             {
                 playerCamera.transform.localPosition += nextPos;
@@ -958,7 +958,7 @@ public class KartScriptV2 : MonoBehaviour
         else
         {
             Vector3 nextDir = firstPersonCamPos - playerCamera.transform.localPosition;
-            Vector3 nextPos = nextDir.normalized * 3f * Time.fixedDeltaTime;
+            Vector3 nextPos = nextDir.normalized * 3f * Time.deltaTime;
             if (nextDir.sqrMagnitude > 0.2f)
             {
                 playerCamera.transform.localPosition += nextPos;
@@ -1025,15 +1025,15 @@ public class KartScriptV2 : MonoBehaviour
         if (bounce)
         {
             
-            bounceTimer += Time.fixedDeltaTime;
+            bounceTimer += Time.deltaTime;
             if (bounceTimer < 0.05f)
             {
-                visualKartBody.transform.localScale = visualKartBody.transform.localScale + new Vector3(-6f, 10f, -6f) * Time.fixedDeltaTime;
+                visualKartBody.transform.localScale = visualKartBody.transform.localScale + new Vector3(-6f, 10f, -6f) * Time.deltaTime;
                 
             }
             else if (bounceTimer < 0.1f)
             {
-                visualKartBody.transform.localScale = visualKartBody.transform.localScale + new Vector3(6f, -10f, 6f) * Time.fixedDeltaTime;
+                visualKartBody.transform.localScale = visualKartBody.transform.localScale + new Vector3(6f, -10f, 6f) * Time.deltaTime;
             }
             else
             {
