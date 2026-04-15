@@ -147,6 +147,7 @@ public class KartScriptV2 : MonoBehaviour
     }
     void Start()
     {
+        //Application.targetFrameRate = 20;
         rb = GetComponent<Rigidbody>();
         groundNormal = new Vector3(0, 1, 0);
     }
