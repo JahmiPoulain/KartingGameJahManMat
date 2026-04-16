@@ -2,15 +2,22 @@ using UnityEngine;
 
 public class TimeAttack : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    public float bestTime;
+
     void Start()
     {
-        
+        bestTime = PlayerPrefs.GetFloat("BestTime", float.MaxValue);
     }
 
-    // Update is called once per frame
-    void Update()
+    public void SaveTime(float newTime)
     {
-        
+        if (newTime < bestTime)
+        {
+            bestTime = newTime;
+            PlayerPrefs.SetFloat("BestTime", bestTime);
+            PlayerPrefs.Save();
+
+            Debug.Log("NOUVEAU RECORD !");
+        }
     }
 }
