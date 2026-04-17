@@ -160,8 +160,15 @@ public class KartScriptV2 : MonoBehaviour
 
     private void FixedUpdate()
     {
-        // On gère la physique du kart
-        HandleCurrentSpeed();
+        // Place Holder Respawner
+        if (transform.position.y < 2f)
+        {
+            transform.position = new Vector3(106.9f, 16, 151.6f);
+            transform.eulerAngles = new Vector3(0, 585.413f, 0);
+        }
+
+            // On gère la physique du kart
+            HandleCurrentSpeed();
         HandleTurning();
         HandleTurbo();
 
@@ -722,22 +729,28 @@ public class KartScriptV2 : MonoBehaviour
     }
     float IncrementTowardsValue(float currentValue, float targetValue, float increment)
     {
+        Debug.Log(currentValue + " " + targetValue + " " + increment);
         if (currentValue > targetValue)
         {
+            //Debug.Log("plus grang");
             currentValue -= increment;
             if (currentValue < targetValue)
             {
+                //Debug.Log("<");
                 return targetValue;
             }
         }
         else if (currentValue < targetValue)
         {
+            //Debug.Log("plus ptit");
             currentValue += increment;
             if (currentValue > targetValue)
             {
+                //Debug.Log(">");
                 return targetValue;
             }
         }
+        Debug.Log(currentValue);
         return currentValue;
     }
     void HandleCameraTransform()
@@ -747,7 +760,7 @@ public class KartScriptV2 : MonoBehaviour
         {
             driftForce = -driftForce;
         }
-        camXpos = Mathf.Clamp((currentSpeed * -currentTurnSpeed / 120f * forwardDirection) + (turnDirection * driftForce), -10f, 10f);
+        camXpos = Mathf.Clamp((currentSpeed * -currentTurnSpeed / 50f * forwardDirection) + (turnDirection * driftForce), -10f, 10f);
         /*if (playerCamera.transform.localPosition.x > camXpos)
         {
             float nextXpos = playerCamera.transform.localPosition.x - 0.15f * Time.deltaTime;
@@ -767,8 +780,9 @@ public class KartScriptV2 : MonoBehaviour
             playerCamera.transform.localPosition = new Vector3(nextXpos, playerCamera.transform.localPosition.y, playerCamera.transform.localPosition.z);
         }*/
 
-
+       // Debug.Log("avant "+playerCamera.transform.localPosition + camXpos);
         playerCamera.transform.localPosition = new Vector3(IncrementTowardsValue(playerCamera.transform.localPosition.x, camXpos, 0.15f * Time.deltaTime), playerCamera.transform.localPosition.y, playerCamera.transform.localPosition.z);
+       // Debug.Log("apres " + playerCamera.transform.localPosition + camXpos);
         Vector3 targetDir = (transform.forward + (transform.right * currentTurnSpeed * Mathf.Clamp(currentDriftForce, -1f, 1f) * 0.05f)).normalized;
         float rotSpeed = 0.1f + (camPivot.forward - targetDir).magnitude * 2f;
         camPivot.forward = Vector3.RotateTowards(camPivot.forward, targetDir, rotSpeed * Time.deltaTime, 0.0f);
