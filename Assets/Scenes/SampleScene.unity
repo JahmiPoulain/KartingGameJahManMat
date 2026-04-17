@@ -10168,7 +10168,6 @@ GameObject:
   m_Component:
   - component: {fileID: 498415610}
   - component: {fileID: 498415611}
-  - component: {fileID: 498415613}
   - component: {fileID: 498415607}
   - component: {fileID: 498415612}
   m_Layer: 8
@@ -10234,7 +10233,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 498415606}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 104209061407fac4fac9cc83a8f6dfb6, type: 3}
   m_Name: 
@@ -10336,91 +10335,6 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0.225, z: 0}
---- !u!114 &498415613
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 498415606}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fa2601e40c4e7714fb8436e8b3665e80, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  canDrive: 1
-  rb: {fileID: 0}
-  checkPointManager: {fileID: 0}
-  maxSpeed: 0
-  currentSpeed: 0
-  maxBackSpeed: 0
-  accelerate: 0
-  accelSpeed: 0
-  flatAccelSpeed: 0
-  decelSpeed: 0
-  flatDecelSpeed: 0
-  maxTurnSpeed: 0
-  currentTurnSpeed: 0
-  turnAccelSpeed: 0
-  turnDecelSpeed: 0
-  currentTurboForce: 0
-  turboAccelSpeed: 0
-  minTurboDecel: 0
-  wallLayer:
-    serializedVersion: 2
-    m_Bits: 0
-  trackLayer:
-    serializedVersion: 2
-    m_Bits: 0
-  bounceDirection: {x: 0, y: 0, z: 0}
-  bounceForce: 0
-  minBounceDecelForce: 0
-  camXpos: 0
-  playerCamera: {fileID: 0}
-  camPivot: {fileID: 0}
-  thirdPersonCamPos: {x: 0, y: 0, z: 0}
-  firstPersonCamPos: {x: 0, y: 0, z: 0}
-  visualKartBody: {fileID: 0}
-  visualKartWheelsParent: {fileID: 0}
-  visKartZRot: 0
-  visKartXRot: 0
-  visKartXRotCatchUp: 0
-  visKartTurboXRotCatchUp: 0
-  turningWheels: []
-  nonTurningWheels: []
-  fireWheelEffects: []
-  visWheelsYRot: 0
-  turningWheelsRatioScaling: 0
-  nonTurningWheelsRatioScaling: 0
-  bounce: 0
-  smokePrefab: {fileID: 0}
-  smokeOrigin: {fileID: 0}
-  baseSmokeMat: {fileID: 0}
-  fireSmokeMat: {fileID: 0}
-  smokeParticlesGenerator: {fileID: 0}
-  fireParticlesGenerator: {fileID: 0}
-  driftParticlesGenerators: []
-  gravity: 0
-  currentFallSpeed: 0
-  preOrientation: {fileID: 0}
-  groundNormalT: {fileID: 0}
-  groundRayOrigin: {fileID: 118313280}
-  keepDrifting: 0
-  highDrift: 0
-  lowDrift: 0
-  gaugeToActivateTurbo: 0
-  driftPivot: {fileID: 0}
-  driftCoyoteTime: 0
-  isFlying: 0
-  flightSpeed: 0
-  flightDir: {fileID: 0}
-  maxFlightTurnForce: 0
-  gliderGO: {fileID: 0}
-  contreLaMontre: {fileID: 0}
-  trackPath: {fileID: 0}
-  ghostMode: 0
-  currentWaypoint: {fileID: 0}
-  firstWaypoint: {fileID: 0}
 --- !u!1 &499588288
 GameObject:
   m_ObjectHideFlags: 0
