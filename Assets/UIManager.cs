@@ -53,7 +53,7 @@ public class UIManager : MonoBehaviour
 
     public void quitGame()
     {
-        SceneManager.LoadScene("MainMenu");
+        SceneManager.LoadScene("MainMenu2_0");
     }
 
 }

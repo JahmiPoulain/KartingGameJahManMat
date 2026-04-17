@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro; // <-- AJOUT DE TEXTMESHPRO ICI !
+using TMPro;
+using UnityEditor.Build.Content;
+using UnityEngine.SceneManagement;
 
 [System.Serializable]
 public class WheelItem
@@ -10,7 +12,7 @@ public class WheelItem
     public Sprite buttonTexture;
 
     [Header("--- Texte & Police ---")]
-    public TMP_FontAsset customFont; // <-- MISE A JOUR POUR TMP
+    public TMP_FontAsset customFont;
 
     public GameObject windowToOpen;
 
@@ -47,6 +49,10 @@ public class MainMenuUIManager : MonoBehaviour
     public Transform mainMenuPosition;
     public Transform optionsPosition;
 
+    //---
+    public static MainMenuUIManager Instance;
+    //---
+
     [Header("--- Effets Visuels (Hover) ---")]
     public float selectedScale = 1.3f;
     public float normalScale = 1.0f;
@@ -69,8 +75,15 @@ public class MainMenuUIManager : MonoBehaviour
     private List<RectTransform> settingsButtonsGenerated = new List<RectTransform>();
 
     private GameObject currentActiveWindow = null;
-
     private bool isAxisInUse = false;
+
+    // NOUVELLE VARIABLE : Pour savoir d'où on a ouvert la sous-fenêtre
+    private MenuState stateBeforeSubWindow = MenuState.MainMenu;
+
+    private void Awake()
+    {
+        Instance = this;
+    }
 
     void Start()
     {
@@ -95,7 +108,7 @@ public class MainMenuUIManager : MonoBehaviour
     // ==========================================
     // 1. GÉNÉRATION PROCÉDURALE
     // ==========================================
-    private void GenerateWheel(WheelItem[] options, RectTransform wheelParent, List<RectTransform> generatedList,bool boolean)
+    private void GenerateWheel(WheelItem[] options, RectTransform wheelParent, List<RectTransform> generatedList, bool boolean)
     {
         int k;
         if (buttonPrefab == null) return;
@@ -127,15 +140,13 @@ public class MainMenuUIManager : MonoBehaviour
             rectT.anchoredPosition = anchoredPos;
 
             Image img = btnObj.GetComponent<Image>();
-
-            // <-- RECHERCHE DU COMPOSANT TEXTMESHPRO AU LIEU DU VIEUX TEXT -->
             TextMeshProUGUI txt = btnObj.GetComponentInChildren<TextMeshProUGUI>();
 
             if (img != null && options[i].buttonTexture != null) img.sprite = options[i].buttonTexture;
 
             if (txt != null)
             {
-                txt.text = options[i].itemName; // Assigne le texte de l'inspecteur !
+                txt.text = options[i].itemName;
                 if (options[i].customFont != null) txt.font = options[i].customFont;
             }
 
@@ -160,40 +171,35 @@ public class MainMenuUIManager : MonoBehaviour
         {
             int inputDirection = 0;
 
-            // On capte l'axe vertical (Clavier, Joystick Gauche, D-Pad)
             float verticalInput = Input.GetAxisRaw("Vertical");
 
-            // Si on pousse le joystick ou appuie sur un bouton
             if (verticalInput != 0)
             {
-                if (!isAxisInUse) // Si on n'était pas déjà en train d'appuyer
+                if (!isAxisInUse)
                 {
-                    if (verticalInput < -0.3f) inputDirection = 1;  // On descend
-                    else if (verticalInput > 0.3f) inputDirection = -1; // On monte
+                    if (verticalInput < -0.3f) inputDirection = 1;
+                    else if (verticalInput > 0.3f) inputDirection = -1;
 
-                    isAxisInUse = true; // On verrouille pour éviter le spam
+                    isAxisInUse = true;
                 }
             }
             else
             {
-                isAxisInUse = false; // Le joueur a relâché le stick, on déverrouille !
+                isAxisInUse = false;
             }
 
-            // Si une direction a été validée, on tourne la roue
             if (inputDirection != 0)
             {
                 if (invertNavigation) inputDirection = -inputDirection;
                 RotateWheel(inputDirection);
             }
 
-            // Validation (Entrée clavier ou Bouton A / Croix sur manette)
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetButtonDown("Submit"))
             {
                 SelectCurrentWheelOption();
             }
         }
 
-        // Retour en arrière (Echap clavier ou Bouton B / Rond sur manette)
         if (Input.GetKeyDown(KeyCode.Escape) || Input.GetButtonDown("Cancel"))
         {
             GoBack();
@@ -232,7 +238,12 @@ public class MainMenuUIManager : MonoBehaviour
             string selectedName = mainMenuOptions[currentMainIndex].itemName.ToLower();
             WheelItem currentItem = mainMenuOptions[currentMainIndex];
 
-            if (selectedName.Contains("play") || selectedName.Contains("jouer")) Debug.Log("Lancement du jeu !");
+            // Si le bouton PLAY a une sous-fenêtre, on l'ouvre, sinon on peut lancer direct
+            if (selectedName.Contains("play") || selectedName.Contains("jouer"))
+            {
+                if (currentItem.windowToOpen != null) OpenWindow(currentItem.windowToOpen);
+                else Debug.Log("Lancement direct du jeu !");
+            }
             else if (selectedName.Contains("setting") || selectedName.Contains("option")) ChangeState(MenuState.OptionsMenu);
             else if (selectedName.Contains("quit") || selectedName.Contains("quitter"))
             {
@@ -256,6 +267,10 @@ public class MainMenuUIManager : MonoBehaviour
     {
         currentActiveWindow = window;
         currentActiveWindow.SetActive(true);
+
+        // Magie ici : On sauvegarde le menu dans lequel on était AVANT d'ouvrir !
+        stateBeforeSubWindow = currentState;
+
         ChangeState(MenuState.SubWindowOpen);
     }
 
@@ -270,7 +285,9 @@ public class MainMenuUIManager : MonoBehaviour
         {
             if (currentActiveWindow != null) currentActiveWindow.SetActive(false);
             currentActiveWindow = null;
-            ChangeState(MenuState.OptionsMenu);
+
+            // On retourne exactement d'où on vient (MainMenu ou OptionsMenu)
+            ChangeState(stateBeforeSubWindow);
         }
         else if (currentState == MenuState.OptionsMenu)
         {
@@ -297,9 +314,22 @@ public class MainMenuUIManager : MonoBehaviour
                 targetRotation = mainMenuPosition.rotation;
                 break;
             case MenuState.OptionsMenu:
-            case MenuState.SubWindowOpen:
                 targetPosition = optionsPosition.position;
                 targetRotation = optionsPosition.rotation;
+                break;
+            case MenuState.SubWindowOpen:
+                // Si on a ouvert depuis le MainMenu, la caméra reste sur le MainMenu !
+                if (stateBeforeSubWindow == MenuState.MainMenu)
+                {
+                    targetPosition = mainMenuPosition.position;
+                    targetRotation = mainMenuPosition.rotation;
+                }
+                // Si on a ouvert depuis les Options, la caméra reste sur les Options !
+                else
+                {
+                    targetPosition = optionsPosition.position;
+                    targetRotation = optionsPosition.rotation;
+                }
                 break;
         }
 
@@ -356,5 +386,10 @@ public class MainMenuUIManager : MonoBehaviour
         {
             btn.localRotation = Quaternion.Euler(0, 0, -settingsWheelZ);
         }
+    }
+
+    public void LaunchScene(string sceneName)
+    {
+        SceneManager.LoadScene(sceneName);
     }
 }
