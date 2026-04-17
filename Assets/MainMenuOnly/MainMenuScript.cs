@@ -86,6 +86,17 @@ public class MainMenuScript : MonoBehaviour
         StartCoroutine(StartGameRoutine());
     }
 
+    public void StartTimeTrial()
+    {
+        GameManager.instance.currentMode = GameManager.GameMode.TimeTrial;
+        StartGame();
+    }
+
+    public void StartTimeAttack()
+    {
+        GameManager.instance.currentMode = GameManager.GameMode.TimeAttack;
+        StartGame();
+    }
 
     public void OpenSettings()
     {
