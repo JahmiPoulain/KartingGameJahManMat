@@ -1,6 +1,7 @@
 
 using UnityEngine;
-using UnityEngine.InputSystem;
+using System.Collections.Generic;
+using System.Linq;
 public class KartScriptV2 : MonoBehaviour
 {
     // JAHMI
@@ -113,7 +114,17 @@ public class KartScriptV2 : MonoBehaviour
     float tryFlightTimer;
     // visual flight
     float visualFlightRotSpeedZ;
-
+    [Header("Respawn Points")]
+    public List <Transform> respawnPoints;
+    public Transform[] respawnPointsArr;
+    public List<Transform> activeRespawnPoints;
+    bool outOfBounds;
+    Vector3 currentRespawnPosition;
+    Quaternion currentRespawnRotation;
+    Transform startRespawnPoint;
+    public GameObject winText;
+    float raceTimer;
+    public float lastTurnTime;
     // MATHIS
 
     //[Header("Checkpoint")]
@@ -130,7 +141,7 @@ public class KartScriptV2 : MonoBehaviour
     public bool ghostMode = false;
     public Transform currentWaypoint;
     public Transform firstWaypoint;
-
+    
     public Vector3 StartPosition { get => startPosition; set => startPosition = value; }
     public Vector3 CurrentPosition { get => currentPosition; set => currentPosition = value; }
     private void Awake()
@@ -150,6 +161,8 @@ public class KartScriptV2 : MonoBehaviour
         //Application.targetFrameRate = 20;
         rb = GetComponent<Rigidbody>();
         groundNormal = new Vector3(0, 1, 0);
+        activeRespawnPoints = respawnPoints;
+        
     }
 
     void Update()
@@ -160,13 +173,13 @@ public class KartScriptV2 : MonoBehaviour
 
     private void FixedUpdate()
     {
-        // Place Holder Respawner
-        if (transform.position.y < 2f)
+        raceTimer += Time.fixedDeltaTime;
+        if (respawnPointsArr.Length == 0)
         {
-            transform.position = new Vector3(106.9f, 16, 151.6f);
-            transform.eulerAngles = new Vector3(0, 585.413f, 0);
+            respawnPointsArr = new Transform[respawnPoints.Count];
+            respawnPointsArr = respawnPoints.ToArray();
         }
-
+        HandleRespawn();
             // On gère la physique du kart
             HandleCurrentSpeed();
         HandleTurning();
@@ -175,6 +188,17 @@ public class KartScriptV2 : MonoBehaviour
         // on gère la force du bounce contre les murs        
         HandleBounceForce();
         HandleGravity();
+        if (outOfBounds)
+        {
+            gliderGO.SetActive(false);
+            currentSpeed = 0f;
+            currentTurboForce = 0f;
+            bounceForce = 0f;
+            currentFallSpeed = 0f;
+            airSpeed = 0f;
+            rb.linearVelocity = Vector3.zero;
+            return;
+        }
         if (grounded)
         {
             gliderGO.SetActive(false);
@@ -276,6 +300,10 @@ public class KartScriptV2 : MonoBehaviour
 
     void PlayerInputs()
     {
+        if (outOfBounds)
+        {            
+            return;
+        }
         if (ghostMode == true)
         {
             GhostDrive();
@@ -729,7 +757,7 @@ public class KartScriptV2 : MonoBehaviour
     }
     float IncrementTowardsValue(float currentValue, float targetValue, float increment)
     {
-        Debug.Log(currentValue + " " + targetValue + " " + increment);
+        //Debug.Log(currentValue + " " + targetValue + " " + increment);
         if (currentValue > targetValue)
         {
             //Debug.Log("plus grang");
@@ -750,7 +778,7 @@ public class KartScriptV2 : MonoBehaviour
                 return targetValue;
             }
         }
-        Debug.Log(currentValue);
+        //Debug.Log(currentValue);
         return currentValue;
     }
     void HandleCameraTransform()
@@ -838,12 +866,13 @@ public class KartScriptV2 : MonoBehaviour
         }
         else if (collision.gameObject.layer == 9)
         {
-            Debug.Log("gogog");
-            transform.position = collision.transform.GetChild(0).transform.position;
-            transform.eulerAngles = collision.transform.GetChild(0).transform.eulerAngles;
+            //Debug.Log("gogog");
+            //transform.position = collision.transform.GetChild(0).transform.position;
+            //transform.eulerAngles = collision.transform.GetChild(0).transform.localEulerAngles;
             //transform.rotation = collision.transform.GetChild(0).transform.rotation;
             //transform.position = new Vector3(230.6f, 16, 365.2f);
             //transform.eulerAngles = new Vector3(0, 661.515f, 0);
+            outOfBounds = true;
         }
 
     }
@@ -904,6 +933,67 @@ public class KartScriptV2 : MonoBehaviour
 
         }
     }
+
+    void HandleRespawn()
+    {
+        if (!outOfBounds)
+        {
+            for (int i = 0; i < activeRespawnPoints.Count; i++)
+            {
+                if ((activeRespawnPoints[i].position - transform.position).sqrMagnitude < 50f)
+                {
+                    currentRespawnPosition = activeRespawnPoints[i].position;
+                    //Debug.Log(currentRespawnPosition);
+                    currentRespawnRotation = activeRespawnPoints[i].rotation;
+                    if (startRespawnPoint == null) startRespawnPoint = activeRespawnPoints[i];
+                    activeRespawnPoints.RemoveAt(i);
+                    i = activeRespawnPoints.Count;
+                    
+                }
+            }
+            // Place Holder Respawner
+            if (transform.position.y < 2f)
+            {
+                outOfBounds = true;
+                //transform.position = new Vector3(106.9f, 16, 151.6f);
+                //transform.eulerAngles = new Vector3(0, 585.413f, 0);
+                //transform.position = currentRespawnPosition;
+                //transform.rotation = currentRespawnRotation;
+            }
+            if (activeRespawnPoints.Count == 0 && (startRespawnPoint.position - transform.position).sqrMagnitude < 50f)
+            {
+                Debug.Log("GAME WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOON");
+                lastTurnTime = raceTimer;
+                raceTimer = 0;
+                winText.SetActive(true);
+                for (int i = 0; i < respawnPointsArr.Length ; i++)
+                {
+                    activeRespawnPoints.Add(respawnPointsArr[i]);
+                }
+                //activeRespawnPoints = respawnPointsArr.ToList<Transform>();
+            }
+        }
+        else
+        {
+            /*if (transform.position.y < currentRespawnPosition.y + 3f)
+            {
+                transform.position += new Vector3(0,);
+            }*/
+            GetComponent<SphereCollider>().enabled = false;
+            Vector3 dir = currentRespawnPosition - transform.position;
+            //float dirMagn = dir.magnitude;
+            
+            float upForce = Mathf.Clamp(dir.magnitude, 0f, 15f);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation,currentRespawnRotation, Mathf.Clamp(upForce / 8f, 1f, 5f));
+            transform.position += (dir.normalized * 8f + dir + new Vector3(0, upForce, 0)) * Time.fixedDeltaTime;
+            if (dir.sqrMagnitude < 0.1f)
+            {
+                GetComponent<SphereCollider>().enabled = true;
+                outOfBounds = false;
+            }            
+        }
+    }
+
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
