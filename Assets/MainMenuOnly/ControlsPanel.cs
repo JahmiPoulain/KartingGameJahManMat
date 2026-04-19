@@ -1,5 +1,5 @@
 using UnityEngine;
-public class AudioSettings : MonoBehaviour
+public class ControlsPanel : MonoBehaviour
 {
     public Transform pointeur;
     public int index;

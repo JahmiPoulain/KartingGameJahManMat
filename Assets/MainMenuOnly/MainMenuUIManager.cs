@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using UnityEditor.Build.Content;
 using UnityEngine.SceneManagement;
+using System.Collections; // <-- Important pour la Coroutine
 
 [System.Serializable]
 public class WheelItem
@@ -23,12 +23,16 @@ public class WheelItem
 
 public class MainMenuUIManager : MonoBehaviour
 {
-    public enum MenuState { TitleScreen, MainMenu, OptionsMenu, SubWindowOpen }
+    // Ajout de l'état "Loading" pour bloquer les inputs pendant la transition
+    public enum MenuState { TitleScreen, MainMenu, OptionsMenu, SubWindowOpen, Loading }
 
     [Header("--- États & Navigation ---")]
     public MenuState currentState = MenuState.TitleScreen;
     [Tooltip("Coche ça si tu trouves que Haut/Bas fait tourner la roue dans le mauvais sens !")]
     public bool invertNavigation = false;
+
+    // LA VARIABLE MAGIQUE : "static" fait qu'elle ne se réinitialise pas quand on recharge la scène !
+    private static bool hasSeenTitleScreen = false;
 
     [Header("--- Configuration Générale des Roues ---")]
     public GameObject buttonPrefab;
@@ -48,6 +52,11 @@ public class MainMenuUIManager : MonoBehaviour
     public Transform titleScreenPosition;
     public Transform mainMenuPosition;
     public Transform optionsPosition;
+
+    [Header("--- Transition de Scène ---")]
+    [Tooltip("Un CanvasGroup noir (ou autre) qui va faire un fondu au noir.")]
+    public CanvasGroup transitionScreen;
+    public float transitionDuration = 1f;
 
     //---
     public static MainMenuUIManager Instance;
@@ -77,16 +86,52 @@ public class MainMenuUIManager : MonoBehaviour
     private GameObject currentActiveWindow = null;
     private bool isAxisInUse = false;
 
-    // NOUVELLE VARIABLE : Pour savoir d'où on a ouvert la sous-fenêtre
     private MenuState stateBeforeSubWindow = MenuState.MainMenu;
+
+    [Header("--- Paramètres Vidéo ---")]
+    public string[] resolutions = { "1920x1080", "1600x900", "1280x720", "800x600" };
+    public int[] fpsValues = { 30, 60, 120, -1 };
+    public string[] fpsLabels = { "30 FPS", "60 FPS", "120 FPS", "Illimité" };
+
+    [HideInInspector] public int currentResIndex = 0;
+    [HideInInspector] public int currentFpsIndex = 1;
+    [HideInInspector] public bool isFullscreen = true;
+    [HideInInspector] public bool isVsync = false;
 
     private void Awake()
     {
+        Time.timeScale = 1f;
         Instance = this;
     }
 
     void Start()
     {
+        // 1. VÉRIFICATION DU SKIP DE L'ÉCRAN TITRE
+        if (hasSeenTitleScreen)
+        {
+            currentState = MenuState.MainMenu;
+
+            // On téléporte la caméra direct au menu principal pour éviter qu'elle "vole" depuis l'écran titre au chargement
+            if (viewContainer != null && mainMenuPosition != null)
+            {
+                Vector3 targetPosition = mainMenuPosition.position;
+                targetPosition.z += Zoffset;
+                viewContainer.position = targetPosition;
+                viewContainer.rotation = mainMenuPosition.rotation;
+            }
+        }
+        else
+        {
+            currentState = MenuState.TitleScreen;
+        }
+
+        // 2. ASSURER QUE L'ÉCRAN DE TRANSITION EST INVISIBLE AU DÉMARRAGE
+        if (transitionScreen != null)
+        {
+            transitionScreen.alpha = 0f;
+            transitionScreen.blocksRaycasts = false;
+        }
+
         if (mainWheelRect != null) initialMainAngle = mainWheelRect.localEulerAngles.z;
         if (settingsWheelRect != null) initialSettingsAngle = settingsWheelRect.localEulerAngles.z;
 
@@ -95,14 +140,61 @@ public class MainMenuUIManager : MonoBehaviour
 
         GenerateWheel(mainMenuOptions, mainWheelRect, mainButtonsGenerated, true);
         GenerateWheel(settingsOptions, settingsWheelRect, settingsButtonsGenerated, false);
+
+        // Chargement et application des paramètres au démarrage
+        LoadSettings();
+        ApplySettings(false);
     }
 
     void Update()
     {
+        // Si on est en train de charger, on bloque tous les inputs et animations
+        if (currentState == MenuState.Loading) return;
+
         HandleInputs();
         SmoothTransitions();
         UpdateButtonsRotation();
         UpdateHoverEffects();
+    }
+
+    // ==========================================
+    // 0. GESTION DES PARAMÈTRES (SAUVEGARDE / CHARGEMENT)
+    // ==========================================
+    public void LoadSettings()
+    {
+        currentResIndex = PlayerPrefs.GetInt("ResIndex", 0);
+        currentFpsIndex = PlayerPrefs.GetInt("FpsIndex", 1);
+        isFullscreen = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
+        isVsync = PlayerPrefs.GetInt("Vsync", 0) == 1;
+    }
+
+    public void SaveSettings()
+    {
+        PlayerPrefs.SetInt("ResIndex", currentResIndex);
+        PlayerPrefs.SetInt("FpsIndex", currentFpsIndex);
+        PlayerPrefs.SetInt("Fullscreen", isFullscreen ? 1 : 0);
+        PlayerPrefs.SetInt("Vsync", isVsync ? 1 : 0);
+
+        PlayerPrefs.Save();
+        Debug.Log("Paramètres sauvegardés !");
+    }
+
+    public void ApplySettings(bool shouldSave)
+    {
+        string[] resParts = resolutions[currentResIndex].Split('x');
+        if (resParts.Length == 2)
+        {
+            int width = int.Parse(resParts[0]);
+            int height = int.Parse(resParts[1]);
+            Screen.SetResolution(width, height, isFullscreen);
+        }
+
+        QualitySettings.vSyncCount = isVsync ? 1 : 0;
+        Application.targetFrameRate = fpsValues[currentFpsIndex];
+
+        if (shouldSave) SaveSettings();
+
+        Debug.Log("Paramètres Appliqués !");
     }
 
     // ==========================================
@@ -163,6 +255,7 @@ public class MainMenuUIManager : MonoBehaviour
     {
         if (currentState == MenuState.TitleScreen && Input.anyKeyDown)
         {
+            hasSeenTitleScreen = true; // <--- ON MÉMORISE QU'ON A PASSÉ L'ÉCRAN TITRE
             ChangeState(MenuState.MainMenu);
             return;
         }
@@ -238,11 +331,10 @@ public class MainMenuUIManager : MonoBehaviour
             string selectedName = mainMenuOptions[currentMainIndex].itemName.ToLower();
             WheelItem currentItem = mainMenuOptions[currentMainIndex];
 
-            // Si le bouton PLAY a une sous-fenêtre, on l'ouvre, sinon on peut lancer direct
             if (selectedName.Contains("play") || selectedName.Contains("jouer"))
             {
                 if (currentItem.windowToOpen != null) OpenWindow(currentItem.windowToOpen);
-                else Debug.Log("Lancement direct du jeu !");
+                else LaunchScene("TaSceneDeJeuIci"); // Remplacer par le nom de ta scène
             }
             else if (selectedName.Contains("setting") || selectedName.Contains("option")) ChangeState(MenuState.OptionsMenu);
             else if (selectedName.Contains("quit") || selectedName.Contains("quitter"))
@@ -267,10 +359,7 @@ public class MainMenuUIManager : MonoBehaviour
     {
         currentActiveWindow = window;
         currentActiveWindow.SetActive(true);
-
-        // Magie ici : On sauvegarde le menu dans lequel on était AVANT d'ouvrir !
         stateBeforeSubWindow = currentState;
-
         ChangeState(MenuState.SubWindowOpen);
     }
 
@@ -285,8 +374,6 @@ public class MainMenuUIManager : MonoBehaviour
         {
             if (currentActiveWindow != null) currentActiveWindow.SetActive(false);
             currentActiveWindow = null;
-
-            // On retourne exactement d'où on vient (MainMenu ou OptionsMenu)
             ChangeState(stateBeforeSubWindow);
         }
         else if (currentState == MenuState.OptionsMenu)
@@ -318,13 +405,11 @@ public class MainMenuUIManager : MonoBehaviour
                 targetRotation = optionsPosition.rotation;
                 break;
             case MenuState.SubWindowOpen:
-                // Si on a ouvert depuis le MainMenu, la caméra reste sur le MainMenu !
                 if (stateBeforeSubWindow == MenuState.MainMenu)
                 {
                     targetPosition = mainMenuPosition.position;
                     targetRotation = mainMenuPosition.rotation;
                 }
-                // Si on a ouvert depuis les Options, la caméra reste sur les Options !
                 else
                 {
                     targetPosition = optionsPosition.position;
@@ -388,8 +473,40 @@ public class MainMenuUIManager : MonoBehaviour
         }
     }
 
+    // ==========================================
+    // 5. CHARGEMENT DE SCÈNE (TRANSITION)
+    // ==========================================
     public void LaunchScene(string sceneName)
     {
-        SceneManager.LoadScene(sceneName);
+        StartCoroutine(TransitionAndLoad(sceneName));
+    }
+
+    private IEnumerator TransitionAndLoad(string sceneName)
+    {
+        // On passe en état Loading pour bloquer les inputs
+        ChangeState(MenuState.Loading);
+
+        // 1. Fondu au noir (ou autre écran de transition)
+        if (transitionScreen != null)
+        {
+            transitionScreen.blocksRaycasts = true; // Bloque les clics souris au cas où
+            float time = 0;
+            while (time < transitionDuration)
+            {
+                transitionScreen.alpha = Mathf.Lerp(0, 1, time / transitionDuration);
+                time += Time.deltaTime;
+                yield return null; // Attend la prochaine frame
+            }
+            transitionScreen.alpha = 1;
+        }
+
+        // 2. Lancement de la scène en arrière-plan
+        AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
+
+        // On attend que la scène soit complètement chargée
+        while (!asyncLoad.isDone)
+        {
+            yield return null;
+        }
     }
 }
