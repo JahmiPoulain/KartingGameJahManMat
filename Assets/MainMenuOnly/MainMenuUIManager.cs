@@ -62,6 +62,9 @@ public class MainMenuUIManager : MonoBehaviour
     public static MainMenuUIManager Instance;
     //---
 
+    [Header("--- UI Panels ---")]
+    public GameObject titleScreenPanel;
+
     [Header("--- Effets Visuels (Hover) ---")]
     public float selectedScale = 1.3f;
     public float normalScale = 1.0f;
@@ -106,12 +109,13 @@ public class MainMenuUIManager : MonoBehaviour
 
     void Start()
     {
-        // 1. VÉRIFICATION DU SKIP DE L'ÉCRAN TITRE
         if (hasSeenTitleScreen)
         {
             currentState = MenuState.MainMenu;
 
-            // On téléporte la caméra direct au menu principal pour éviter qu'elle "vole" depuis l'écran titre au chargement
+            // ON CACHE LE PANEL SI ON A DÉJÀ PASSÉ L'ÉCRAN TITRE
+            if (titleScreenPanel != null) titleScreenPanel.SetActive(false);
+
             if (viewContainer != null && mainMenuPosition != null)
             {
                 Vector3 targetPosition = mainMenuPosition.position;
@@ -123,9 +127,9 @@ public class MainMenuUIManager : MonoBehaviour
         else
         {
             currentState = MenuState.TitleScreen;
+            // ON AFFICHE LE PANEL AU TOUT PREMIER LANCEMENT
+            if (titleScreenPanel != null) titleScreenPanel.SetActive(true);
         }
-
-        // 2. ASSURER QUE L'ÉCRAN DE TRANSITION EST INVISIBLE AU DÉMARRAGE
         if (transitionScreen != null)
         {
             transitionScreen.alpha = 0f;
@@ -255,7 +259,11 @@ public class MainMenuUIManager : MonoBehaviour
     {
         if (currentState == MenuState.TitleScreen && Input.anyKeyDown)
         {
-            hasSeenTitleScreen = true; // <--- ON MÉMORISE QU'ON A PASSÉ L'ÉCRAN TITRE
+            hasSeenTitleScreen = true;
+
+            // ON CACHE LE PANEL QUAND LE JOUEUR APPUIE SUR UNE TOUCHE
+            if (titleScreenPanel != null) titleScreenPanel.SetActive(false);
+
             ChangeState(MenuState.MainMenu);
             return;
         }
