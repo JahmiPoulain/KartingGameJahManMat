@@ -1554,7 +1554,7 @@ MonoBehaviour:
   currentState: 0
   invertNavigation: 0
   buttonPrefab: {fileID: 8387537317075167882, guid: 5ec7680a76616504bb44751871f58db6, type: 3}
-  customAnglePerOption: 25
+  customAnglePerOption: 45
   startAngleOffset: 0
   reverseSpawnDirection: 0
   wheelRadius: 10
@@ -6080,7 +6080,7 @@ MonoBehaviour:
   - {fileID: 1923489293}
   - {fileID: 1707855407}
   Offset: {x: -8, y: 0.25, z: 0}
-  selectedScale: 1.02
+  selectedScale: 1
   selectedColor: {r: 0.7654414, g: 0.9716981, b: 0.96095556, a: 1}
   audioSource: {fileID: 0}
   soundNav: {fileID: 0}
@@ -6095,6 +6095,19 @@ MonoBehaviour:
   itemFullscreen: {fileID: 443627487}
   itemVsync: {fileID: 1923489293}
   itemApply: {fileID: 1707855407}
+  resolutions:
+  - 2560x1440
+  - 1920x1080
+  - 1600x900
+  - 1280x720
+  - 800x600
+  fpsValues: 1e0000003c00000078000000a5000000ffffffff
+  fpsLabels:
+  - 30 FPS
+  - 60 FPS
+  - 120 FPS
+  - 165 FPS
+  - "Illimit\xE9"
 --- !u!1 &1741519982
 GameObject:
   m_ObjectHideFlags: 0

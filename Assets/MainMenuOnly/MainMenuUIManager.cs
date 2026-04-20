@@ -279,6 +279,7 @@ public class MainMenuUIManager : MonoBehaviour
                 if (!isAxisInUse)
                 {
                     if (verticalInput < -0.3f) inputDirection = 1;
+
                     else if (verticalInput > 0.3f) inputDirection = -1;
 
                     isAxisInUse = true;
