@@ -308,7 +308,7 @@ public class KartScriptV3 : MonoBehaviour
             //if (currentTurboForce <= 0) airSpeed -= 5f * Time.fixedDeltaTime;
             //if (airSpeed < 0) airSpeed = 0;
         }
-        CheckIfOffTrack();
+
     }
     private void LateUpdate()
     {
@@ -1045,39 +1045,7 @@ public class KartScriptV3 : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawRay(groundRayOrigin.position, Vector3.down * 0.5f);
     }
-    void CheckIfOffTrack()
-    {
 
-        if (respawnCooldown > 0)
-        {
-            respawnCooldown -= Time.fixedDeltaTime;
-            return;
-        }
-
-
-        if (!Physics.Raycast(groundRayOrigin.position, Vector3.down, 50f, trackLayer))
-        {
-
-            while(security >= 0)
-            {
-                Debug.Log("Petite sécurité");
-                security -= Time.fixedDeltaTime;
-                if (security < 0)
-                {
-                    Debug.Log("Hors piste donc respawn");
-                    checkPointManager.IsOffTrack = true;
-                    transform.position = startPosition;
-                    respawnCooldown = 1.5f;
-                    
-                    return;
-                }
-                else return;
-            }
-            security = 8f;
-
-
-        }
-    }
 
     void GhostDrive()
     {

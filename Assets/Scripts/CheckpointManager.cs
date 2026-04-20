@@ -11,10 +11,11 @@ public class CheckpointManager : MonoBehaviour
     private Vector3 newPos;
     private bool hasCheckpoint = false; // ✅ savoir si un checkpoint a été validé
 
-    private bool isOffTrack = false;
+
 
     public int NextIndex { get => nextIndex; set => nextIndex = value; }
-    public bool IsOffTrack { get => isOffTrack; set => isOffTrack = value; }
+    public bool HasCheckpoint { get => hasCheckpoint; set => hasCheckpoint = value; }
+    public Vector3 NewPos { get => newPos; set => newPos = value; }
 
     private void Awake()
     {
@@ -26,11 +27,7 @@ public class CheckpointManager : MonoBehaviour
 
     public void Update()
     {
-        if (isOffTrack)
-        {
-            StartCoroutine(Respawn());
-            isOffTrack = false;
-        }
+
     }
 
     public void CompareCheckpoint(Checkpoint checkpoint)
@@ -40,32 +37,11 @@ public class CheckpointManager : MonoBehaviour
             NextIndex++;
 
             // ✅ on enregistre la position + petit offset pour éviter les murs/sol
-            newPos = checkpoint.transform.position + Vector3.up * 0.5f;
+            NewPos = checkpoint.transform.position + Vector3.up * 0.5f;
 
-            hasCheckpoint = true; // ✅ checkpoint valide
+            HasCheckpoint = true; // ✅ checkpoint valide
         }
     }
 
-    public IEnumerator Respawn()
-    {
-        kartScript.canDrive = false;
-        yield return new WaitForSeconds(1);
-        // ✅ si aucun checkpoint → on utilise la position de départ
-        if (hasCheckpoint)
-        {
 
-            kartScript.StartPosition = newPos;
-            kartScript.currentSpeed = 0;
-            yield return new WaitForSeconds(0.5f);
-            kartScript.canDrive = true;
-        }
-        yield return new WaitForSeconds(1);
-        // ✅ reset physique propre
-        kartScript.CurrentPosition = kartScript.StartPosition;
-        kartScript.currentSpeed = 0;
-        kartScript.rb.linearVelocity = Vector3.zero;
-        yield return new WaitForSeconds(0.5f);
-        kartScript.canDrive = true;
-
-    }
 }
