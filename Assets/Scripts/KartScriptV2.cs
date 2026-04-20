@@ -1023,7 +1023,7 @@ public class KartScriptV2 : MonoBehaviour
         turnDirection = Mathf.Clamp(angle / 30f, -1f, 1f);
         forwardDirection = 1f;
 
-        if (dir.magnitude < 4f)
+        if (dir.sqrMagnitude < 20f)
         {
             Debug.Log(currentWaypoint);
             currentWaypoint = currentWaypoint.GetComponent<Waypoints>().nextWaypoint;
