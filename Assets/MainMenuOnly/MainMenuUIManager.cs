@@ -113,7 +113,6 @@ public class MainMenuUIManager : MonoBehaviour
         {
             currentState = MenuState.MainMenu;
 
-            // ON CACHE LE PANEL SI ON A DÉJÀ PASSÉ L'ÉCRAN TITRE
             if (titleScreenPanel != null) titleScreenPanel.SetActive(false);
 
             if (viewContainer != null && mainMenuPosition != null)
@@ -127,7 +126,6 @@ public class MainMenuUIManager : MonoBehaviour
         else
         {
             currentState = MenuState.TitleScreen;
-            // ON AFFICHE LE PANEL AU TOUT PREMIER LANCEMENT
             if (titleScreenPanel != null) titleScreenPanel.SetActive(true);
         }
         if (transitionScreen != null)
@@ -142,17 +140,18 @@ public class MainMenuUIManager : MonoBehaviour
         targetMainAngle = initialMainAngle;
         targetSettingsAngle = initialSettingsAngle;
 
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
         GenerateWheel(mainMenuOptions, mainWheelRect, mainButtonsGenerated, true);
         GenerateWheel(settingsOptions, settingsWheelRect, settingsButtonsGenerated, false);
 
-        // Chargement et application des paramètres au démarrage
         LoadSettings();
         ApplySettings(false);
     }
 
     void Update()
     {
-        // Si on est en train de charger, on bloque tous les inputs et animations
         if (currentState == MenuState.Loading) return;
 
         HandleInputs();
@@ -161,9 +160,6 @@ public class MainMenuUIManager : MonoBehaviour
         UpdateHoverEffects();
     }
 
-    // ==========================================
-    // 0. GESTION DES PARAMÈTRES (SAUVEGARDE / CHARGEMENT)
-    // ==========================================
     public void LoadSettings()
     {
         currentResIndex = PlayerPrefs.GetInt("ResIndex", 0);
@@ -200,10 +196,6 @@ public class MainMenuUIManager : MonoBehaviour
 
         Debug.Log("Paramètres Appliqués !");
     }
-
-    // ==========================================
-    // 1. GÉNÉRATION PROCÉDURALE
-    // ==========================================
     private void GenerateWheel(WheelItem[] options, RectTransform wheelParent, List<RectTransform> generatedList, bool boolean)
     {
         int k;
@@ -251,17 +243,12 @@ public class MainMenuUIManager : MonoBehaviour
             generatedList.Add(rectT);
         }
     }
-
-    // ==========================================
-    // 2. GESTION DES INPUTS 
-    // ==========================================
     private void HandleInputs()
     {
         if (currentState == MenuState.TitleScreen && Input.anyKeyDown)
         {
             hasSeenTitleScreen = true;
 
-            // ON CACHE LE PANEL QUAND LE JOUEUR APPUIE SUR UNE TOUCHE
             if (titleScreenPanel != null) titleScreenPanel.SetActive(false);
 
             ChangeState(MenuState.MainMenu);
@@ -307,10 +294,6 @@ public class MainMenuUIManager : MonoBehaviour
             GoBack();
         }
     }
-
-    // ==========================================
-    // 3. LOGIQUE INTERNE DES ROUES
-    // ==========================================
     private void RotateWheel(int direction)
     {
         float spawnDirection = reverseSpawnDirection ? -1f : 1f;
@@ -343,7 +326,7 @@ public class MainMenuUIManager : MonoBehaviour
             if (selectedName.Contains("play") || selectedName.Contains("jouer"))
             {
                 if (currentItem.windowToOpen != null) OpenWindow(currentItem.windowToOpen);
-                else LaunchScene("TaSceneDeJeuIci"); // Remplacer par le nom de ta scène
+                else LaunchScene("TaSceneDeJeuIci");
             }
             else if (selectedName.Contains("setting") || selectedName.Contains("option")) ChangeState(MenuState.OptionsMenu);
             else if (selectedName.Contains("quit") || selectedName.Contains("quitter"))
@@ -390,10 +373,6 @@ public class MainMenuUIManager : MonoBehaviour
             ChangeState(MenuState.MainMenu);
         }
     }
-
-    // ==========================================
-    // 4. ANIMATIONS & HOVER
-    // ==========================================
     private void SmoothTransitions()
     {
         Vector3 targetPosition = Vector3.zero;
@@ -482,9 +461,6 @@ public class MainMenuUIManager : MonoBehaviour
         }
     }
 
-    // ==========================================
-    // 5. CHARGEMENT DE SCÈNE (TRANSITION)
-    // ==========================================
     public void LaunchScene(string sceneName)
     {
         StartCoroutine(TransitionAndLoad(sceneName));
@@ -492,27 +468,23 @@ public class MainMenuUIManager : MonoBehaviour
 
     private IEnumerator TransitionAndLoad(string sceneName)
     {
-        // On passe en état Loading pour bloquer les inputs
         ChangeState(MenuState.Loading);
 
-        // 1. Fondu au noir (ou autre écran de transition)
         if (transitionScreen != null)
         {
-            transitionScreen.blocksRaycasts = true; // Bloque les clics souris au cas où
+            transitionScreen.blocksRaycasts = true;
             float time = 0;
             while (time < transitionDuration)
             {
                 transitionScreen.alpha = Mathf.Lerp(0, 1, time / transitionDuration);
                 time += Time.deltaTime;
-                yield return null; // Attend la prochaine frame
+                yield return null;
             }
             transitionScreen.alpha = 1;
         }
 
-        // 2. Lancement de la scène en arrière-plan
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
 
-        // On attend que la scène soit complètement chargée
         while (!asyncLoad.isDone)
         {
             yield return null;
