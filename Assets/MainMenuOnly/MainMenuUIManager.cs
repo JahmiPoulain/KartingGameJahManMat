@@ -261,12 +261,11 @@ public class MainMenuUIManager : MonoBehaviour
 
             float verticalInput = Input.GetAxisRaw("Vertical");
 
-            if (verticalInput != 0)
+            if (Mathf.Abs(verticalInput) > 0.5f)
             {
                 if (!isAxisInUse)
                 {
                     if (verticalInput < -0.3f) inputDirection = 1;
-
                     else if (verticalInput > 0.3f) inputDirection = -1;
 
                     isAxisInUse = true;

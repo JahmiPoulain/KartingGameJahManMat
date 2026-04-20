@@ -94,7 +94,7 @@ public class AudioSettings : MonoBehaviour
     void HandleNavigation()
     {
         float v = Input.GetAxisRaw("Vertical");
-        if (v != 0)
+        if (Mathf.Abs(v) > 0.5f)
         {
             if (!isVerticalAxisInUse)
             {
@@ -111,7 +111,7 @@ public class AudioSettings : MonoBehaviour
     void HandleModification()
     {
         float h = Input.GetAxisRaw("Horizontal");
-        if (h != 0)
+        if (Mathf.Abs(h) > 0.5f)
         {
             if (!isHorizontalAxisInUse)
             {

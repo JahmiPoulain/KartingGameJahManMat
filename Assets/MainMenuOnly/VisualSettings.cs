@@ -147,11 +147,13 @@ public class VisualSettings : MonoBehaviour
     void HandleNavigation()
     {
         float v = Input.GetAxisRaw("Vertical");
-        if (v != 0)
+        if (Mathf.Abs(v) > 0.5f)
         {
             if (!isVerticalAxisInUse)
             {
                 int dir = v < -0.3f ? 1 : -1;
+                if (MainMenuUIManager.Instance != null && MainMenuUIManager.Instance.invertNavigation) dir = -dir;
+
                 ChangeIndex(dir);
                 isVerticalAxisInUse = true;
             }
@@ -162,7 +164,7 @@ public class VisualSettings : MonoBehaviour
     void HandleModification()
     {
         float h = Input.GetAxisRaw("Horizontal");
-        if (h != 0)
+        if (Mathf.Abs(h) > 0.5f) 
         {
             if (!isHorizontalAxisInUse)
             {
@@ -214,7 +216,7 @@ public class VisualSettings : MonoBehaviour
         {
             UpdateUI();
             PlaySfx(soundChange);
-            StartCoroutine(PulseEffect(selectables[index].transform));
+           // StartCoroutine(PulseEffect(selectables[index].transform));
         }
     }
 
