@@ -8,7 +8,6 @@ public class LapManager : MonoBehaviour
     [SerializeField] private Checkpoint[] checkpoints;
     [SerializeField] CheckpointManager checkpointManager;
     [SerializeField] ContreLaMontre contreLaMontre;
-    [SerializeField] KartScriptV2 kartScriptV2;
 
     [SerializeField]
     private TextMeshProUGUI chronoUI;
@@ -56,8 +55,6 @@ public class LapManager : MonoBehaviour
             {
                 checkpoint.gameObject.SetActive(true);
             }
-            kartScriptV2.StartPosition = transform.position;
-            checkpointManager.HasCheckpoint = false;
         }
 
     }

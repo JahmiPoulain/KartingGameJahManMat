@@ -78,7 +78,7 @@ public class Respawner : MonoBehaviour
             kartTransform.position += (dir.normalized * 0.5f + dir + new Vector3(0, upForce, 0)) * Time.fixedDeltaTime;
 
         }
-       // Debug.Log(dir.sqrMagnitude);
+        Debug.Log(dir.sqrMagnitude);
         if (dir.sqrMagnitude < 0.1f)
         {
             Debug.Log("retour effectué");
