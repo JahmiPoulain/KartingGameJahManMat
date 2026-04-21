@@ -12865,7 +12865,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 566441327}
-  - component: {fileID: 566441326}
+  - component: {fileID: 566441328}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -12873,20 +12873,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &566441326
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 566441325}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6baca01dff352644a8f2c59e17ee8b34, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  pausePanel: {fileID: 1394232074}
-  pauseAction: {fileID: 5471971544671258475, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!4 &566441327
 Transform:
   m_ObjectHideFlags: 0
@@ -12902,6 +12888,33 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &566441328
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 566441325}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6baca01dff352644a8f2c59e17ee8b34, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pauseMenuUI: {fileID: 1394232074}
+  pauseAction: {fileID: 5471971544671258475, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  pointeur: {fileID: 1933321941}
+  index: 0
+  selectables:
+  - {fileID: 801212071}
+  - {fileID: 1285928983}
+  Offset: {x: -275, y: 0, z: 0}
+  selectedScale: 1
+  selectedColor: {r: 0.6933962, g: 1, b: 0.9823661, a: 1}
+  normalColor: {r: 0.99607843, g: 0.80784315, b: 0.8627451, a: 1}
+  audioSource: {fileID: 0}
+  soundNav: {fileID: 0}
+  soundSubmit: {fileID: 0}
+  globalVolume: {fileID: 0}
 --- !u!1 &566727891
 GameObject:
   m_ObjectHideFlags: 0
@@ -48544,7 +48557,6 @@ GameObject:
   - component: {fileID: 1394232077}
   - component: {fileID: 1394232076}
   - component: {fileID: 1394232075}
-  - component: {fileID: 1394232079}
   m_Layer: 5
   m_Name: PauseCanva
   m_TagString: Untagged
@@ -48635,31 +48647,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!114 &1394232079
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1394232074}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b4820aedb4dacd446a34ccf0ca96bdf5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  pauseMenuUI: {fileID: 1394232074}
-  pointeur: {fileID: 1933321941}
-  index: 0
-  selectables:
-  - {fileID: 801212071}
-  - {fileID: 1285928983}
-  Offset: {x: -275, y: 0, z: 0}
-  selectedScale: 1
-  selectedColor: {r: 0.8160377, g: 1, b: 0.9888612, a: 1}
-  audioSource: {fileID: 0}
-  soundNav: {fileID: 0}
-  soundSubmit: {fileID: 0}
-  globalVolume: {fileID: 832575518}
 --- !u!1001 &1396582314
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -66788,7 +66775,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   contreLaMontre: {fileID: 1546263593}
-  chronoUI: {fileID: 0}
+  chronoUI: {fileID: 3709806865398118134}
 --- !u!114 &1546263592
 MonoBehaviour:
   m_ObjectHideFlags: 0

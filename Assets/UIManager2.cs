@@ -4,12 +4,17 @@ using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
-public class MenuPauseScriptIG : MonoBehaviour
+public class UIManager2 : MonoBehaviour
 {
     [Header("UI Panels")]
     public GameObject pauseMenuUI;
     private bool isPaused = false;
+
+    [Header("Input System")]
+    [SerializeField] private InputActionReference pauseAction;
 
     [Header("Navigation (0: Continuer, 1: Quitter)")]
     public Transform pointeur;
@@ -20,7 +25,7 @@ public class MenuPauseScriptIG : MonoBehaviour
     [Header("Feedback Visuel")]
     public float selectedScale = 1.15f;
     public Color selectedColor = Color.yellow;
-    private Color normalColor = Color.white;
+    public Color normalColor = Color.white;
     private Vector3[] defaultScales;
 
     [Header("Audio SFX")]
@@ -35,29 +40,58 @@ public class MenuPauseScriptIG : MonoBehaviour
     private bool isVerticalAxisInUse = false;
     private Canvas parentCanvas;
 
+    #region Initialisation et Inputs
     void Awake()
     {
+        // Setup des échelles par défaut
         defaultScales = new Vector3[selectables.Length];
         for (int i = 0; i < selectables.Length; i++)
         {
             if (selectables[i] != null) defaultScales[i] = selectables[i].transform.localScale;
         }
 
+        // Setup du Post-Po
         if (globalVolume != null && globalVolume.profile != null)
             globalVolume.profile.TryGet(out depthOfField);
 
+        // Setup du Canvas
         parentCanvas = GetComponentInParent<Canvas>();
         if (parentCanvas != null && !parentCanvas.isRootCanvas) parentCanvas = parentCanvas.rootCanvas;
     }
 
+    private void OnEnable()
+    {
+        if (pauseAction != null)
+        {
+            pauseAction.action.performed += OnPausePerformed;
+            pauseAction.action.Enable();
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (pauseAction != null)
+        {
+            pauseAction.action.performed -= OnPausePerformed;
+            pauseAction.action.Disable();
+        }
+    }
+
+    // Cette fonction est appelée par le New Input System
+    private void OnPausePerformed(InputAction.CallbackContext context)
+    {
+        TogglePause();
+    }
+
+    public void TogglePause()
+    {
+        if (isPaused) Resume();
+        else Pause();
+    }
+    #endregion
+
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape) || Input.GetButtonDown("Cancel"))
-        {
-            if (isPaused) Resume();
-            else Pause();
-        }
-
         if (isPaused)
         {
             HandleNavigation();
@@ -71,24 +105,25 @@ public class MenuPauseScriptIG : MonoBehaviour
 
     public void Resume()
     {
+        KartScriptV2.instance.canDrive = true;
         pauseMenuUI.SetActive(false);
         Time.timeScale = 1f;
         isPaused = false;
         if (depthOfField != null) depthOfField.active = false;
-        Debug.Log("Jeu Repris");
     }
 
     void Pause()
     {
+        KartScriptV2.instance.canDrive = false;
         pauseMenuUI.SetActive(true);
         Time.timeScale = 0f;
         isPaused = true;
         index = 0;
         UpdateVisuals();
         if (depthOfField != null) depthOfField.active = true;
-        Debug.Log("Jeu en Pause");
     }
 
+    #region Navigation et Visuels
     void HandleNavigation()
     {
         float v = Input.GetAxisRaw("Vertical");
@@ -104,10 +139,7 @@ public class MenuPauseScriptIG : MonoBehaviour
                 isVerticalAxisInUse = true;
             }
         }
-        else
-        {
-            isVerticalAxisInUse = false;
-        }
+        else isVerticalAxisInUse = false;
     }
 
     void MoveSelection(int dir)
@@ -134,11 +166,8 @@ public class MenuPauseScriptIG : MonoBehaviour
             {
                 selectables[i].transform.localScale = defaultScales[i] * selectedScale;
                 SetColorRecursive(selectables[i].transform, selectedColor);
-
                 if (pointeur != null)
-                {
                     pointeur.position = selectables[i].transform.position + (Offset * currentScaleFactor);
-                }
             }
             else
             {
@@ -147,25 +176,20 @@ public class MenuPauseScriptIG : MonoBehaviour
             }
         }
     }
+    #endregion
 
     void InteractWithCurrentSelection()
     {
         PlaySfx(soundSubmit);
-        Debug.Log("Selection validée : Index " + index);
-
         if (index == 0) Resume();
         else if (index == 1) QuitToMainMenu();
     }
 
-    void QuitToMainMenu()
+    public void QuitToMainMenu()
     {
         Time.timeScale = 1f;
         if (depthOfField != null) depthOfField.active = false;
-
-        if (MainMenuUIManager.Instance != null)
-            MainMenuUIManager.Instance.LaunchScene("MainMenu2_0");
-        else
-            UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu2_0");
+        SceneManager.LoadScene("MainMenu2_0");
     }
 
     void SetColorRecursive(Transform parent, Color c)
@@ -176,17 +200,11 @@ public class MenuPauseScriptIG : MonoBehaviour
         Image img = parent.GetComponent<Image>();
         if (img != null && img.gameObject.name != "Background") img.color = c;
 
-        foreach (Transform child in parent)
-        {
-            SetColorRecursive(child, c);
-        }
+        foreach (Transform child in parent) SetColorRecursive(child, c);
     }
 
     void PlaySfx(AudioClip clip)
     {
-        if (audioSource != null && clip != null)
-        {
-            audioSource.PlayOneShot(clip);
-        }
+        if (audioSource != null && clip != null) audioSource.PlayOneShot(clip);
     }
 }
