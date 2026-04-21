@@ -154,6 +154,8 @@ public class MainMenuUIManager : MonoBehaviour
     {
         if (currentState == MenuState.Loading) return;
 
+        if (ControlsSettings.IsRebinding) return;
+
         HandleInputs();
         SmoothTransitions();
         UpdateButtonsRotation();

@@ -16,7 +16,7 @@ public class ControlsSettings : MonoBehaviour
         public GameObject rowObject;
 
         [HideInInspector]
-        public Vector3 defaultScale; // Mémorise la vraie taille initiale !
+        public Vector3 defaultScale;
     }
 
     [Header("Configuration des Actions")]
@@ -27,7 +27,8 @@ public class ControlsSettings : MonoBehaviour
     public Transform pointeur;
     public Vector3 Offset;
     private int rowIndex = 0;
-    private bool isRebinding = false;
+
+    public static bool IsRebinding = false;
 
     [Header("Feedback Visuel")]
     public float selectedScale = 1.15f;
@@ -47,7 +48,6 @@ public class ControlsSettings : MonoBehaviour
 
     void Awake()
     {
-        // 1. SAUVEGARDE DES TAILLES INITIALES (FINI LE VECTOR3.ONE !)
         foreach (var row in actionRows)
         {
             if (row.rowObject != null)
@@ -61,11 +61,10 @@ public class ControlsSettings : MonoBehaviour
 
     void OnEnable()
     {
-        // Sécurité pour éviter les bugs d'initialisation si OnEnable se lance trop tôt
         if (!isInitialized) Awake();
 
         rowIndex = 0;
-        isRebinding = false;
+        IsRebinding = false;
         ChargerToutesLesTouches();
         UpdateVisualFeedback();
         UpdatePointerPosition();
@@ -73,7 +72,7 @@ public class ControlsSettings : MonoBehaviour
 
     void Update()
     {
-        if (isRebinding) return;
+        if (IsRebinding) return;
 
         HandleNavigation();
 
@@ -85,7 +84,6 @@ public class ControlsSettings : MonoBehaviour
 
     void HandleNavigation()
     {
-        // NAVIGATION UNIQUEMENT HAUT/BAS (beaucoup plus propre)
         float v = Input.GetAxisRaw("Vertical");
         if (Mathf.Abs(v) > 0.5f)
         {
@@ -124,33 +122,29 @@ public class ControlsSettings : MonoBehaviour
             return;
         }
 
-        // 2. DÉTECTION INTELLIGENTE DU PÉRIPHÉRIQUE
-        // Si on a validé en appuyant sur Entrée ou Espace, c'est le clavier !
         bool isKeyboardSubmit = Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space);
-
-        // Sinon, c'est qu'on a cliqué avec la manette (Croix, A, etc.)
         bool isGamepad = !isKeyboardSubmit;
 
-        LancerLeChangement(actionRows[rowIndex], isGamepad);
+        StartCoroutine(LancerLeChangementDiffere(actionRows[rowIndex], isGamepad));
     }
 
-    private void LancerLeChangement(ActionRow row, bool pourManette)
+    private IEnumerator LancerLeChangementDiffere(ActionRow row, bool pourManette)
     {
-        if (row.actionRef == null) return;
+        if (row.actionRef == null) yield break;
 
-        isRebinding = true;
+        IsRebinding = true;
 
         TMP_Text texteCible = pourManette ? row.textGamepad : row.textKeyboard;
         texteCible.text = "...";
 
+        yield return new WaitForSecondsRealtime(0.2f);
+
         row.actionRef.action.Disable();
 
-        // 3. ON CIBLE DIRECTEMENT LE BON INDEX DE BINDING DANS L'INPUT SYSTEM
         int bindingIndexToModify = ObtenirIndexDeBinding(row.actionRef.action, pourManette);
 
         var operation = row.actionRef.action.PerformInteractiveRebinding(bindingIndexToModify);
 
-        // 4. ANNULATION AVEC ÉCHAP (ANNULE TOUT)
         operation.WithCancelingThrough("<Keyboard>/escape");
 
         if (pourManette)
@@ -167,7 +161,6 @@ public class ControlsSettings : MonoBehaviour
         });
 
         operation.OnCancel(op => {
-            // Si on annule, on remet tout à la normale sans sauvegarder
             TerminerRebinding(row, op);
         });
 
@@ -185,20 +178,21 @@ public class ControlsSettings : MonoBehaviour
 
     private int ObtenirIndexDeBinding(InputAction action, bool pourManette)
     {
-        // Petite sécurité pour trouver automatiquement quel emplacement modifier dans l'Input System
         for (int i = 0; i < action.bindings.Count; i++)
         {
-            if (pourManette && action.bindings[i].path.Contains("<Gamepad>")) return i;
-            if (!pourManette && (action.bindings[i].path.Contains("<Keyboard>") || action.bindings[i].path.Contains("<Mouse>"))) return i;
+            if (action.bindings[i].isComposite) continue;
+
+            string path = action.bindings[i].path.ToLower();
+            if (pourManette && (path.Contains("<gamepad>") || path.Contains("<joystick>"))) return i;
+            if (!pourManette && (path.Contains("<keyboard>") || path.Contains("<mouse>"))) return i;
         }
-        // Par défaut s'il trouve pas le nom du path
         return pourManette ? 1 : 0;
     }
 
     IEnumerator UnlockNavigation()
     {
-        yield return null;
-        isRebinding = false;
+        yield return new WaitForSecondsRealtime(0.1f);
+        IsRebinding = false;
     }
 
     private void SauvegarderLesTouches(InputActionReference actionRef)
@@ -230,14 +224,32 @@ public class ControlsSettings : MonoBehaviour
             int indexClavier = ObtenirIndexDeBinding(row.actionRef.action, false);
             int indexManette = ObtenirIndexDeBinding(row.actionRef.action, true);
 
-            if (row.textKeyboard != null) row.textKeyboard.text = row.actionRef.action.GetBindingDisplayString(indexClavier);
-            if (row.textGamepad != null) row.textGamepad.text = row.actionRef.action.GetBindingDisplayString(indexManette);
+            if (row.textKeyboard != null)
+                row.textKeyboard.text = NettoyerNomTouche(row.actionRef.action.GetBindingDisplayString(indexClavier));
+
+            if (row.textGamepad != null)
+                row.textGamepad.text = NettoyerNomTouche(row.actionRef.action.GetBindingDisplayString(indexManette));
         }
+    }
+    private string NettoyerNomTouche(string nomBrut)
+    {
+        if (string.IsNullOrEmpty(nomBrut)) return "";
+
+        return nomBrut
+            .Replace("Right Stick", "R Stick")
+            .Replace("Left Stick", "L Stick")
+            .Replace("D-Pad", "DPad")
+            .Replace("Press", "")
+            .Replace("Left Button", "LB")
+            .Replace("Right Button", "RB")
+            .Replace("Left Trigger", "LT")
+            .Replace("Right Trigger", "RT")
+            .Replace(" / ", "/")
+            .Trim();
     }
 
     void UpdateVisualFeedback()
     {
-        // Reset de tout le monde avec leur VRAIE taille (defaultScale)
         foreach (var row in actionRows)
         {
             if (row.rowObject != null)
@@ -253,7 +265,6 @@ public class ControlsSettings : MonoBehaviour
             SetColorRecursive(itemApply, normalColor);
         }
 
-        // Highlight de la ligne entière (on change la couleur des deux textes)
         if (rowIndex < actionRows.Length)
         {
             ActionRow selectedRow = actionRows[rowIndex];
@@ -263,7 +274,7 @@ public class ControlsSettings : MonoBehaviour
             if (selectedRow.textGamepad) selectedRow.textGamepad.color = selectedColor;
             if (selectedRow.textKeyboard) selectedRow.textKeyboard.color = selectedColor;
         }
-        else // Bouton Apply
+        else
         {
             if (itemApply != null)
             {
@@ -275,7 +286,6 @@ public class ControlsSettings : MonoBehaviour
 
     void UpdatePointerPosition()
     {
-        // Le pointeur se place par rapport au parent de la ligne !
         if (rowIndex < actionRows.Length)
         {
             ActionRow selectedRow = actionRows[rowIndex];
