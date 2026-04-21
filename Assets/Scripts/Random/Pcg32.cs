@@ -49,7 +49,7 @@ public class Pcg32
     }
 
     // -------- PCG32 ALGORYTHME --------
-    // Retourne un entier 32 bits : 0 → 4 294 967 295
+    // Retourne un entier non signé 32 bits : 0 → 4 294 967 295
     public uint NextUInt()
     {
         ulong oldstate = state;
