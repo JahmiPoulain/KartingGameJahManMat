@@ -1,6 +1,5 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
 
@@ -28,23 +27,13 @@ public class MainMenuScript : MonoBehaviour
 
     private bool isFading = false;
 
-
-
-    [SerializeField] GameObject defaultMenuButton;
-    [SerializeField] GameObject defaultSettingdButton;
-
     private Coroutine currentFade;
 
-    private void Awake()
-    {
-        Time.timeScale = 1.0f;
-    }
     private void Start()
     {
         instance = this;
         FadeCanva.gameObject.SetActive(true);
         FadeOut();
-        EventSystem.current.SetSelectedGameObject(defaultMenuButton);
     }
     public void FadeIn()
     {
@@ -56,12 +45,6 @@ public class MainMenuScript : MonoBehaviour
     {
         if (currentFade != null) StopCoroutine(currentFade);
         currentFade = StartCoroutine(Fade(1f, 0f));
-    }
-
-
-    public void SetCursorAt(GameObject b)
-    {
-        EventSystem.current.SetSelectedGameObject(b);
     }
 
     public void TogglePanel(GameObject panel)
@@ -109,12 +92,6 @@ public class MainMenuScript : MonoBehaviour
         if (SettingsPanel == null || CreditsPanel == null) return;
         SettingsPanel.SetActive(true);
         CreditsPanel.SetActive(false);
-        EventSystem.current.SetSelectedGameObject(defaultSettingdButton);
-    }
-
-    public void closeSettings()
-    {
-        EventSystem.current.SetSelectedGameObject(defaultMenuButton);
     }
 
     public void OpenCredits()
