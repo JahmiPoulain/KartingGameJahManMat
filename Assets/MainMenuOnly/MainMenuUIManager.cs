@@ -318,6 +318,8 @@ public class MainMenuUIManager : MonoBehaviour
         }
     }
 
+
+
     private void SelectCurrentWheelOption()
     {
         if (currentState == MenuState.MainMenu)
@@ -325,11 +327,17 @@ public class MainMenuUIManager : MonoBehaviour
             string selectedName = mainMenuOptions[currentMainIndex].itemName.ToLower();
             WheelItem currentItem = mainMenuOptions[currentMainIndex];
 
-            if (selectedName.Contains("play") || selectedName.Contains("jouer"))
+            if (selectedName.Contains("attack")) // Si le bouton s'appelle "Time Attack"
             {
-                if (currentItem.windowToOpen != null) OpenWindow(currentItem.windowToOpen);
-                else LaunchScene("TaSceneDeJeuIci");
+                GameManager.instance.currentMode = GameManager.GameModeType.TimeAttack;
+                LaunchScene("MaSceneDeCourse");
             }
+            else if (selectedName.Contains("trial") || selectedName.Contains("contre"))
+            {
+                GameManager.instance.currentMode = GameManager.GameModeType.TimeTrial;
+                LaunchScene("MaSceneDeCourse");
+            }
+
             else if (selectedName.Contains("setting") || selectedName.Contains("option")) ChangeState(MenuState.OptionsMenu);
             else if (selectedName.Contains("quit") || selectedName.Contains("quitter"))
             {

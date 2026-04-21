@@ -2,26 +2,34 @@
 
 public class GameManager : MonoBehaviour
 {
-    private static GameManager instance;
+    public static GameManager instance; // Correction du singleton
 
-    private GameManager()
+    public enum GameModeType { TimeTrial, TimeAttack }
+    public GameModeType currentMode;
+
+    private void Awake()
     {
-        instance = this;
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
-    public GameManager Instance()
+    // Cette méthode sera appelée par un "LevelLoader" ou au Start de la scène de course
+    public void SetupGameMode(GameObject racingKart)
     {
-        if (instance == null) instance = new GameManager();
-        return instance;
+        if (currentMode == GameModeType.TimeAttack)
+        {
+            racingKart.AddComponent<TimeAttack>();
+        }
+        else
+        {
+            racingKart.AddComponent<ContreLaMontre>();
+        }
     }
-
-    public enum GameMode
-    {
-        TimeTrial,
-        TimeAttack
-    }
-
-    public GameMode currentMode;
-
-
 }

@@ -7,7 +7,7 @@ public class LapManager : MonoBehaviour
     [SerializeField] private ChronoScript chrono;
     [SerializeField] private Checkpoint[] checkpoints;
     [SerializeField] CheckpointManager checkpointManager;
-    [SerializeField] ContreLaMontre contreLaMontre;
+    [SerializeField] GameMode currentMode;
 
 
     [SerializeField]
@@ -28,8 +28,8 @@ public class LapManager : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        _lapTimes = new float[contreLaMontre.MaxLaps];
-        lapUI.text = $"Tour {_currentLap}/{contreLaMontre.MaxLaps}";
+        _lapTimes = new float[currentMode.MaxLaps];
+        lapUI.text = $"Tour {_currentLap}/{currentMode.MaxLaps}";
     }
 
     // Update is called once per frame
@@ -73,11 +73,11 @@ public class LapManager : MonoBehaviour
 
         CurrentLap++;
 
-        lapUI.text = $"Tour {CurrentLap}/{contreLaMontre.MaxLaps}";
+        lapUI.text = $"Tour {CurrentLap}/{currentMode.MaxLaps}";
 
-        if (CurrentLap >= contreLaMontre.MaxLaps)
+        if (CurrentLap >= currentMode.MaxLaps)
         {
-            lapUI.text = $"Tour {contreLaMontre.MaxLaps}/{contreLaMontre.MaxLaps}";
+            lapUI.text = $"Tour {currentMode.MaxLaps}/{currentMode.MaxLaps}";
         }
 
         if (CurrentLap > LapTimes.Length)
