@@ -10,8 +10,13 @@ public class ChronoScript : MonoBehaviour
 
     public float CurrentTime => delta;
 
+    private void Start()
+    {
+        //if (chronoUI == null) chronoUI = FindFirstObjectByType<>
+    }
     void Update()
     {
+        
         if (contreLaMontre.RaceFinished || !contreLaMontre.getRaceStarted())
             return;
 

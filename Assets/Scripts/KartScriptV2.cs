@@ -103,6 +103,7 @@ public class KartScriptV2 : MonoBehaviour
     float nextYDriftRot;
     public float driftCoyoteTime;
     float driftCoyoteTimer;
+    public float tryDriftDelay;
     [Header("Flight")]
     public bool isFlying;
     public float flightSpeed;
@@ -421,10 +422,32 @@ public class KartScriptV2 : MonoBehaviour
         currentSpeed = nextSpeed;
     }
     void HandleDrift()
-    {
+    { 
+        if (tryToDrift && grounded && tryDriftDelay <= 0f) //if (tryToDrift && grounded)
+        {
+            tryDriftDelay = 0.2f;
+            if (currentTurnSpeed > 0.5f && turnDirection > 0)
+            {
+                driftDir = 1;
+                for (int i = 0; i < driftParticlesGenerators.Length; i++)
+                {
+                    driftParticlesGenerators[i].gameObject.SetActive(true);
+                }
+            }
+            else if (currentTurnSpeed < -0.5f && turnDirection < 0)
+            {
+                driftDir = -1;
+                for (int i = 0; i < driftParticlesGenerators.Length; i++)
+                {
+                    driftParticlesGenerators[i].gameObject.SetActive(true);
+                }
+            }
+        }
+        if (tryDriftDelay > 0) tryDriftDelay -= Time.deltaTime;
+
         //ca mem
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! faux drift
-        if (keepDrifting && grounded)
+        if (keepDrifting && grounded && driftDir != 0)
         {
             // on fait monter ou descendre la rotation Y vers targetYRot
             float targetYRot = (driftDir + turnDirection) * 18f;
@@ -508,25 +531,7 @@ public class KartScriptV2 : MonoBehaviour
             }
         }
         
-        if (tryToDrift && grounded) //if (tryToDrift && grounded)
-        {
-            if (currentTurnSpeed > 0.5f && turnDirection > 0)
-            {
-                driftDir = 1;
-                for (int i = 0; i < driftParticlesGenerators.Length; i++)
-                {
-                    driftParticlesGenerators[i].gameObject.SetActive(true);
-                }
-            }
-            else if (currentTurnSpeed < -0.5f && turnDirection < 0)
-            {
-                driftDir = -1;
-                for (int i = 0; i < driftParticlesGenerators.Length; i++)
-                {
-                    driftParticlesGenerators[i].gameObject.SetActive(true);
-                }
-            }
-        }
+       
         if (driftTurboGauge > gaugeToActivateTurbo)
         {
             for (int i = 0; i < fireWheelEffects.Length; i++)

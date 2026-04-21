@@ -2,7 +2,7 @@
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager instance;
+   /* public static GameManager instance;
 
     public enum GameMode
     {
@@ -23,5 +23,5 @@ public class GameManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
-    }
+    }*/
 }

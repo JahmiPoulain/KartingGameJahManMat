@@ -1,7 +1,5 @@
-﻿using System.Collections;
-using Unity.VisualScripting;
+﻿
 using UnityEngine;
-using static UnityEditor.VersionControl.Message;
 
 public class Respawner : MonoBehaviour
 {
@@ -35,6 +33,8 @@ public class Respawner : MonoBehaviour
 
     void CheckIfOffTrack()
     {
+        if (kartScriptV2 == null) kartScriptV2 = FindFirstObjectByType<KartScriptV2>();
+        
         if (kartScriptV2.outOfBounds)
         {
             isOffTrack = true;  
