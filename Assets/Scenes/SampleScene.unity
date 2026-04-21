@@ -48551,7 +48551,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1394232075
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -48653,12 +48653,13 @@ MonoBehaviour:
   selectables:
   - {fileID: 801212071}
   - {fileID: 1285928983}
-  Offset: {x: 0, y: 0, z: 0}
+  Offset: {x: 8, y: 0, z: 0}
   selectedScale: 1
-  selectedColor: {r: 0.9983687, g: 0.9669811, b: 1, a: 1}
+  selectedColor: {r: 0.8160377, g: 1, b: 0.9888612, a: 1}
   audioSource: {fileID: 0}
   soundNav: {fileID: 0}
   soundSubmit: {fileID: 0}
+  globalVolume: {fileID: 832575518}
 --- !u!1001 &1396582314
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -66787,7 +66788,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   contreLaMontre: {fileID: 1546263593}
-  chronoUI: {fileID: 3709806865398118134}
+  chronoUI: {fileID: 0}
 --- !u!114 &1546263592
 MonoBehaviour:
   m_ObjectHideFlags: 0

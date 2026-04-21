@@ -2,17 +2,20 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+// Ajout des namespaces pour le Post Processing (URP)
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 public class MenuPauseScriptIG : MonoBehaviour
 {
     [Header("UI Panels")]
-    public GameObject pauseMenuUI; // Le Panel qui contient tout le menu de pause
+    public GameObject pauseMenuUI;
     private bool isPaused = false;
 
     [Header("Navigation (0: Continuer, 1: Quitter)")]
     public Transform pointeur;
     public int index = 0;
-    public GameObject[] selectables; // Place tes deux boutons ici dans l'ordre
+    public GameObject[] selectables;
     public Vector3 Offset;
 
     [Header("Feedback Visuel")]
@@ -26,21 +29,29 @@ public class MenuPauseScriptIG : MonoBehaviour
     public AudioClip soundNav;
     public AudioClip soundSubmit;
 
+    [Header("Post Processing")]
+    public Volume globalVolume; // Glisse ton GameObject "Global Volume" ici
+    private DepthOfField depthOfField;
+
     private bool isVerticalAxisInUse = false;
 
     void Awake()
     {
-        // Initialisation des tailles par défaut
         defaultScales = new Vector3[selectables.Length];
         for (int i = 0; i < selectables.Length; i++)
         {
             if (selectables[i] != null) defaultScales[i] = selectables[i].transform.localScale;
         }
+
+        // Récupération de l'effet Depth of Field dans le profil du Global Volume
+        if (globalVolume != null && globalVolume.profile != null)
+        {
+            globalVolume.profile.TryGet(out depthOfField);
+        }
     }
 
     void Update()
     {
-        // Touche de pause (Échap ou bouton Start manette)
         if (Input.GetKeyDown(KeyCode.Escape) || Input.GetButtonDown("Cancel"))
         {
             if (isPaused) Resume();
@@ -58,26 +69,35 @@ public class MenuPauseScriptIG : MonoBehaviour
         }
     }
 
-    // --- LOGIQUE DE PAUSE ---
     public void Resume()
     {
         pauseMenuUI.SetActive(false);
-        Time.timeScale = 1f; // Relance le temps
+        Time.timeScale = 1f;
         isPaused = false;
+
+        // Désactiver le flou
+        if (depthOfField != null)
+        {
+            depthOfField.active = false;
+        }
     }
 
     void Pause()
     {
         pauseMenuUI.SetActive(true);
-        Time.timeScale = 0f; // Fige le temps
+        Time.timeScale = 0f;
         isPaused = true;
 
-        // Reset l'index au bouton "Continuer" à chaque ouverture
         index = 0;
         UpdateVisuals();
+
+        // Activer le flou
+        if (depthOfField != null)
+        {
+            depthOfField.active = true;
+        }
     }
 
-    // --- NAVIGATION ---
     void HandleNavigation()
     {
         float v = Input.GetAxisRaw("Vertical");
@@ -86,7 +106,6 @@ public class MenuPauseScriptIG : MonoBehaviour
         {
             if (!isVerticalAxisInUse)
             {
-                // Vers le bas = index++, Vers le haut = index--
                 int dir = v < -0.5f ? 1 : -1;
                 ChangeIndex(dir);
                 isVerticalAxisInUse = true;
@@ -101,7 +120,6 @@ public class MenuPauseScriptIG : MonoBehaviour
     void ChangeIndex(int dir)
     {
         int oldIndex = index;
-        // Navigation cyclique entre 0 et 1
         index = (index + dir + selectables.Length) % selectables.Length;
 
         if (index != oldIndex)
@@ -122,7 +140,6 @@ public class MenuPauseScriptIG : MonoBehaviour
                 selectables[i].transform.localScale = defaultScales[i] * selectedScale;
                 SetColorRecursive(selectables[i], selectedColor);
 
-                // Position du pointeur
                 if (pointeur != null)
                     pointeur.position = selectables[i].transform.position + Offset;
             }
@@ -134,16 +151,15 @@ public class MenuPauseScriptIG : MonoBehaviour
         }
     }
 
-    // --- ACTIONS ---
     void InteractWithCurrentSelection()
     {
         PlaySfx(soundSubmit);
 
-        if (index == 0) // BOUTON CONTINUER
+        if (index == 0)
         {
             Resume();
         }
-        else if (index == 1) // BOUTON QUITTER
+        else if (index == 1)
         {
             QuitToMainMenu();
         }
@@ -151,23 +167,20 @@ public class MenuPauseScriptIG : MonoBehaviour
 
     void QuitToMainMenu()
     {
-        // TRÈS IMPORTANT : Remettre le temps à 1 avant de changer de scène !
-        // Sinon ton menu principal sera figé (TimeScale est global)
         Time.timeScale = 1f;
+
+        if (depthOfField != null) depthOfField.active = false;
 
         if (MainMenuUIManager.Instance != null)
         {
-            // On utilise ta transition "quali" que j'ai écrite avant
-            MainMenuUIManager.Instance.LaunchScene("NomDeTaSceneMenu");
+            MainMenuUIManager.Instance.LaunchScene("MainMenu2_0");
         }
         else
         {
-            // Sécurité si tu n'as pas le manager dans la scène
-            UnityEngine.SceneManagement.SceneManager.LoadScene("NomDeTaSceneMenu");
+            UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu2_0");
         }
     }
 
-    // --- UTILS ---
     void SetColorRecursive(GameObject obj, Color c)
     {
         if (obj.GetComponent<TMP_Text>()) obj.GetComponent<TMP_Text>().color = c;
