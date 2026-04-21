@@ -2,7 +2,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
-// Ajout des namespaces pour le Post Processing (URP)
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
@@ -30,10 +29,12 @@ public class MenuPauseScriptIG : MonoBehaviour
     public AudioClip soundSubmit;
 
     [Header("Post Processing")]
-    public Volume globalVolume; // Glisse ton GameObject "Global Volume" ici
+    public Volume globalVolume;
     private DepthOfField depthOfField;
 
     private bool isVerticalAxisInUse = false;
+
+    private Canvas parentCanvas;
 
     void Awake()
     {
@@ -43,10 +44,15 @@ public class MenuPauseScriptIG : MonoBehaviour
             if (selectables[i] != null) defaultScales[i] = selectables[i].transform.localScale;
         }
 
-        // Récupération de l'effet Depth of Field dans le profil du Global Volume
         if (globalVolume != null && globalVolume.profile != null)
         {
             globalVolume.profile.TryGet(out depthOfField);
+        }
+
+        parentCanvas = GetComponentInParent<Canvas>();
+        if (parentCanvas != null && !parentCanvas.isRootCanvas)
+        {
+            parentCanvas = parentCanvas.rootCanvas;
         }
     }
 
@@ -75,7 +81,6 @@ public class MenuPauseScriptIG : MonoBehaviour
         Time.timeScale = 1f;
         isPaused = false;
 
-        // Désactiver le flou
         if (depthOfField != null)
         {
             depthOfField.active = false;
@@ -91,7 +96,6 @@ public class MenuPauseScriptIG : MonoBehaviour
         index = 0;
         UpdateVisuals();
 
-        // Activer le flou
         if (depthOfField != null)
         {
             depthOfField.active = true;
@@ -120,7 +124,8 @@ public class MenuPauseScriptIG : MonoBehaviour
     void ChangeIndex(int dir)
     {
         int oldIndex = index;
-        index = (index + dir + selectables.Length) % selectables.Length;
+
+        index = Mathf.Clamp(index + dir, 0, selectables.Length - 1);
 
         if (index != oldIndex)
         {
@@ -131,6 +136,8 @@ public class MenuPauseScriptIG : MonoBehaviour
 
     void UpdateVisuals()
     {
+        float currentScaleFactor = parentCanvas != null ? parentCanvas.scaleFactor : 1f;
+
         for (int i = 0; i < selectables.Length; i++)
         {
             if (selectables[i] == null) continue;
@@ -141,7 +148,9 @@ public class MenuPauseScriptIG : MonoBehaviour
                 SetColorRecursive(selectables[i], selectedColor);
 
                 if (pointeur != null)
-                    pointeur.position = selectables[i].transform.position + Offset;
+                {
+                    pointeur.position = selectables[i].transform.position + (Offset * currentScaleFactor);
+                }
             }
             else
             {
