@@ -1,5 +1,6 @@
 
 using UnityEngine;
+using System.Collections;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
 using static UnityEngine.GraphicsBuffer;
@@ -7,8 +8,15 @@ using static UnityEngine.GraphicsBuffer;
 public class KartScriptV3 : MonoBehaviour
 {
     public static KartScriptV3 instance;
+    public bool canDrive = true;
+
+    float respawnCooldown = 1.5f;
+    private Vector3 startPosition;
+    private Vector3 currentPosition;
+    private float security = 8f;
     [Header("Components")]
     public Rigidbody rb;
+    [SerializeField] private CheckpointManager checkPointManager;
     [Header("Inputs")]
     float forwardDirection;
     float turnDirection; // la direction de la rotation du vollant
@@ -40,6 +48,7 @@ public class KartScriptV3 : MonoBehaviour
     bool turbo;
     [Header("Colisions")]
     public LayerMask wallLayer;
+    public LayerMask trackLayer;
     public Vector3 bounceDirection;
     public float bounceForce;
     public float minBounceDecelForce;
@@ -112,6 +121,16 @@ public class KartScriptV3 : MonoBehaviour
     float inputGlideUpDown;
     public GameObject gliderGO;
     float tryFlightTimer;
+    [Header("Ghost")]
+    [SerializeField] ContreLaMontre contreLaMontre;
+    [SerializeField] private GameObject trackPath;
+    public bool ghostMode = false;
+    public Transform currentWaypoint;
+    public Transform firstWaypoint;
+
+    public Vector3 StartPosition { get => startPosition; set => startPosition = value; }
+    public Vector3 CurrentPosition { get => currentPosition; set => currentPosition = value; }
+
     private void Awake()
     {
         if (instance == null)
@@ -128,6 +147,8 @@ public class KartScriptV3 : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        currentPosition = transform.position;
+        StartPosition = groundRayOrigin.gameObject.transform.position;
     }
 
     void Update()
@@ -287,6 +308,7 @@ public class KartScriptV3 : MonoBehaviour
             //if (currentTurboForce <= 0) airSpeed -= 5f * Time.fixedDeltaTime;
             //if (airSpeed < 0) airSpeed = 0;
         }
+
     }
     private void LateUpdate()
     {
@@ -302,6 +324,19 @@ public class KartScriptV3 : MonoBehaviour
 
     void PlayerInputs()
     {
+        if (ghostMode == true)
+        {
+            GhostDrive();
+            return;
+        }
+
+        if (!canDrive)
+        {
+            forwardDirection = 0;
+            turnDirection = 0;
+            return;
+        }
+
         /*forwardDirection = Input.GetAxisRaw("Vertical");
         turnDirection = Input.GetAxisRaw("Horizontal");
         tryToDrift = Input.GetButtonDown("Drift1");
@@ -1011,32 +1046,6 @@ public class KartScriptV3 : MonoBehaviour
         Gizmos.DrawRay(groundRayOrigin.position, Vector3.down * 0.5f);
     }
 
-
-    void CheckIfOffTrack()
-    {
-        Debug.Log("je suis appeler");
-        if (respawnCooldown > 0)
-        {
-            respawnCooldown -= Time.fixedDeltaTime;
-            return;
-        }
-
-        if (Physics.Raycast(groundRayOrigin.position, Vector3.down, 5f))
-        {
-            Debug.Log("Je touche quelque chose");
-        }
-        else
-        {
-            Debug.Log("Je touche RIEN");
-        }
-        if (!Physics.Raycast(groundRayOrigin.position, Vector3.down, 5f, trackLayer))
-        {
-            Debug.Log("cacacacacacaca");
-            checkPointManager.Respawn();
-            transform.position = startPosition;
-            respawnCooldown = 1.5f;
-        }
-    }
 
     void GhostDrive()
     {
