@@ -18,7 +18,7 @@ public class ContreLaMontre : MonoBehaviour
 
 
 
-    private int maxLaps = 0;
+    private int maxLaps = 3;
     private bool raceFinished = false;
 
     public bool RaceFinished { get => raceFinished; private set => raceFinished = value; }
