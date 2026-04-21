@@ -1019,11 +1019,26 @@ public class KartScriptV2 : MonoBehaviour
         Vector3 dir = currentWaypoint.position - transform.position;
 
         float angle = Vector3.SignedAngle(transform.forward, dir, Vector3.up);
-
-        turnDirection = Mathf.Clamp(angle / 30f, -1f, 1f);
+        Debug.Log(angle);
+        if (angle < -5f)
+        {
+            turnDirection = -1;
+            inputGlideTurn = -1;
+        }
+        else if (angle > 5f)
+        {
+            turnDirection = 1;
+            inputGlideTurn = 1;
+        }
+        else
+        {
+            turnDirection = 0;
+            inputGlideTurn = 0;
+        }
+        //turnDirection = Mathf.Clamp(angle / 30f, -1f, 1f);
         forwardDirection = 1f;
 
-        if (dir.sqrMagnitude < 20f)
+        if (dir.sqrMagnitude < 50f)
         {
             Debug.Log(currentWaypoint);
             currentWaypoint = currentWaypoint.GetComponent<Waypoints>().nextWaypoint;
