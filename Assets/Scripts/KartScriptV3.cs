@@ -167,7 +167,7 @@ public class KartScriptV3 : MonoBehaviour
     }*/
     private void FixedUpdate()
     {
-        // On gère la physique du kart
+        // On gÃ¨re la physique du kart
         HandleCurrentSpeed();
         HandleTurning();
         HandleTurbo();
@@ -176,7 +176,7 @@ public class KartScriptV3 : MonoBehaviour
         //float unsignedCurSpeed = currentSpeed;
         //if (unsignedCurSpeed < 0) {unsignedCurSpeed = -unsignedCurSpeed;}
 
-        // on gère la force du bounce contre les murs        
+        // on gÃ¨re la force du bounce contre les murs        
         HandleBounceForce();
         HandleGravity();
 
@@ -312,7 +312,7 @@ public class KartScriptV3 : MonoBehaviour
     }
     private void LateUpdate()
     {
-        // on gère les visuels du kart
+        // on gÃ¨re les visuels du kart
         HandleWholeKartRotationXZ();
         HandleVisualKartBody();
         HandleVisualKartWheels();
@@ -369,7 +369,7 @@ public class KartScriptV3 : MonoBehaviour
     }
     private void HandleBounceForce()
     {
-        // on baisse la force jusqu'a qu'elle soit à 0
+        // on baisse la force jusqu'a qu'elle soit Ã  0
         float nextBounceForce = bounceForce - (minBounceDecelForce) * Time.fixedDeltaTime;
         if (nextBounceForce > 0)
         {
@@ -384,7 +384,7 @@ public class KartScriptV3 : MonoBehaviour
 
     private void HandleGravity()
     {
-        // Si on est pas au sol on accelère la vitesse de chute
+        // Si on est pas au sol on accelÃ¨re la vitesse de chute
         if (grounded) { currentFallSpeed = 0; }
         else if (currentFallSpeed < 32f) { currentFallSpeed += gravity * Time.fixedDeltaTime; }
     }
@@ -407,7 +407,7 @@ public class KartScriptV3 : MonoBehaviour
         {
             nextSpeed += flatAccelSpeed + (maxSpeed - currentSpeed) * accelSpeed * Time.fixedDeltaTime;
         }
-        else if (forwardDirection < 0) // si on veut accelerer en arière
+        else if (forwardDirection < 0) // si on veut accelerer en ariÃ¨re
         {
             nextSpeed -= flatAccelSpeed + (maxSpeed - currentSpeed) * accelSpeed * Time.fixedDeltaTime;
         }
@@ -454,12 +454,12 @@ public class KartScriptV3 : MonoBehaviour
             if (nextYDriftRot < targetYRot)
             {
                 nextYDriftRot += 12f * Time.fixedDeltaTime;
-                if (nextYDriftRot > targetYRot) { nextYDriftRot = targetYRot; } // on dépasse pas targetYRot
+                if (nextYDriftRot > targetYRot) { nextYDriftRot = targetYRot; } // on dÃ©passe pas targetYRot
             }
             else if (nextYDriftRot > targetYRot)
             {
                 nextYDriftRot += -12f * Time.fixedDeltaTime;
-                if (nextYDriftRot < targetYRot) { nextYDriftRot = targetYRot; } // on dépasse pas targetYRot
+                if (nextYDriftRot < targetYRot) { nextYDriftRot = targetYRot; } // on dÃ©passe pas targetYRot
             }
             driftPivot.localRotation = Quaternion.Euler(0, nextYDriftRot, 0);
             oldKeepD = keepDrifting;
@@ -801,7 +801,7 @@ public class KartScriptV3 : MonoBehaviour
 
         float nextTotalSpeed = visKartXRot + -currentTurboForce * 0.5f;
         nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -(maxSpeed), maxSpeed + 2f);
-        groundNormalT.transform.rotation = Quaternion.LookRotation(Vector3.Cross(transform.right, groundNormal), groundNormal); // oriente le y vers le haut de la normale et le x vers l'avant du kart ( 2 semaines de galère )
+        groundNormalT.transform.rotation = Quaternion.LookRotation(Vector3.Cross(transform.right, groundNormal), groundNormal); // oriente le y vers le haut de la normale et le x vers l'avant du kart ( 2 semaines de galÃ¨re )
         preOrientation.localRotation = Quaternion.RotateTowards(preOrientation.localRotation, groundNormalT.localRotation, 1f);
         //preOrientation.forward = Vector3.RotateTowards(preOrientation.forward, groundNormalT.forward, 1.5f * Time.fixedDeltaTime, 0.0f);
         //preOrientation.rotation = Quaternion.Euler(preOrientation.rotation.x, 0, preOrientation.rotation.z);
@@ -981,7 +981,7 @@ public class KartScriptV3 : MonoBehaviour
             //    currentFallSpeed = 8f;
             //    return;
             //}
-            //currentFallSpeed += (-groundNormalT.localEulerAngles.x / 70f) * currentSpeed / maxSpeed; // on donne une fausse inertie via la gravité selon l'angle x de la dernière normale            
+            //currentFallSpeed += (-groundNormalT.localEulerAngles.x / 70f) * currentSpeed / maxSpeed; // on donne une fausse inertie via la gravitÃ© selon l'angle x de la derniÃ¨re normale            
             // si on recule en sortie de sol on tombe bien plus vite!!!            
         }
     }
