@@ -422,7 +422,8 @@ public class KartScriptV2 : MonoBehaviour
     }
     void HandleDrift()
     {
-
+        //ca mem
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! faux drift
         if (keepDrifting && grounded)
         {
             // on fait monter ou descendre la rotation Y vers targetYRot
@@ -442,7 +443,7 @@ public class KartScriptV2 : MonoBehaviour
             oldKeepD = keepDrifting;
             driftCoyoteTime = 0.12f;
         }
-        else
+        else // quand on lache le drift
         {
             if (driftCoyoteTime > 0f)
             {
@@ -506,6 +507,7 @@ public class KartScriptV2 : MonoBehaviour
                 fireWheelEffects[i].transform.localScale = new Vector3(0.5f, 0.05f, 0.5f);
             }
         }
+        
         if (tryToDrift && grounded) //if (tryToDrift && grounded)
         {
             if (currentTurnSpeed > 0.5f && turnDirection > 0)

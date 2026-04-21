@@ -12,6 +12,7 @@ public class ContreLaMontre : MonoBehaviour
     [SerializeField] private TextMeshProUGUI scoreUI;
     [SerializeField] private TextMeshProUGUI startUI;
 
+
     bool boostWindow = false;
     bool playerPressed = false;
 
@@ -19,7 +20,14 @@ public class ContreLaMontre : MonoBehaviour
 
 
     private int maxLaps = 3;
+    private bool raceStarted = false;
     private bool raceFinished = false;
+
+    public bool getRaceStarted()
+    {
+
+        return raceStarted;
+    }
 
     public bool RaceFinished { get => raceFinished; private set => raceFinished = value; }
     public int MaxLaps { get => maxLaps; private set => maxLaps = value; }
@@ -100,5 +108,6 @@ public class ContreLaMontre : MonoBehaviour
         yield return new WaitForSeconds(1);
 
         startUI.text = "";
+        raceStarted = true;
     }
 }

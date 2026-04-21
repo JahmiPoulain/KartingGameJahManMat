@@ -9,6 +9,7 @@ public class LapManager : MonoBehaviour
     [SerializeField] CheckpointManager checkpointManager;
     [SerializeField] ContreLaMontre contreLaMontre;
 
+
     [SerializeField]
     private TextMeshProUGUI chronoUI;
     [SerializeField]
@@ -55,6 +56,8 @@ public class LapManager : MonoBehaviour
             {
                 checkpoint.gameObject.SetActive(true);
             }
+
+            checkpointManager.HasCheckpoint = false;
         }
 
     }
