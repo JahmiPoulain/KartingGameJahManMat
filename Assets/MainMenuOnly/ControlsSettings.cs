@@ -13,6 +13,7 @@ public class ControlsSettings : MonoBehaviour
         public InputActionReference actionRef;
         public TMP_Text textKeyboard;
         public TMP_Text textGamepad;
+        public TMP_Text label;
         public GameObject rowObject;
 
         [HideInInspector]
@@ -257,6 +258,7 @@ public class ControlsSettings : MonoBehaviour
 
             if (row.textKeyboard) row.textKeyboard.color = normalColor;
             if (row.textGamepad) row.textGamepad.color = normalColor;
+            if (row.textKeyboard) row.label.color = normalColor;
         }
 
         if (itemApply != null)
@@ -273,6 +275,7 @@ public class ControlsSettings : MonoBehaviour
 
             if (selectedRow.textGamepad) selectedRow.textGamepad.color = selectedColor;
             if (selectedRow.textKeyboard) selectedRow.textKeyboard.color = selectedColor;
+            if (selectedRow.textKeyboard) selectedRow.label.color = selectedColor;
         }
         else
         {
