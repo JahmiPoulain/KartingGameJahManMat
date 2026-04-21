@@ -3,11 +3,11 @@ using Unity.VisualScripting;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
-public class KartScriptV2 : MonoBehaviour
+public class KartScriptV22 : MonoBehaviour
 {
     // JAHMI
 
-    public static KartScriptV2 instance;
+    public static KartScriptV22 instance;
     public bool canDrive = true;
 
     float respawnCooldown = 0f;
