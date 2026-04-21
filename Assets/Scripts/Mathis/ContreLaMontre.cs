@@ -3,7 +3,7 @@ using UnityEngine;
 using TMPro;
 using System.Collections;
 
-public class ContreLaMontre : MonoBehaviour
+public class ContreLaMontre : GameMode
 {
 
     [SerializeField] LapManager lapManager;
@@ -16,21 +16,6 @@ public class ContreLaMontre : MonoBehaviour
     bool boostWindow = false;
     bool playerPressed = false;
 
-
-
-
-    private int maxLaps = 3;
-    private bool raceStarted = false;
-    private bool raceFinished = false;
-
-    public bool getRaceStarted()
-    {
-
-        return raceStarted;
-    }
-
-    public bool RaceFinished { get => raceFinished; private set => raceFinished = value; }
-    public int MaxLaps { get => maxLaps; private set => maxLaps = value; }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -58,7 +43,7 @@ public class ContreLaMontre : MonoBehaviour
         }
     }
 
-    private void CompleteRace()
+    public override void CompleteRace()
     {
 
         raceFinished = true;

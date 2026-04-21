@@ -1,8 +1,8 @@
 using UnityEngine;
 
-public class TimeAttack : MonoBehaviour
+public class TimeAttack : GameMode
 {
-    public float bestTime;
+    private float bestTime;
 
     void Start()
     {
@@ -19,5 +19,10 @@ public class TimeAttack : MonoBehaviour
 
             Debug.Log("NOUVEAU RECORD !");
         }
+    }
+
+    public override void CompleteRace()
+    {
+        throw new System.NotImplementedException();
     }
 }
