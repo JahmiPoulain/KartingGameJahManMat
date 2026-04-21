@@ -49,6 +49,7 @@ public class KartScriptV2 : MonoBehaviour
     public Transform camPivot;
     public Vector3 thirdPersonCamPos;
     public Vector3 firstPersonCamPos;
+    Vector3 currentCamPosCenter;
     float turboTimer;
     [Header("Visual Kart")]
     public GameObject visualKartBody;
@@ -800,62 +801,66 @@ public class KartScriptV2 : MonoBehaviour
         {
             driftForce = -driftForce;
         }
-        camXpos = Mathf.Clamp((currentSpeed * -currentTurnSpeed / 50f * forwardDirection) + (turnDirection * driftForce), -10f, 10f);
+        camXpos = Mathf.Clamp((currentSpeed * -currentTurnSpeed / 110f * forwardDirection) + (turnDirection * driftForce), -10f, 10f);
         //  Debug.Log("avant " + playerCamera.transform.localPosition + camXpos);
         if (playerCamera.transform.localPosition.x > camXpos)
         {
-            float nextXpos = playerCamera.transform.localPosition.x - 0.15f * Time.deltaTime;
+            float nextXpos = playerCamera.transform.localPosition.x - 1.2f * Time.deltaTime;
             if (nextXpos < camXpos)
             {
                 nextXpos = camXpos;
             }
-            playerCamera.transform.localPosition = new Vector3(nextXpos, playerCamera.transform.localPosition.y, playerCamera.transform.localPosition.z);
+            playerCamera.transform.localPosition = currentCamPosCenter + new Vector3(nextXpos, playerCamera.transform.localPosition.y, playerCamera.transform.localPosition.z);
         }
         else if (playerCamera.transform.localPosition.x < camXpos)
         {
-            float nextXpos = playerCamera.transform.localPosition.x + 0.15f * Time.deltaTime;
+            float nextXpos = playerCamera.transform.localPosition.x + 1.2f * Time.deltaTime;
             if (nextXpos > camXpos)
             {
                 nextXpos = camXpos;
             }
-            playerCamera.transform.localPosition = new Vector3(nextXpos, playerCamera.transform.localPosition.y, playerCamera.transform.localPosition.z);
+            playerCamera.transform.localPosition = currentCamPosCenter + new Vector3(nextXpos, playerCamera.transform.localPosition.y, playerCamera.transform.localPosition.z);
         }
         // Debug.Log("apres " + playerCamera.transform.localPosition + camXpos);
         // Debug.Log("avant "+playerCamera.transform.localPosition + camXpos);
         // playerCamera.transform.localPosition = new Vector3(IncrementTowardsValue(playerCamera.transform.localPosition.x, camXpos, 0.15f * Time.deltaTime), playerCamera.transform.localPosition.y, playerCamera.transform.localPosition.z);
         // Debug.Log("apres " + playerCamera.transform.localPosition + camXpos);
         Vector3 targetDir = (transform.forward + (transform.right * currentTurnSpeed * Mathf.Clamp(currentDriftForce, -1f, 1f) * 0.05f)).normalized;
-        float rotSpeed = 0.1f + (camPivot.forward - targetDir).magnitude * 2f;
-        camPivot.forward = Vector3.RotateTowards(camPivot.forward, targetDir, rotSpeed * Time.deltaTime, 0.0f);
-
-        if (InputSystemHandler.instance.inputCameraMode)
+        float rotSpeed = 0.1f + (camPivot.forward - targetDir).magnitude * 2f; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        camPivot.forward = Vector3.RotateTowards(camPivot.forward, targetDir, 1 * Time.deltaTime, 0.0f);
+        
+       /* if (InputSystemHandler.instance.inputCameraMode)
         {
-            Vector3 nextDir = thirdPersonCamPos - playerCamera.transform.localPosition;
+            Vector3 nextDir = thirdPersonCamPos - currentCamPosCenter; //playerCamera.transform.localPosition;
             Vector3 nextDirNorm = nextDir.normalized;
             Vector3 nextPos = (nextDirNorm + nextDir * 8f) * Time.deltaTime;
             if (nextDir.sqrMagnitude > 0.0001f)
             {
-                playerCamera.transform.localPosition += nextPos;
+                //playerCamera.transform.localPosition += nextPos;
+                currentCamPosCenter += nextPos;
             }
             else
             {
-                playerCamera.transform.localPosition = thirdPersonCamPos;
+                //playerCamera.transform.localPosition = thirdPersonCamPos;
+                currentCamPosCenter = thirdPersonCamPos;
             }
         }
         else
         {
-            Vector3 nextDir = firstPersonCamPos - playerCamera.transform.localPosition;
+            Vector3 nextDir = firstPersonCamPos - currentCamPosCenter;//playerCamera.transform.localPosition;
             Vector3 nextDirNorm = nextDir.normalized;
             Vector3 nextPos = (nextDirNorm + nextDir * 8f) * Time.deltaTime;
             if (nextDir.sqrMagnitude > 0.0001f)
             {
-                playerCamera.transform.localPosition += nextPos;
+                //playerCamera.transform.localPosition += nextPos;
+                currentCamPosCenter += nextPos;
             }
             else
             {
-                playerCamera.transform.localPosition = firstPersonCamPos;
+                //playerCamera.transform.localPosition = firstPersonCamPos;
+                currentCamPosCenter = firstPersonCamPos;
             }
-        }
+        }*/
     }
 
 
