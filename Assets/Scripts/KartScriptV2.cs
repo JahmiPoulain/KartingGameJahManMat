@@ -520,7 +520,7 @@ public class KartScriptV2 : MonoBehaviour
 
             driftPivot.localRotation = Quaternion.Euler(0, nextYDriftRot, 0);
 
-            oldKeepD = keepDrifting;
+            //oldKeepD = keepDrifting;
             //driftCoyoteTime = 0.12f;
         }
         else // quand on lache le drift
