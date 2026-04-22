@@ -1026,7 +1026,6 @@ public class KartScriptV2 : MonoBehaviour
     }
 
 
-
     void GhostDrive()
     {
         if (currentWaypoint == null)
