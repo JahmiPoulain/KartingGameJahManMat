@@ -1,6 +1,7 @@
-using UnityEngine;
-using TMPro;
 using System.Collections;
+using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
 
 public class LapManager : MonoBehaviour
 {
@@ -16,21 +17,39 @@ public class LapManager : MonoBehaviour
     private TextMeshProUGUI lapUI;
 
     private int _currentLap = 1;
-    private float[] _lapTimes = new float[3];
     private float lapTime = 0f;
     private bool _isChecking = false;
 
+    // Remplacez : private float[] _lapTimes = new float[3];
+    private List<float> _lapTimes = new List<float>();
+
+    // Modifiez la propriété :
+    public List<float> LapTimes { get => _lapTimes; }
     public int CurrentLap { get => _currentLap; private set => _currentLap = value; }
-    public float[] LapTimes { get => _lapTimes; private set => _lapTimes = value; }
     public bool IsChecking { get => _isChecking; set => _isChecking = value; }
     public Checkpoint[] Checkpoints { get => checkpoints; set => checkpoints = value; }
+    public TextMeshProUGUI ChronoUI { get => chronoUI; set => chronoUI = value; }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        _lapTimes = new float[currentMode.MaxLaps];
+        _lapTimes.Clear();
         lapUI.text = $"Tour {_currentLap}/{currentMode.MaxLaps}";
+
+        // On attend un peu ou on cherche le mode sur le joueur
+        StartCoroutine(WaitForMode());
+
     }
+
+    IEnumerator WaitForMode()
+    {
+        while (currentMode == null)
+        {
+            currentMode = FindFirstObjectByType<GameMode>();
+            yield return null;
+        }
+    }
+
 
     // Update is called once per frame
     void Update()
@@ -65,24 +84,30 @@ public class LapManager : MonoBehaviour
     private void FinishLapLogic()
     {
         lapTime = chrono.CurrentTime;
-        LapTimes[CurrentLap - 1] = lapTime;
+        _lapTimes.Add(lapTime); // On ajoute dynamiquement
 
-        chrono.ResetChrono();
-
-        checkpointManager.NextIndex = 1;
-
-        CurrentLap++;
-
-        lapUI.text = $"Tour {CurrentLap}/{currentMode.MaxLaps}";
-
-        if (CurrentLap >= currentMode.MaxLaps)
+        // Gestion dynamique du tableau des scores (évite l'erreur d'index hors limites)
+        if (CurrentLap <= LapTimes.Count)
         {
-            lapUI.text = $"Tour {currentMode.MaxLaps}/{currentMode.MaxLaps}";
+            LapTimes[CurrentLap - 1] = lapTime;
         }
 
-        if (CurrentLap > LapTimes.Length)
+        // ON PRÉVIENT LE MODE DE JEU QU'UN TOUR EST FINI
+        // C'est ici que la magie opère : chaque mode réagira différemment
+        currentMode.OnLapCompleted(lapTime);
+
+        chrono.ResetChrono();
+        checkpointManager.NextIndex = 1;
+        _currentLap++;
+
+        // Mise à jour de l'UI selon le mode
+        if (currentMode is TimeAttack)
         {
-            Debug.Log("Course terminée !");
+            lapUI.text = $"Tour {_currentLap}";
+        }
+        else
+        {
+            lapUI.text = $"Tour {_currentLap}/{currentMode.MaxLaps}";
         }
     }
 
@@ -92,14 +117,14 @@ public class LapManager : MonoBehaviour
 
         for (int i = 0; i < 3; i++)
         {
-            chronoUI.text =lapTime.ToString("F3");
+            ChronoUI.text =lapTime.ToString("F3");
             yield return new WaitForSeconds(0.3f);
 
-            chronoUI.text = "";
+            ChronoUI.text = "";
             yield return new WaitForSeconds(0.3f);
         }
 
-        chronoUI.text = "";
+        ChronoUI.text = "";
 
         IsChecking = false;
     }

@@ -5,8 +5,6 @@ using TMPro;
 public class TimeAttack : GameMode
 {
     [Header("Références")]
-    [SerializeField] private LapManager lapManager;
-    [SerializeField] private KartScriptV2 kartScript;
     [SerializeField] private TextMeshProUGUI startUI;
     [SerializeField] private TextMeshProUGUI currentTimerUI;
     [SerializeField] private TextMeshProUGUI bestScoreUI; // Pour afficher le record
@@ -16,10 +14,25 @@ public class TimeAttack : GameMode
 
     private void Start()
     {
-        maxLaps = 999; // Mode infini, le joueur enchaîne sans arrêt 
+        lapManager = FindFirstObjectByType<LapManager>();
+        kartScript = GetComponent<KartScriptV2>();
+        // Pour l'UI, cherchez par tag ou via un script UI centralisé
+        startUI = GameObject.Find("CountDownUI").GetComponent<TextMeshProUGUI>();
+        currentTimerUI = GameObject.Find("ChronoUI").GetComponent<TextMeshProUGUI>();
+        bestScoreUI = GameObject.Find("BestScoreUI").GetComponent<TextMeshProUGUI>();
+
+        maxLaps = 999;
         LoadBestScore();
         StartCoroutine(InitialCountdown());
     }
+
+    public override void Initialize(LapManager lm, KartScriptV2 ks)
+    {
+        base.Initialize(lm, ks);
+        // Récupérez les UI depuis le LapManager qui les possède déjà
+        this.currentTimerUI = lm.ChronoUI;
+    }
+
 
     private void Update()
     {
@@ -32,7 +45,7 @@ public class TimeAttack : GameMode
     private void UpdateUI()
     {
         // Affichage du chrono actuel 
-        currentTimerUI.text = FormatTime(lapManager.CurrentLapTime);
+        //currentTimerUI.text = FormatTime(lapManager.CurrentLapTime);
     }
 
     private string FormatTime(float time)
@@ -71,6 +84,20 @@ public class TimeAttack : GameMode
 
         yield return new WaitForSeconds(1);
         startUI.text = "";
+    }
+
+
+    public override void OnLapCompleted(float lapTime)
+    {
+        // On vérifie le record
+        if (lapTime < bestLapTime)
+        {
+            bestLapTime = lapTime;
+            PlayerPrefs.SetFloat(BEST_TIME_KEY, bestLapTime);
+            bestScoreUI.text = "NOUVEAU RECORD : " + FormatTime(bestLapTime);
+        }
+
+
     }
 
     // Appelé par LapManager à chaque franchissement de ligne 

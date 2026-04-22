@@ -329,12 +329,12 @@ public class MainMenuUIManager : MonoBehaviour
 
             if (selectedName.Contains("attack")) // Si le bouton s'appelle "Time Attack"
             {
-                GameManager.instance.currentMode = GameManager.GameModeType.TimeAttack;
+                GameManager.Instance().currentMode = GameManager.GameModeType.TimeAttack;
                 LaunchScene("MaSceneDeCourse");
             }
             else if (selectedName.Contains("trial") || selectedName.Contains("contre"))
             {
-                GameManager.instance.currentMode = GameManager.GameModeType.TimeTrial;
+                GameManager.Instance().currentMode = GameManager.GameModeType.TimeTrial;
                 LaunchScene("MaSceneDeCourse");
             }
 

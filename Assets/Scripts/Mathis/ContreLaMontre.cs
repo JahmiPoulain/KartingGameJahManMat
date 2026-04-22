@@ -6,20 +6,19 @@ using System.Collections;
 public class ContreLaMontre : GameMode
 {
 
-    [SerializeField] LapManager lapManager;
-    [SerializeField] private KartScriptV2 kartScript;
-
     [SerializeField] private TextMeshProUGUI scoreUI;
     [SerializeField] private TextMeshProUGUI startUI;
 
 
     bool boostWindow = false;
     bool playerPressed = false;
+    
 
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        maxLaps = 3;
         StartCoroutine(StartCountdown());
     }
 
@@ -34,7 +33,7 @@ public class ContreLaMontre : GameMode
         CheckRaceCompletion();
     }
 
-    private void CheckRaceCompletion()
+    public override void CheckRaceCompletion()
     {
         if (!raceFinished && lapManager.CurrentLap -1 >= MaxLaps)
         {
@@ -51,10 +50,11 @@ public class ContreLaMontre : GameMode
         for (int i = 0; i < MaxLaps; i++)
         {
             totalTime += lapManager.LapTimes[i];
+            scoreUI.text += $"Tour{i} : {(int)(totalTime / 60): 00} : {totalTime % 60: 00.000}\n";
         }
         int minutes = (int)(totalTime / 60);
         float seconds = totalTime % 60;
-        scoreUI.text = $"Temps total : \n {minutes : 00}:{seconds:00.000}";
+        scoreUI.text += $"Temps total : \n {minutes : 00}:{seconds:00.000}";
         kartScript.ghostMode = true;
 
         OnRaceFinished(totalTime);

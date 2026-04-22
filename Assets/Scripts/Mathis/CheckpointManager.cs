@@ -8,6 +8,7 @@ public class CheckpointManager : MonoBehaviour
 
     private int nextIndex = 1;
 
+
     private Vector3 newPos;
     private Quaternion newRotation;
     private bool hasCheckpoint = false; // ✅ savoir si un checkpoint a été validé
@@ -18,6 +19,7 @@ public class CheckpointManager : MonoBehaviour
     public bool HasCheckpoint { get => hasCheckpoint; set => hasCheckpoint = value; }
     public Vector3 NewPos { get => newPos; set => newPos = value; }
     public Quaternion NewRotation { get => newRotation; set => newRotation = value; }
+
 
     private void Awake()
     {
@@ -34,6 +36,7 @@ public class CheckpointManager : MonoBehaviour
 
     public void CompareCheckpoint(Checkpoint checkpoint)
     {
+
         if (checkpoint.Index == NextIndex)
         {
             NextIndex++;
@@ -44,6 +47,7 @@ public class CheckpointManager : MonoBehaviour
 
             HasCheckpoint = true; // ✅ checkpoint valide
         }
+
     }
 
 

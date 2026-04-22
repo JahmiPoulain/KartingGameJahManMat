@@ -3,26 +3,32 @@ using UnityEngine;
 
 public class ChronoScript : MonoBehaviour
 {
-    [SerializeField] private ContreLaMontre contreLaMontre;
+    private GameMode gameMode; // Changé de ContreLaMontre à GameMode
     [SerializeField] private TextMeshProUGUI chronoUI;
-
     private float delta = 0f;
-
     public float CurrentTime => delta;
+
+    void Start()
+    {
+        // On récupère le mode de jeu présent sur le Kart au démarrage
+        gameMode = FindFirstObjectByType<GameMode>();
+    }
 
     void Update()
     {
-        if (contreLaMontre.RaceFinished || !contreLaMontre.getRaceStarted())
+        if (gameMode == null || gameMode.RaceFinished || !gameMode.getRaceStarted())
             return;
 
         delta += Time.deltaTime;
-        int minutes = (int)(delta / 60);
-        float seconds = delta % 60;
-        chronoUI.text = $"{minutes: 00}:{seconds:00.000}";
+        chronoUI.text = FormatTime(delta);
     }
 
-    public void ResetChrono()
+    public void ResetChrono() => delta = 0f;
+
+    private string FormatTime(float time)
     {
-        delta = 0f;
+        int minutes = (int)(time / 60);
+        float seconds = time % 60;
+        return $"{minutes:00}:{seconds:00.000}";
     }
 }

@@ -3,8 +3,8 @@ using UnityEngine;
 public abstract class GameMode : MonoBehaviour
 {
 
-    [SerializeField] LapManager lapManager;
-    [SerializeField] private KartScriptV2 kartScript;
+    [SerializeField] protected LapManager lapManager;
+    [SerializeField] protected KartScriptV2 kartScript;
 
     protected int maxLaps;
     protected bool raceStarted = false;
@@ -18,11 +18,23 @@ public abstract class GameMode : MonoBehaviour
     public bool RaceFinished { get => raceFinished; private set => raceFinished = value; }
     public int MaxLaps { get => maxLaps; private set => maxLaps = value; }
 
-    private void CheckRaceCompletion()
+    public virtual void Initialize(LapManager lm, KartScriptV2 ks)
     {
-        if (!raceFinished && lapManager.CurrentLap - 1 >= MaxLaps)
+        this.lapManager = lm;
+        this.kartScript = ks;
+    }
+
+    // Cette méthode peut être ignorée ou surchargée
+    public virtual void OnLapCompleted(float lapTime)
+    {
+        // Par défaut, on vérifie si la course est finie
+        CheckRaceCompletion();
+    }
+
+    public virtual void CheckRaceCompletion()
+    {
+        if (!raceFinished && lapManager.CurrentLap > MaxLaps)
         {
-            kartScript.canDrive = false;
             CompleteRace();
         }
     }
