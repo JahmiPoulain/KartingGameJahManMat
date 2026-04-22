@@ -6,9 +6,8 @@ public class LapManager : MonoBehaviour
 {
     [SerializeField] private ChronoScript chrono;
     [SerializeField] private Checkpoint[] checkpoints;
-    [SerializeField] CheckpointManager checkpointManager;
-    [SerializeField] ContreLaMontre contreLaMontre;
-
+    [SerializeField] private CheckpointManager checkpointManager;
+    [SerializeField] private ContreLaMontre contreLaMontre;
 
     [SerializeField]
     private TextMeshProUGUI chronoUI;
@@ -37,6 +36,7 @@ public class LapManager : MonoBehaviour
     {
         
     }
+
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player") && !IsChecking)
@@ -82,7 +82,7 @@ public class LapManager : MonoBehaviour
 
         if (CurrentLap > LapTimes.Length)
         {
-            Debug.Log("Course terminée !");
+            Debug.Log("Course terminï¿½e !");
         }
     }
 
@@ -100,7 +100,6 @@ public class LapManager : MonoBehaviour
         }
 
         chronoUI.text = "";
-
         IsChecking = false;
     }
 }

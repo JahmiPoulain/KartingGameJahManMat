@@ -9,7 +9,7 @@ public class GameModes : MonoBehaviour
     public string sceneMode1;
     public string sceneMode2;
 
-    [Header("Map Inversée (Index 0)")]
+    [Header("Map Inversee (Index 0)")]
     public static bool isMapInverted = false;
     public TMP_Text texteEtatMap;
     public string texteActif = "OUI";
