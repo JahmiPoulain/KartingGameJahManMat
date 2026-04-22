@@ -55,12 +55,13 @@ public class MainMenuUIManager : MonoBehaviour
 
     [Header("--- Navigation Avancée ---")]
     public float initialRepeatDelay = 0.4f;
-    public float minRepeatInterval = 0.05f;
-    public float accelerationFactor = 0.1f;
+    public float minRepeatInterval = 0.1f;
+    public float accelerationFactor = 0.02f;
 
     private float nextActionTime = 0f;
     private float currentRepeatInterval;
     private int lastDirection = 0;
+    private bool isHolding = false;
 
     [Header("--- Transition de Scène ---")]
     [Tooltip("Un CanvasGroup noir (ou autre) qui va faire un fondu au noir.")]
@@ -78,6 +79,7 @@ public class MainMenuUIManager : MonoBehaviour
     public float selectedScale = 1.3f;
     public float normalScale = 1.0f;
     public float scaleAnimSpeed = 12f;
+
 
     [Header("--- Roue Menu Principal ---")]
     public RectTransform mainWheelRect;
@@ -257,6 +259,7 @@ public class MainMenuUIManager : MonoBehaviour
     }
     private void HandleInputs()
     {
+        // 1. Écran de titre
         if (currentState == MenuState.TitleScreen && Input.anyKeyDown)
         {
             hasSeenTitleScreen = true;
@@ -265,73 +268,70 @@ public class MainMenuUIManager : MonoBehaviour
             return;
         }
 
+        // 2. Navigation Roue
         if (currentState == MenuState.MainMenu || currentState == MenuState.OptionsMenu)
         {
             int inputDirection = 0;
 
-            // 1. LECTURE DES AXES
+            // LECTURE : On mixe Vertical (Z/S/Haut/Bas) et Horizontal (Q/D/Gauche/Droite)
+            // pour que le joueur puisse naviguer comme il veut sur la roue
             float v = Input.GetAxisRaw("Vertical");
             float h = Input.GetAxisRaw("Horizontal");
             float scroll = Input.GetAxis("Mouse ScrollWheel");
 
-            // On prend la valeur la plus forte (pour supporter flèches et D-pad)
             float combinedInput = Mathf.Abs(v) > Mathf.Abs(h) ? v : h;
 
-            // 2. LOGIQUE ANTI-VIBRATION (Hystérésis)
-            // Seuil d'activation : 0.7 (il faut vraiment pousser le bâton)
-            // Seuil de relâchement : 0.2 (il faut vraiment le lâcher pour arrêter)
-            bool isPushing = Mathf.Abs(combinedInput) > 0.7f;
-            bool hasReleasedEnough = Mathf.Abs(combinedInput) < 0.2f;
-
-            // Gestion de la molette (prioritaire et instantanée)
-            if (scroll != 0)
+            // Priorité Molette (mouvement sec)
+            if (Mathf.Abs(scroll) > 0.01f)
             {
                 inputDirection = scroll > 0 ? -1 : 1;
             }
-            // Gestion du maintien des touches/joystick
-            else if (isPushing)
+
+            else if (Mathf.Abs(combinedInput) > 0.6f)
             {
                 int currentDir = combinedInput > 0 ? -1 : 1;
 
-                // Premier appui ou changement de direction net
-                if (lastDirection != currentDir)
+                if (!isHolding || currentDir != lastDirection)
                 {
+                    // PREMIER CLIC (Instantané)
                     inputDirection = currentDir;
                     lastDirection = currentDir;
-                    nextActionTime = Time.unscaledTime + initialRepeatDelay;
+                    isHolding = true;
                     currentRepeatInterval = initialRepeatDelay;
+                    nextActionTime = Time.unscaledTime + initialRepeatDelay;
                 }
-                // Maintien prolongé (Auto-repeat)
                 else if (Time.unscaledTime >= nextActionTime)
                 {
-                    inputDirection = -currentDir;
-                    // Accélération progressive
+                    // DÉFILEMENT CONTINU
+                    inputDirection = currentDir;
+
+                    // On accélère doucement
                     currentRepeatInterval = Mathf.Max(minRepeatInterval, currentRepeatInterval - accelerationFactor);
                     nextActionTime = Time.unscaledTime + currentRepeatInterval;
                 }
             }
-
-            // On ne reset la direction QUE si le joueur a bien relâché le stick
-            if (hasReleasedEnough && scroll == 0)
+            else
             {
+                // Reset quand on lâche
+                isHolding = false;
                 lastDirection = 0;
-                currentRepeatInterval = initialRepeatDelay;
             }
 
-            // 3. APPLICATION
+            // Application du mouvement
             if (inputDirection != 0)
             {
                 if (invertNavigation) inputDirection = -inputDirection;
                 RotateWheel(inputDirection);
             }
 
-            // 4. VALIDATION
+            // 3. Validation
             if (Input.GetButtonDown("Submit") || Input.GetKeyDown(KeyCode.Return))
             {
                 SelectCurrentWheelOption();
             }
         }
 
+        // 4. Retour
         if (Input.GetButtonDown("Cancel") || Input.GetKeyDown(KeyCode.Escape))
         {
             GoBack();
