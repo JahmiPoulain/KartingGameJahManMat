@@ -519,20 +519,17 @@ public class KartScriptV2 : MonoBehaviour
             }
 
             driftPivot.localRotation = Quaternion.Euler(0, nextYDriftRot, 0);
-<<<<<<< Updated upstream
-            driftCoyoteTime = 0.12f;
-=======
+
             oldKeepD = keepDrifting;
             //driftCoyoteTime = 0.12f;
->>>>>>> Stashed changes
         }
         else // quand on lache le drift
         {
-           /* if (driftCoyoteTime > 0f)
-            {
-                driftCoyoteTime -= Time.deltaTime;
-                return;
-            }*/
+            // if (driftCoyoteTime > 0f)
+            // {
+            //     driftCoyoteTime -= Time.deltaTime;
+            //     return;
+            // }                   
             /*if (nextYDriftRot < 0)
             {
                 nextYDriftRot += 12f * Time.fixedDeltaTime;
@@ -580,11 +577,7 @@ public class KartScriptV2 : MonoBehaviour
             for (int i = 0; i < driftParticlesGenerators.Length; i++)
             {
                 driftParticlesGenerators[i].gameObject.SetActive(false);
-<<<<<<< Updated upstream
-                //Debug.Log("DEACTIVATE");
-=======
                // Debug.Log("DEACTIVATE");
->>>>>>> Stashed changes
             }
 
             //return; 
