@@ -129,15 +129,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 5bfb74a264ca3d248a178a567fd7de6c, type: 3}
       propertyPath: m_LocalScale.x
-      value: 62.905834
+      value: 104.60611
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5bfb74a264ca3d248a178a567fd7de6c, type: 3}
       propertyPath: m_LocalScale.y
-      value: 62.905846
+      value: 104.60613
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5bfb74a264ca3d248a178a567fd7de6c, type: 3}
       propertyPath: m_LocalScale.z
-      value: 2325.9692
+      value: 3867.8542
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5bfb74a264ca3d248a178a567fd7de6c, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1074,7 +1074,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
   m_AnchorMin: {x: 0.81039816, y: 0.22585225}
   m_AnchorMax: {x: 1.0935538, y: 0.7072581}
-  m_AnchoredPosition: {x: 0.0000038146973, y: 0.00000047683716}
+  m_AnchoredPosition: {x: 1.71, y: 0.00000047683716}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &233649522
@@ -2023,7 +2023,7 @@ MonoBehaviour:
   customAnglePerOption: 90
   startAngleOffset: 0
   reverseSpawnDirection: 0
-  wheelRadius: 10
+  wheelRadius: 15
   wheelRotationSpeed: 7.5
   keepButtonsUpright: 1
   viewContainer: {fileID: 271540518}
@@ -5702,7 +5702,7 @@ RectTransform:
   m_GameObject: {fileID: 1151446050}
   m_LocalRotation: {x: 0.31411606, y: -0.633507, z: -0.6335071, w: 0.314116}
   m_LocalPosition: {x: 0, y: 0, z: 1.1}
-  m_LocalScale: {x: 20.203743, y: 0.5464104, z: 20.203747}
+  m_LocalScale: {x: 31.630453, y: 0.85544586, z: 31.630459}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1869608363}
