@@ -9658,7 +9658,7 @@ Terrain:
   m_TreeBillboardDistance: 50
   m_TreeCrossFadeLength: 5
   m_TreeMaximumFullLODCount: 50
-  m_DetailObjectDistance: 80
+  m_DetailObjectDistance: 383
   m_DetailObjectDensity: 1
   m_HeightmapPixelError: 5
   m_SplatMapDistance: 1000
@@ -9671,7 +9671,7 @@ Terrain:
   m_StaticShadowCaster: 0
   m_IgnoreQualitySettings: 0
   m_ReflectionProbeUsage: 1
-  m_MaterialTemplate: {fileID: 2100000, guid: 594ea882c5a793440b60ff72d896021e, type: 2}
+  m_MaterialTemplate: {fileID: 2100000, guid: 07ab63867ceac41a1bc95ea02edb3427, type: 2}
   m_BakeLightProbesForTrees: 1
   m_PreserveTreePrototypeLayers: 0
   m_DeringLightProbesForTrees: 1
@@ -9693,7 +9693,7 @@ Transform:
   m_GameObject: {fileID: 178413073}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -311, y: -5.2, z: -202}
+  m_LocalPosition: {x: -311, y: 10.3, z: -202}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -19856,7 +19856,6 @@ MonoBehaviour:
   bounceDirection: {x: 0, y: 0, z: 0}
   bounceForce: 0
   minBounceDecelForce: 200
-  camXpos: 0
   playerCamera: {fileID: 330585543}
   camPivot: {fileID: 1219606186}
   thirdPersonCamPos: {x: 0, y: 2, z: -3}
@@ -45669,6 +45668,9 @@ MonoBehaviour:
   kart: {fileID: 498415611}
   smoothSpeed: 5
   speedSmooth: 5
+  shakeThreshold: 0.98
+  shakeAmount: 5
+  shakeFrequency: 25
 --- !u!1 &966933303
 GameObject:
   m_ObjectHideFlags: 0
@@ -52376,7 +52378,7 @@ GameObject:
   - component: {fileID: 1352873153}
   - component: {fileID: 1352873152}
   m_Layer: 5
-  m_Name: AfficheurVitesse
+  m_Name: Speedometer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -85938,7 +85940,6 @@ MonoBehaviour:
   bounceDirection: {x: 0, y: 0, z: 0}
   bounceForce: 0
   minBounceDecelForce: 200
-  camXpos: 0
   playerCamera: {fileID: 2138573176}
   camPivot: {fileID: 0}
   thirdPersonCamPos: {x: 0, y: 0, z: 0}
