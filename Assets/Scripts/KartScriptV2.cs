@@ -572,7 +572,7 @@ public class KartScriptV2 : MonoBehaviour
             for (int i = 0; i < driftParticlesGenerators.Length; i++)
             {
                 driftParticlesGenerators[i].gameObject.SetActive(false);
-                Debug.Log("DEACTIVATE");
+                //Debug.Log("DEACTIVATE");
             }
 
             //return; 
