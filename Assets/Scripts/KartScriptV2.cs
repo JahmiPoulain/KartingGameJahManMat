@@ -1048,7 +1048,8 @@ public class KartScriptV2 : MonoBehaviour
             inputGlideTurn = 0;
         }
         //turnDirection = Mathf.Clamp(angle / 30f, -1f, 1f);
-        forwardDirection = 1f;
+        if (!isFlying) forwardDirection = 1f;
+        else forwardDirection = 0f;
 
         if (dir.sqrMagnitude < 70f)
         {
