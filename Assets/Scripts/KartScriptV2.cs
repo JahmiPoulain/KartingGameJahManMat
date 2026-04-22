@@ -571,7 +571,7 @@ public class KartScriptV2 : MonoBehaviour
             for (int i = 0; i < fireWheelEffects.Length; i++)
             {
                 fireWheelEffects[i].SetActive(false);
-                fireWheelEffects[i].transform.localScale = new Vector3(0.5f, 0.05f, 0.5f);
+                fireWheelEffects[i].transform.localScale = new Vector3(0.3f, 0.04f, 0.3f);
             }
 
             for (int i = 0; i < driftParticlesGenerators.Length; i++)
