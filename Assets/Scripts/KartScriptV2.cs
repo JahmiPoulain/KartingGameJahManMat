@@ -470,12 +470,7 @@ public class KartScriptV2 : MonoBehaviour
         if (tryToDrift) //if (tryToDrift && grounded)
         {
             tryDriftCoyoteTime = 0.4f;
-<<<<<<< Updated upstream
-
-            if (grounded && tryDriftCoyoteTime > 0)
-=======
             if (grounded && tryDriftCoyoteTime > 0f)
->>>>>>> Stashed changes
             {
                 if (turnDirection > 0) //if (currentTurnSpeed > 0.05f && turnDirection > 0)
                 {
