@@ -516,15 +516,15 @@ public class KartScriptV2 : MonoBehaviour
             }
 
             driftPivot.localRotation = Quaternion.Euler(0, nextYDriftRot, 0);
-            driftCoyoteTime = 0.12f;
+            //driftCoyoteTime = 0.12f;
         }
         else // quand on lache le drift
         {
-            if (driftCoyoteTime > 0f)
-            {
-                driftCoyoteTime -= Time.deltaTime;
-                return;
-            }
+            // if (driftCoyoteTime > 0f)
+            // {
+            //     driftCoyoteTime -= Time.deltaTime;
+            //     return;
+            // }                   
             /*if (nextYDriftRot < 0)
             {
                 nextYDriftRot += 12f * Time.fixedDeltaTime;
