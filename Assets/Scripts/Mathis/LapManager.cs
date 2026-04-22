@@ -6,40 +6,24 @@ using UnityEngine;
 public class LapManager : MonoBehaviour
 {
     [SerializeField] private ChronoScript chrono;
-    [SerializeField] private Checkpoint[] checkpoints;
-    [SerializeField] CheckpointManager checkpointManager;
-    [SerializeField] GameMode currentMode;
+    [SerializeField] private CheckpointManager checkpointManager;
 
+    [SerializeField] private TextMeshProUGUI chronoUI;
+    [SerializeField] private TextMeshProUGUI lapUI;
 
-    [SerializeField]
-    private TextMeshProUGUI chronoUI;
-    [SerializeField]
-    private TextMeshProUGUI lapUI;
-
+    private GameMode currentMode;
     private int _currentLap = 1;
-    private float lapTime = 0f;
+    private List<float> _lapTimes = new List<float>();
     private bool _isChecking = false;
 
-    // Remplacez : private float[] _lapTimes = new float[3];
-    private List<float> _lapTimes = new List<float>();
-
-    // Modifiez la propriété :
-    public List<float> LapTimes { get => _lapTimes; }
-    public int CurrentLap { get => _currentLap; private set => _currentLap = value; }
+    public List<float> LapTimes => _lapTimes;
+    public int CurrentLap => _currentLap;
     public bool IsChecking { get => _isChecking; set => _isChecking = value; }
-    public Checkpoint[] Checkpoints { get => checkpoints; set => checkpoints = value; }
-    public TextMeshProUGUI ChronoUI { get => chronoUI; set => chronoUI = value; }
+    public TextMeshProUGUI ChronoUI { get => chronoUI; }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        // On attend un peu ou on cherche le mode sur le joueur
         StartCoroutine(WaitForMode());
-
-        _lapTimes.Clear();
-        lapUI.text = $"Tour {_currentLap}/{currentMode.MaxLaps}";
-
-
     }
 
     IEnumerator WaitForMode()
@@ -49,80 +33,58 @@ public class LapManager : MonoBehaviour
             currentMode = FindFirstObjectByType<GameMode>();
             yield return null;
         }
+        UpdateLapUI();
     }
-
-
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player") && !IsChecking)
+        if (other.CompareTag("Player") && !_isChecking)
         {
-            CompleteLap();
+            if (checkpointManager.NextIndex > checkpointManager.TotalCheckpointCount)
+            {
+                CompleteLap();
+            }
         }
     }
 
     private void CompleteLap()
     {
-        if (checkpointManager.NextIndex > Checkpoints.Length)
-        {
-            FinishLapLogic();
-            StartCoroutine(LapCompletionAnimation());
+        float finalLapTime = chrono.CurrentTime; // CAPTURE ICI
+        _lapTimes.Add(finalLapTime);
 
-            foreach (Checkpoint checkpoint in Checkpoints)
-            {
-                checkpoint.gameObject.SetActive(true);
-            }
-
-            checkpointManager.HasCheckpoint = false;
-        }
-
-    }
-
-    private void FinishLapLogic()
-    {
-        lapTime = chrono.CurrentTime;
-        _lapTimes.Add(lapTime); // On ajoute dynamiquement
-
-        // Gestion dynamique du tableau des scores (évite l'erreur d'index hors limites)
-        /*if (CurrentLap <= LapTimes.Count)
-        {
-            LapTimes[CurrentLap - 1] = lapTime;
-        }*/
-
-        // ON PRÉVIENT LE MODE DE JEU QU'UN TOUR EST FINI
-        // C'est ici que la magie opère : chaque mode réagira différemment
-        currentMode.OnLapCompleted(lapTime);
-
+        currentMode.OnLapCompleted(finalLapTime);
         chrono.ResetChrono();
-        checkpointManager.NextIndex = 1;
-        _currentLap++;
+        checkpointManager.ResetCheckpoints();
 
-        // Mise à jour de l'UI selon le mode
-        if (currentMode is TimeAttack)
-        {
-            lapUI.text = $"Essai {_currentLap}";
-        }
-        else
-        {
-            lapUI.text = $"Tour {_currentLap}/{currentMode.MaxLaps}";
-        }
+        StartCoroutine(LapCompletionAnimation(finalLapTime));
+        _currentLap++;
+        UpdateLapUI();
+
+        checkpointManager.HasCheckpoint = false;
     }
 
-    private IEnumerator LapCompletionAnimation()
+    private void UpdateLapUI()
     {
-        IsChecking = true;
+        if (currentMode is TimeAttack) lapUI.text = $"Essai {_currentLap}";
+        else lapUI.text = $"Tour {_currentLap}/{currentMode.MaxLaps}";
+        if (currentMode.RaceFinished) lapUI.text = $"Tour {currentMode.MaxLaps}/{currentMode.MaxLaps}";
+    }
+
+    private IEnumerator LapCompletionAnimation(float timeToShow)
+    {
+        _isChecking = true;
+        string formatted = $"{((int)timeToShow / 60):00}:{(timeToShow % 60):00.000}";
 
         for (int i = 0; i < 3; i++)
         {
-            ChronoUI.text =lapTime.ToString("F3");
-            yield return new WaitForSeconds(0.3f);
-
+            ChronoUI.text = formatted;
+            ChronoUI.color = Color.yellow;
+            yield return new WaitForSeconds(0.25f);
             ChronoUI.text = "";
-            yield return new WaitForSeconds(0.3f);
+            yield return new WaitForSeconds(0.2f);
         }
 
-        ChronoUI.text = "";
-
-        IsChecking = false;
+        ChronoUI.color = Color.white;
+        _isChecking = false;
     }
 }

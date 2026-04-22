@@ -3,25 +3,30 @@ using UnityEngine;
 
 public class ChronoScript : MonoBehaviour
 {
-    private GameMode gameMode; // Changé de ContreLaMontre à GameMode
+    private GameMode gameMode;
     [SerializeField] private TextMeshProUGUI chronoUI;
+    [SerializeField] private LapManager lapManager;
     private float delta = 0f;
     public float CurrentTime => delta;
 
-    void Start()
-    {
-        // On récupère le mode de jeu présent sur le Kart au démarrage
-        gameMode = FindFirstObjectByType<GameMode>();
-    }
-
     void Update()
     {
+        // On cherche le mode de jeu s'il n'est pas encore là
+        if (gameMode == null)
+        {
+            gameMode = FindFirstObjectByType<GameMode>();
+            return;
+        }
 
-        if (gameMode == null || gameMode.RaceFinished || !gameMode.getRaceStarted())
+        if (gameMode.RaceFinished || !gameMode.getRaceStarted())
             return;
 
-        delta += Time.deltaTime;
-        chronoUI.text = FormatTime(delta);
+        // On n'incrémente et n'affiche que si le LapManager n'est pas en train de faire son animation
+        if (lapManager != null && !lapManager.IsChecking)
+        {
+            delta += Time.deltaTime;
+            chronoUI.text = FormatTime(delta);
+        }
     }
 
     public void ResetChrono() => delta = 0f;

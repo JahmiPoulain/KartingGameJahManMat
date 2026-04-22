@@ -1,98 +1,79 @@
-using System;
 using UnityEngine;
 using TMPro;
 using System.Collections;
 
 public class ContreLaMontre : GameMode
 {
-
-    [SerializeField] private TextMeshProUGUI scoreUI;
-    [SerializeField] private TextMeshProUGUI startUI;
-
+    private TextMeshProUGUI scoreUI;
+    private TextMeshProUGUI startUI;
 
     bool boostWindow = false;
-    bool playerPressed = false;
-    
 
-
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public override void Initialize(LapManager lm, KartScriptV2 ks)
     {
-        maxLaps = 3;
+        base.Initialize(lm, ks);
+        this.MaxLaps = 3;
+
+        // Récupération automatique de l'UI (assure-toi que les noms correspondent dans ta scène)
+        startUI = GameObject.Find("CountDownUI")?.GetComponent<TextMeshProUGUI>();
+        scoreUI = GameObject.Find("ScoreUI")?.GetComponent<TextMeshProUGUI>();
+
         StartCoroutine(StartCountdown());
     }
 
-    // Update is called once per frame
-
     void Update()
     {
-        if (boostWindow && InputSystemHandler.instance.inputForward > 0)
+        if (raceStarted && !raceFinished)
         {
-            playerPressed = true;
-        }
-        CheckRaceCompletion();
-    }
-
-    public override void CheckRaceCompletion()
-    {
-        if (!raceFinished && lapManager.CurrentLap -1 >= MaxLaps)
-        {
-            kartScript.canDrive = false;
-            CompleteRace();
+            // Logique de boost ou autre
         }
     }
 
     public override void CompleteRace()
     {
-
+        if (raceFinished) return;
         raceFinished = true;
-        float totalTime = 0;
-        for (int i = 0; i < MaxLaps; i++)
-        {
-            totalTime += lapManager.LapTimes[i];
-            scoreUI.text += $"Tour{i} : {(int)(totalTime / 60): 00} : {totalTime % 60: 00.000}\n";
-        }
-        int minutes = (int)(totalTime / 60);
-        float seconds = totalTime % 60;
-        scoreUI.text += $"Temps total : \n {minutes : 00}:{seconds:00.000}";
-        kartScript.ghostMode = true;
 
-        OnRaceFinished(totalTime);
+        kartScript.canDrive = false;
+        kartScript.ghostMode = true;
+        float totalTime = 0;
+        string detailScores = "Résultats :\n";
+
+        for (int i = 0; i < lapManager.LapTimes.Count; i++)
+        {
+            float t = lapManager.LapTimes[i];
+            totalTime += t;
+            detailScores += $"Tour {i + 1} : {FormatTime(t)}\n";
+        }
+
+        if (scoreUI != null)
+            scoreUI.text = detailScores + $"TOTAL : {FormatTime(totalTime)}";
     }
 
-    void OnRaceFinished(float totalTime)
+    private string FormatTime(float time)
     {
-        int finalTime = Mathf.RoundToInt(totalTime * 1000f);
-
-        //LeaderboardManager.Instance.SubmitScoreAndRefresh(finalTime);
+        int min = (int)time / 60;
+        float sec = time % 60;
+        return $"{min:00}:{sec:00.000}";
     }
 
     IEnumerator StartCountdown()
     {
-        kartScript.canDrive = false;
+        if (kartScript != null) kartScript.canDrive = false;
 
-        startUI.text = "3";
+        if (startUI != null) startUI.text = "3";
         yield return new WaitForSeconds(1);
-
-        startUI.text = "2";
+        if (startUI != null) startUI.text = "2";
         boostWindow = true;
         yield return new WaitForSeconds(1);
-
-        startUI.text = "1";
+        if (startUI != null) startUI.text = "1";
         yield return new WaitForSeconds(1);
+        if (startUI != null) startUI.text = "GO!";
 
-        startUI.text = "GO!";
-
-        kartScript.canDrive = true;
-
-        if (boostWindow && playerPressed)
-        {
-            kartScript.StartTurbo(8f, 1.2f);
-        }
-
-        yield return new WaitForSeconds(1);
-
-        startUI.text = "";
         raceStarted = true;
+        if (kartScript != null) kartScript.canDrive = true;
+
+        yield return new WaitForSeconds(1);
+        if (startUI != null) startUI.text = "";
     }
 }
