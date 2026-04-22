@@ -104,7 +104,7 @@ public class KartScriptV2 : MonoBehaviour
     float nextYDriftRot;
     public float driftCoyoteTime;
     float driftCoyoteTimer;
-    public float tryDriftDelay;
+    public float tryDriftCoyoteTime;
     [Header("Flight")]
     public bool isFlying;
     public float flightSpeed;
@@ -424,27 +424,30 @@ public class KartScriptV2 : MonoBehaviour
     }
     void HandleDrift()
     { 
-        if (tryToDrift && grounded && tryDriftDelay <= 0f) //if (tryToDrift && grounded)
+        if (tryToDrift) //if (tryToDrift && grounded)
         {
-            tryDriftDelay = 0.2f;
-            if (currentTurnSpeed > 0.5f && turnDirection > 0)
+            tryDriftCoyoteTime = 0.25f;
+            if (grounded && tryDriftCoyoteTime > 0)
             {
-                driftDir = 1;
-                for (int i = 0; i < driftParticlesGenerators.Length; i++)
+                if (currentTurnSpeed > 0.15f && turnDirection > 0)
                 {
-                    driftParticlesGenerators[i].gameObject.SetActive(true);
+                    driftDir = 1;
+                    for (int i = 0; i < driftParticlesGenerators.Length; i++)
+                    {
+                        driftParticlesGenerators[i].gameObject.SetActive(true);
+                    }
                 }
-            }
-            else if (currentTurnSpeed < -0.5f && turnDirection < 0)
-            {
-                driftDir = -1;
-                for (int i = 0; i < driftParticlesGenerators.Length; i++)
+                else if (currentTurnSpeed < -0.15f && turnDirection < 0)
                 {
-                    driftParticlesGenerators[i].gameObject.SetActive(true);
+                    driftDir = -1;
+                    for (int i = 0; i < driftParticlesGenerators.Length; i++)
+                    {
+                        driftParticlesGenerators[i].gameObject.SetActive(true);
+                    }
                 }
             }
         }
-        if (tryDriftDelay > 0) tryDriftDelay -= Time.deltaTime;
+        if (tryDriftCoyoteTime > 0) tryDriftCoyoteTime -= Time.deltaTime;
 
         //ca mem
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! faux drift
