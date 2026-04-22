@@ -426,23 +426,25 @@ public class KartScriptV2 : MonoBehaviour
     { 
         if (tryToDrift) //if (tryToDrift && grounded)
         {
-            tryDriftCoyoteTime = 0.25f;
+            tryDriftCoyoteTime = 0.4f;
             if (grounded && tryDriftCoyoteTime > 0)
             {
-                if (currentTurnSpeed > 0.15f && turnDirection > 0)
+                if (turnDirection > 0) //if (currentTurnSpeed > 0.05f && turnDirection > 0)
                 {
                     driftDir = 1;
                     for (int i = 0; i < driftParticlesGenerators.Length; i++)
                     {
                         driftParticlesGenerators[i].gameObject.SetActive(true);
+                        Debug.Log("SET ACTIVE");
                     }
                 }
-                else if (currentTurnSpeed < -0.15f && turnDirection < 0)
-                {
+                else if (turnDirection < 0)//(currentTurnSpeed < -0.05f && turnDirection < 0)
+                    {
                     driftDir = -1;
                     for (int i = 0; i < driftParticlesGenerators.Length; i++)
                     {
                         driftParticlesGenerators[i].gameObject.SetActive(true);
+                        Debug.Log("SET ACTIVE");
                     }
                 }
             }
@@ -519,6 +521,7 @@ public class KartScriptV2 : MonoBehaviour
             for (int i = 0; i < driftParticlesGenerators.Length; i++)
             {
                 driftParticlesGenerators[i].gameObject.SetActive(false);
+                Debug.Log("DEACTIVATE");
             }
             //return; 
         }
@@ -541,8 +544,8 @@ public class KartScriptV2 : MonoBehaviour
             for (int i = 0; i < fireWheelEffects.Length; i++)
             {
                 fireWheelEffects[i].SetActive(true);
-                float fireWheelSize = Mathf.Clamp(1 + driftTurboGauge / 6, 1.01f, 1.8f);
-                fireWheelEffects[i].transform.localScale = new Vector3(fireWheelSize, 0.05f, fireWheelSize);
+                float fireWheelSize = Mathf.Clamp(1 + driftTurboGauge / 6, 0.0042f, 0.01f);
+                fireWheelEffects[i].transform.localScale = new Vector3(fireWheelSize, 0.001f, fireWheelSize);
             }
         }
         if (driftDir != 0)
@@ -570,6 +573,7 @@ public class KartScriptV2 : MonoBehaviour
             {
                 driftTurboGauge += 0.8f * Time.deltaTime;
             }
+
             if (driftCatchUp < nextDriftForceTarget)
             {
                 driftCatchUp += 5f * Time.deltaTime;
