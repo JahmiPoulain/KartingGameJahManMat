@@ -13,8 +13,6 @@ public class PlayerController : MonoBehaviour
     private float xRotation = 0f;
 
     [Header("UI")]
-    public RectTransform minimapIcon;
-    public RectTransform minimapParent;
     public RectTransform aiguille;
 
     void Start()
