@@ -16,6 +16,7 @@ public class ChronoScript : MonoBehaviour
 
     void Update()
     {
+
         if (gameMode == null || gameMode.RaceFinished || !gameMode.getRaceStarted())
             return;
 

@@ -33,11 +33,12 @@ public class LapManager : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        // On attend un peu ou on cherche le mode sur le joueur
+        StartCoroutine(WaitForMode());
+
         _lapTimes.Clear();
         lapUI.text = $"Tour {_currentLap}/{currentMode.MaxLaps}";
 
-        // On attend un peu ou on cherche le mode sur le joueur
-        StartCoroutine(WaitForMode());
 
     }
 
@@ -51,11 +52,7 @@ public class LapManager : MonoBehaviour
     }
 
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player") && !IsChecking)
@@ -87,10 +84,10 @@ public class LapManager : MonoBehaviour
         _lapTimes.Add(lapTime); // On ajoute dynamiquement
 
         // Gestion dynamique du tableau des scores (évite l'erreur d'index hors limites)
-        if (CurrentLap <= LapTimes.Count)
+        /*if (CurrentLap <= LapTimes.Count)
         {
             LapTimes[CurrentLap - 1] = lapTime;
-        }
+        }*/
 
         // ON PRÉVIENT LE MODE DE JEU QU'UN TOUR EST FINI
         // C'est ici que la magie opère : chaque mode réagira différemment
@@ -103,7 +100,7 @@ public class LapManager : MonoBehaviour
         // Mise à jour de l'UI selon le mode
         if (currentMode is TimeAttack)
         {
-            lapUI.text = $"Tour {_currentLap}";
+            lapUI.text = $"Essai {_currentLap}";
         }
         else
         {

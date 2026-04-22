@@ -15,7 +15,7 @@ public class TimeAttack : GameMode
     private void Start()
     {
         lapManager = FindFirstObjectByType<LapManager>();
-        kartScript = GetComponent<KartScriptV2>();
+        Initialize(lapManager, FindFirstObjectByType<KartScriptV2>());
         // Pour l'UI, cherchez par tag ou via un script UI centralisé
         startUI = GameObject.Find("CountDownUI").GetComponent<TextMeshProUGUI>();
         currentTimerUI = GameObject.Find("ChronoUI").GetComponent<TextMeshProUGUI>();
@@ -89,12 +89,14 @@ public class TimeAttack : GameMode
 
     public override void OnLapCompleted(float lapTime)
     {
-        // On vérifie le record
         if (lapTime < bestLapTime)
         {
             bestLapTime = lapTime;
             PlayerPrefs.SetFloat(BEST_TIME_KEY, bestLapTime);
-            bestScoreUI.text = "NOUVEAU RECORD : " + FormatTime(bestLapTime);
+            PlayerPrefs.Save(); // Optionnel mais sûr
+
+            if (bestScoreUI != null)
+                bestScoreUI.text = "NOUVEAU RECORD : " + FormatTime(bestLapTime);
         }
 
 
@@ -103,7 +105,7 @@ public class TimeAttack : GameMode
     // Appelé par LapManager à chaque franchissement de ligne 
     public override void CompleteRace()
     {
-        // Récupère le temps du tour venant d'être complété
+        /*// Récupère le temps du tour venant d'être complété
         float lastLapTime = lapManager.LapTimes[lapManager.CurrentLap - 2];
 
         // Vérifie si c'est un nouveau record 
@@ -113,8 +115,9 @@ public class TimeAttack : GameMode
             PlayerPrefs.SetFloat(BEST_TIME_KEY, bestLapTime);
             PlayerPrefs.Save();
             bestScoreUI.text = "NOUVEAU RECORD : " + FormatTime(bestLapTime);
-        }
+        }*/
+        Debug.Log("Fin TimeAttack");
 
-        // Note : On ne met pas raceFinished = true car le joueur enchaîne 
+
     }
 }
