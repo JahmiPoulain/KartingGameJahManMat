@@ -304,7 +304,7 @@ public class MainMenuUIManager : MonoBehaviour
                 // Maintien prolongé (Auto-repeat)
                 else if (Time.unscaledTime >= nextActionTime)
                 {
-                    inputDirection = currentDir;
+                    inputDirection = -currentDir;
                     // Accélération progressive
                     currentRepeatInterval = Mathf.Max(minRepeatInterval, currentRepeatInterval - accelerationFactor);
                     nextActionTime = Time.unscaledTime + currentRepeatInterval;
