@@ -39,7 +39,7 @@ public class Respawner : MonoBehaviour
         {
             isOffTrack = true;  
         }
-        if (kartTransform.position.y <= 2)
+        if (kartTransform.position.y <= 6)
         {
 
             isOffTrack = true;

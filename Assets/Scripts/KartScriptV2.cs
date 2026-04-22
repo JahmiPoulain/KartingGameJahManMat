@@ -1050,9 +1050,10 @@ public class KartScriptV2 : MonoBehaviour
                 }
             }
             // Place Holder Respawner
-            if (transform.position.y < 2f)
+            if (transform.position.y < 11f)
             {
                 outOfBounds = true;
+                Debug.Log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                 //transform.position = new Vector3(106.9f, 16, 151.6f);
                 //transform.eulerAngles = new Vector3(0, 585.413f, 0);
                 //transform.position = currentRespawnPosition;
