@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using TMPro;
 using System.Collections;
@@ -12,6 +11,7 @@ public class ContreLaMontre : MonoBehaviour
     [SerializeField] private TextMeshProUGUI scoreUI;
     [SerializeField] private TextMeshProUGUI startUI;
 
+    [SerializeField] private GameObject leaderboardCanvas;
 
     bool boostWindow = false;
     bool playerPressed = false;
@@ -19,9 +19,11 @@ public class ContreLaMontre : MonoBehaviour
     public GameObject endCourseCanva;
 
 
-    private int maxLaps = 3;
+    [SerializeField] private int maxLaps = 3;
+
     private bool raceStarted = false;
     private bool raceFinished = false;
+    private float raceStartTime;
 
     public bool getRaceStarted()
     {
@@ -35,6 +37,9 @@ public class ContreLaMontre : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        if (leaderboardCanvas != null)
+            leaderboardCanvas.SetActive(false);
+
         StartCoroutine(StartCountdown());
     }
 
@@ -62,25 +67,34 @@ public class ContreLaMontre : MonoBehaviour
     {
 
         raceFinished = true;
-        float totalTime = 0;
-        for (int i = 0; i < MaxLaps; i++)
-        {
-            totalTime += lapManager.LapTimes[i];
-        }
-        int minutes = (int)(totalTime / 60);
-        float seconds = totalTime % 60;
-        scoreUI.text = $"Temps total : \n {minutes : 00}:{seconds:00.000}";
+        int finalTime = Mathf.RoundToInt((Time.time - raceStartTime) * 1000f);
+
+        scoreUI.text = $"Temps total : \n {FormatTime(finalTime)}";
         kartScript.ghostMode = true;
 
-        OnRaceFinished(totalTime);
+        OnRaceFinished(finalTime);
+
+        if (leaderboardCanvas != null)
+            leaderboardCanvas.SetActive(true);
+
         endCourseCanva.SetActive(true);
     }
 
-    void OnRaceFinished(float totalTime)
+    void OnRaceFinished(int finalTime)
     {
-        int finalTime = Mathf.RoundToInt(totalTime * 1000f);
+        if (LeaderboardManager.Instance != null)
+        {
+            LeaderboardManager.Instance.SubmitScoreAndRefresh(finalTime);
+        }
+    }
 
-        //LeaderboardManager.Instance.SubmitScoreAndRefresh(finalTime);
+    private string FormatTime(int milliseconds)
+    {
+        int min = milliseconds / 60000;
+        int sec = milliseconds / 1000 % 60;
+        int ms = milliseconds % 1000;
+
+        return string.Format("{0:00}:{1:00}.{2:000}", min, sec, ms);
     }
 
     IEnumerator StartCountdown()
@@ -100,6 +114,7 @@ public class ContreLaMontre : MonoBehaviour
         startUI.text = "GO!";
 
         kartScript.canDrive = true;
+        raceStartTime = Time.time;
 
         if (boostWindow && playerPressed)
         {
