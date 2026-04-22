@@ -53,6 +53,15 @@ public class MainMenuUIManager : MonoBehaviour
     public Transform mainMenuPosition;
     public Transform optionsPosition;
 
+    [Header("--- Navigation Avancée ---")]
+    public float initialRepeatDelay = 0.4f;
+    public float minRepeatInterval = 0.05f;
+    public float accelerationFactor = 0.1f;
+
+    private float nextActionTime = 0f;
+    private float currentRepeatInterval;
+    private int lastDirection = 0;
+
     [Header("--- Transition de Scène ---")]
     [Tooltip("Un CanvasGroup noir (ou autre) qui va faire un fondu au noir.")]
     public CanvasGroup transitionScreen;
@@ -251,9 +260,7 @@ public class MainMenuUIManager : MonoBehaviour
         if (currentState == MenuState.TitleScreen && Input.anyKeyDown)
         {
             hasSeenTitleScreen = true;
-
             if (titleScreenPanel != null) titleScreenPanel.SetActive(false);
-
             ChangeState(MenuState.MainMenu);
             return;
         }
@@ -263,20 +270,37 @@ public class MainMenuUIManager : MonoBehaviour
             int inputDirection = 0;
 
             float verticalInput = Input.GetAxisRaw("Vertical");
+            float horizontalInput = Input.GetAxisRaw("Horizontal");
 
-            if (Mathf.Abs(verticalInput) > 0.5f)
+            float combinedInput = Mathf.Abs(verticalInput) > Mathf.Abs(horizontalInput) ? verticalInput : horizontalInput;
+
+            float scroll = Input.GetAxis("Mouse ScrollWheel");
+            if (scroll != 0)
             {
-                if (!isAxisInUse)
-                {
-                    if (verticalInput < -0.3f) inputDirection = 1;
-                    else if (verticalInput > 0.3f) inputDirection = -1;
+                inputDirection = scroll > 0 ? -1 : 1;
+            }
+            if (Mathf.Abs(combinedInput) > 0.5f)
+            {
+                int currentDir = combinedInput > 0.3f ? -1 : 1;
 
-                    isAxisInUse = true;
+                if (lastDirection != currentDir)
+                {
+                    inputDirection = currentDir;
+                    lastDirection = currentDir;
+                    nextActionTime = Time.unscaledTime + initialRepeatDelay;
+                    currentRepeatInterval = initialRepeatDelay;
+                }
+                else if (Time.unscaledTime >= nextActionTime)
+                {
+                    inputDirection = currentDir;
+                    currentRepeatInterval = Mathf.Max(minRepeatInterval, currentRepeatInterval - accelerationFactor);
+                    nextActionTime = Time.unscaledTime + currentRepeatInterval;
                 }
             }
             else
             {
-                isAxisInUse = false;
+                lastDirection = 0;
+                currentRepeatInterval = initialRepeatDelay;
             }
 
             if (inputDirection != 0)
@@ -296,6 +320,8 @@ public class MainMenuUIManager : MonoBehaviour
             GoBack();
         }
     }
+
+
     private void RotateWheel(int direction)
     {
         float spawnDirection = reverseSpawnDirection ? -1f : 1f;

@@ -13,6 +13,10 @@ public class UIManager2 : MonoBehaviour
     public GameObject pauseMenuUI;
     private bool isPaused = false;
 
+    public bool canPause = true;
+
+    public static UIManager2 instance;
+
     [Header("Input System")]
     [SerializeField] private InputActionReference pauseAction;
 
@@ -43,18 +47,19 @@ public class UIManager2 : MonoBehaviour
     #region Initialisation et Inputs
     void Awake()
     {
-        // Setup des échelles par défaut
+
+        if (instance == null) instance = this;
+        else Destroy(gameObject);
+
         defaultScales = new Vector3[selectables.Length];
         for (int i = 0; i < selectables.Length; i++)
         {
             if (selectables[i] != null) defaultScales[i] = selectables[i].transform.localScale;
         }
 
-        // Setup du Post-Po
         if (globalVolume != null && globalVolume.profile != null)
             globalVolume.profile.TryGet(out depthOfField);
 
-        // Setup du Canvas
         parentCanvas = GetComponentInParent<Canvas>();
         if (parentCanvas != null && !parentCanvas.isRootCanvas) parentCanvas = parentCanvas.rootCanvas;
     }
@@ -77,7 +82,6 @@ public class UIManager2 : MonoBehaviour
         }
     }
 
-    // Cette fonction est appelée par le New Input System
     private void OnPausePerformed(InputAction.CallbackContext context)
     {
         TogglePause();
@@ -114,6 +118,7 @@ public class UIManager2 : MonoBehaviour
 
     void Pause()
     {
+        if (canPause == false) return;
         KartScriptV2.instance.canDrive = false;
         pauseMenuUI.SetActive(true);
         Time.timeScale = 0f;

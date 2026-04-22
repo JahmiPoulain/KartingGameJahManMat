@@ -16,7 +16,7 @@ public class ContreLaMontre : MonoBehaviour
     bool boostWindow = false;
     bool playerPressed = false;
 
-
+    public GameObject endCourseCanva;
 
 
     private int maxLaps = 3;
@@ -73,6 +73,7 @@ public class ContreLaMontre : MonoBehaviour
         kartScript.ghostMode = true;
 
         OnRaceFinished(totalTime);
+        endCourseCanva.SetActive(true);
     }
 
     void OnRaceFinished(float totalTime)
