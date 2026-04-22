@@ -10,6 +10,11 @@ public class Pcg32
     // Constante LCG
     private const ulong PCG32_MULT = 6364136223846793005UL;
 
+    public Pcg32()
+    {
+        Init();
+    }
+
     // -------- INITIALISATION --------
     public void Init()
     {
