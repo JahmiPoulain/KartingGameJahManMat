@@ -228,7 +228,7 @@ public class KartScriptV2 : MonoBehaviour
 
         if (grounded)
         {
-            groundedCoyoteTimer = 0.1f;
+            groundedCoyoteTimer = 0.3f;
             gliderGO.SetActive(false);
             transform.Rotate(0, currentTurnSpeed + currentDriftForce, 0);
             rb.linearVelocity = (groundNormalT.transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
@@ -479,7 +479,7 @@ public class KartScriptV2 : MonoBehaviour
         if (tryToDrift) //if (tryToDrift && grounded)
         {
             tryDriftCoyoteTime = 0.4f;
-            if (grounded && tryDriftCoyoteTime > 0f)
+            if (groundedCoyoteTimer > 0f && tryDriftCoyoteTime > 0f)
             {
                 if (turnDirection > 0) //if (currentTurnSpeed > 0.05f && turnDirection > 0)
                 {
@@ -530,7 +530,7 @@ public class KartScriptV2 : MonoBehaviour
             driftPivot.localRotation = Quaternion.Euler(0, nextYDriftRot, 0);
 
             //oldKeepD = keepDrifting;
-            driftCoyoteTime = 0.25f;
+            driftCoyoteTime = 0.3f;
         }
         else // quand on lache le drift
         {
