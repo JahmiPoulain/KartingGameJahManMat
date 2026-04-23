@@ -36,21 +36,30 @@ public class MainMenuUIManager : MonoBehaviour
     [Header("--- Configuration Générale des Roues ---")]
     public GameObject buttonPrefab;
     public float customAnglePerOption = 45f;
-    [Tooltip("L'angle de départ du premier bouton (ex: 90 ou -90 pour commencer sur un côté)")]
     public float startAngleOffset = 0f;
-    [Tooltip("Coche ça pour que les boutons s'alignent dans le sens inverse !")]
     public bool reverseSpawnDirection = false;
     public float wheelRadius = 150f;
     public float wheelRotationSpeed = 10f;
     public bool keepButtonsUpright = true;
 
     [Header("--- Mouvement Caméra/Écran ---")]
-    public Transform viewContainer;
-    public float transitionSpeed = 5f;
+    public Transform CameraTransform;
     public float Zoffset = 10;
     public Transform titleScreenPosition;
     public Transform mainMenuPosition;
     public Transform optionsPosition;
+
+    [Header("--- Transition Dynamique ---")]
+    [Tooltip("Crée une courbe qui monte à 1.1 puis redescend à 1.0 pour l'effet d'élan !")]
+    public AnimationCurve transitionCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+    public float transitionDuration = 0.8f;
+
+    private float transitionTimer = 0f;
+    private Vector3 startPos;
+    private Quaternion startRot;
+    private Vector3 targetPos;
+    private Quaternion targetRot;
+    private bool isTransitioning = false;
 
     [Header("--- Navigation Avancée ---")]
     public float initialRepeatDelay = 0.4f;
@@ -63,13 +72,10 @@ public class MainMenuUIManager : MonoBehaviour
     private bool isHolding = false;
 
     [Header("--- Transition de Scène ---")]
-    [Tooltip("Un CanvasGroup noir (ou autre) qui va faire un fondu au noir.")]
     public CanvasGroup transitionScreen;
-    public float transitionDuration = 1f;
+    public float sceneTransitionDuration = 1f;
 
-    //---
     public static MainMenuUIManager Instance;
-    //---
 
     [Header("--- UI Panels ---")]
     public GameObject titleScreenPanel;
@@ -78,7 +84,6 @@ public class MainMenuUIManager : MonoBehaviour
     public float selectedScale = 1.3f;
     public float normalScale = 1.0f;
     public float scaleAnimSpeed = 12f;
-
 
     [Header("--- Roue Menu Principal ---")]
     public RectTransform mainWheelRect;
@@ -102,70 +107,55 @@ public class MainMenuUIManager : MonoBehaviour
     public int musicVol = 10;
     public int sfxVol = 10;
 
-    [Header("--- Paramètres Contrôles ---")]
-    public string controlsSaveKey = "Controles";
+    public string controlsSaveKey = ("Controles");
 
     private GameObject currentActiveWindow = null;
-    private bool isAxisInUse = false;
-
     private MenuState stateBeforeSubWindow = MenuState.MainMenu;
 
     [Header("--- Paramètres Vidéo ---")]
     public string[] resolutions = { "1920x1080", "1600x900", "1280x720", "800x600" };
     public int[] fpsValues = { 30, 60, 120, -1 };
-    public string[] fpsLabels = { "30 FPS", "60 FPS", "120 FPS", "Illimité" };
+    public string[] fpsLabels = { "30", "60", "120", "Illimité" };
 
     [HideInInspector] public int currentResIndex = 0;
     [HideInInspector] public int currentFpsIndex = 1;
     [HideInInspector] public bool isFullscreen = true;
     [HideInInspector] public bool isVsync = false;
 
-    private void Awake()
-    {
-        
-        Instance = this;
-    }
+    private void Awake() { Instance = this; }
 
     void Start()
     {
         Time.timeScale = 1f;
+
+        // Init angles
+        if (mainWheelRect != null) initialMainAngle = mainWheelRect.localEulerAngles.z;
+        if (settingsWheelRect != null) initialSettingsAngle = settingsWheelRect.localEulerAngles.z;
+        targetMainAngle = initialMainAngle;
+        targetSettingsAngle = initialSettingsAngle;
+
+        GenerateWheel(mainMenuOptions, mainWheelRect, mainButtonsGenerated, true);
+        GenerateWheel(settingsOptions, settingsWheelRect, settingsButtonsGenerated, false);
+
+        // Positionnement initial de la caméra
         if (hasSeenTitleScreen)
         {
             currentState = MenuState.MainMenu;
-
             if (titleScreenPanel != null) titleScreenPanel.SetActive(false);
-
-            if (viewContainer != null && mainMenuPosition != null)
-            {
-                Vector3 targetPosition = mainMenuPosition.position;
-                targetPosition.z += Zoffset;
-                viewContainer.position = targetPosition;
-                viewContainer.rotation = mainMenuPosition.rotation;
-            }
+            SetCameraPositionImmediate(mainMenuPosition);
         }
         else
         {
             currentState = MenuState.TitleScreen;
             if (titleScreenPanel != null) titleScreenPanel.SetActive(true);
+            SetCameraPositionImmediate(titleScreenPosition);
         }
+
         if (transitionScreen != null)
         {
             transitionScreen.gameObject.SetActive(true);
             transitionScreen.alpha = 0f;
-            transitionScreen.blocksRaycasts = false;
         }
-
-        if (mainWheelRect != null) initialMainAngle = mainWheelRect.localEulerAngles.z;
-        if (settingsWheelRect != null) initialSettingsAngle = settingsWheelRect.localEulerAngles.z;
-
-        targetMainAngle = initialMainAngle;
-        targetSettingsAngle = initialSettingsAngle;
-
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-
-        GenerateWheel(mainMenuOptions, mainWheelRect, mainButtonsGenerated, true);
-        GenerateWheel(settingsOptions, settingsWheelRect, settingsButtonsGenerated, false);
 
         LoadSettings();
         ApplySettings(false);
@@ -174,7 +164,6 @@ public class MainMenuUIManager : MonoBehaviour
     void Update()
     {
         if (currentState == MenuState.Loading) return;
-
         if (ControlsSettings.IsRebinding) return;
 
         HandleInputs();
@@ -183,115 +172,107 @@ public class MainMenuUIManager : MonoBehaviour
         UpdateHoverEffects();
     }
 
-    public void LoadSettings()
+    // --- LOGIQUE DE TRANSITION AMÉLIORÉE ---
+
+    public void ChangeState(MenuState newState)
     {
-        // Vidéo
-        currentResIndex = PlayerPrefs.GetInt("ResIndex", 0);
-        currentFpsIndex = PlayerPrefs.GetInt("FpsIndex", 1);
-        isFullscreen = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
-        isVsync = PlayerPrefs.GetInt("Vsync", 0) == 1;
+        if (newState == currentState) return;
 
-        // Audio
-        masterVol = PlayerPrefs.GetInt("MasterVol", 10);
-        musicVol = PlayerPrefs.GetInt("MusicVol", 10);
-        sfxVol = PlayerPrefs.GetInt("SfxVol", 10);
-    }
+        // Préparation du mouvement
+        startPos = CameraTransform.position;
+        startRot = CameraTransform.rotation;
 
-    public void SaveSettings()
-    {
-        // Vidéo
-        PlayerPrefs.SetInt("ResIndex", currentResIndex);
-        PlayerPrefs.SetInt("FpsIndex", currentFpsIndex);
-        PlayerPrefs.SetInt("Fullscreen", isFullscreen ? 1 : 0);
-        PlayerPrefs.SetInt("Vsync", isVsync ? 1 : 0);
-
-        // Audio
-        PlayerPrefs.SetInt("MasterVol", masterVol);
-        PlayerPrefs.SetInt("MusicVol", musicVol);
-        PlayerPrefs.SetInt("SfxVol", sfxVol);
-
-        PlayerPrefs.Save();
-        Debug.Log("Tous les paramètres ont été sauvegardés !");
-    }
-
-    public void ApplySettings(bool shouldSave)
-    {
-        string[] resParts = resolutions[currentResIndex].Split('x');
-        if (resParts.Length == 2)
+        Transform targetAnchor = GetTargetTransform(newState);
+        if (targetAnchor != null)
         {
-            int width = int.Parse(resParts[0]);
-            int height = int.Parse(resParts[1]);
-            Screen.SetResolution(width, height, isFullscreen);
+            targetPos = targetAnchor.position;
+            targetPos.z += Zoffset;
+            targetRot = targetAnchor.rotation;
         }
-        QualitySettings.vSyncCount = isVsync ? 1 : 0;
-        Application.targetFrameRate = fpsValues[currentFpsIndex];
 
-        ApplyAudioVolumes();
-
-        if (shouldSave) SaveSettings();
+        currentState = newState;
+        transitionTimer = 0f;
+        isTransitioning = true;
     }
 
-    public void ApplyAudioVolumes()
+    private void SmoothTransitions()
     {
-        if (mainAudioMixer != null)
+        UpdateWheelsRotation();
+
+        if (!isTransitioning || CameraTransform == null) return;
+
+        transitionTimer += Time.deltaTime;
+        float t = transitionTimer / transitionDuration;
+        float curveValue = transitionCurve.Evaluate(t);
+
+        // LerpUnclamped permet de dépasser la cible si la courbe va au dessus de 1
+        CameraTransform.position = Vector3.LerpUnclamped(startPos, targetPos, curveValue);
+        CameraTransform.rotation = Quaternion.LerpUnclamped(startRot, targetRot, curveValue);
+
+        if (t >= 1f)
         {
-            mainAudioMixer.SetFloat("masterVolume", Mathf.Log10(Mathf.Max(masterVol, 0.0001f) / 10f) * 20f);
-            mainAudioMixer.SetFloat("musicVolume", Mathf.Log10(Mathf.Max(musicVol, 0.0001f) / 10f) * 20f);
-            mainAudioMixer.SetFloat("sfxVolume", Mathf.Log10(Mathf.Max(sfxVol, 0.0001f) / 10f) * 20f);
-        }
-        else
-        {
-            AudioListener.volume = masterVol / 10f;
+            isTransitioning = false;
+            CameraTransform.position = targetPos; // Sécurité final
+            CameraTransform.rotation = targetRot;
         }
     }
 
-    private void GenerateWheel(WheelItem[] options, RectTransform wheelParent, List<RectTransform> generatedList, bool boolean)
+    private Transform GetTargetTransform(MenuState state)
     {
-        int k;
-        if (buttonPrefab == null) return;
-
-        for (int i = 0; i < options.Length; i++)
+        switch (state)
         {
-            GameObject btnObj = Instantiate(buttonPrefab, wheelParent);
-            btnObj.name = "Btn_" + options[i].itemName;
-
-            RectTransform rectT = btnObj.GetComponent<RectTransform>();
-
-            rectT.anchorMin = new Vector2(0.5f, 0.5f);
-            rectT.anchorMax = new Vector2(0.5f, 0.5f);
-            rectT.pivot = new Vector2(0.5f, 0.5f);
-
-            if (options[i].customSize != Vector2.zero) rectT.sizeDelta = options[i].customSize;
-
-            rectT.localScale = Vector3.one * normalScale;
-            rectT.localPosition = Vector3.zero;
-
-            float directionMultiplier = reverseSpawnDirection ? -1f : 1f;
-            if (boolean) k = -i;
-            else
-                k = i;
-            float currentAngle = (k * customAnglePerOption * directionMultiplier);
-            float angleRad = (currentAngle + startAngleOffset) * Mathf.Deg2Rad;
-
-            Vector2 anchoredPos = new Vector2(Mathf.Sin(angleRad), Mathf.Cos(angleRad)) * wheelRadius;
-            rectT.anchoredPosition = anchoredPos;
-
-            Image img = btnObj.GetComponent<Image>();
-            TextMeshProUGUI txt = btnObj.GetComponentInChildren<TextMeshProUGUI>();
-
-            if (img != null && options[i].buttonTexture != null) img.sprite = options[i].buttonTexture;
-
-            if (txt != null)
-            {
-                txt.text = options[i].itemName;
-                if (options[i].customFont != null) txt.font = options[i].customFont;
-            }
-
-            if (options[i].windowToOpen != null) options[i].windowToOpen.SetActive(false);
-
-            generatedList.Add(rectT);
+            case MenuState.TitleScreen: return titleScreenPosition;
+            case MenuState.MainMenu: return mainMenuPosition;
+            case MenuState.OptionsMenu: return optionsPosition;
+            case MenuState.SubWindowOpen:
+                return (stateBeforeSubWindow == MenuState.OptionsMenu) ? optionsPosition : mainMenuPosition;
+            default: return mainMenuPosition;
         }
     }
+
+    private void SetCameraPositionImmediate(Transform anchor)
+    {
+        if (anchor == null || CameraTransform == null) return;
+        Vector3 pos = anchor.position;
+        pos.z += Zoffset;
+        CameraTransform.position = pos;
+        CameraTransform.rotation = anchor.rotation;
+        // On initialise les targets pour éviter les sauts au premier mouvement
+        targetPos = pos;
+        targetRot = anchor.rotation;
+    }
+
+    private void UpdateWheelsRotation()
+    {
+        if (mainWheelRect != null)
+        {
+            Quaternion targetMainRot = Quaternion.Euler(0, 0, targetMainAngle);
+            mainWheelRect.localRotation = Quaternion.Lerp(mainWheelRect.localRotation, targetMainRot, Time.deltaTime * wheelRotationSpeed);
+        }
+
+        if (settingsWheelRect != null)
+        {
+            Quaternion targetSettingsRot = Quaternion.Euler(0, 0, targetSettingsAngle);
+            settingsWheelRect.localRotation = Quaternion.Lerp(settingsWheelRect.localRotation, targetSettingsRot, Time.deltaTime * wheelRotationSpeed);
+        }
+    }
+
+    // --- LE RESTE DU SCRIPT ---
+
+    public void GoBack()
+    {
+        if (currentState == MenuState.SubWindowOpen)
+        {
+            if (currentActiveWindow != null) currentActiveWindow.SetActive(false);
+            currentActiveWindow = null;
+            ChangeState(stateBeforeSubWindow);
+        }
+        else if (currentState == MenuState.OptionsMenu)
+        {
+            ChangeState(MenuState.MainMenu);
+        }
+    }
+
     private void HandleInputs()
     {
         if (currentState == MenuState.TitleScreen && Input.anyKeyDown)
@@ -305,22 +286,15 @@ public class MainMenuUIManager : MonoBehaviour
         if (currentState == MenuState.MainMenu || currentState == MenuState.OptionsMenu)
         {
             int inputDirection = 0;
-
             float v = Input.GetAxisRaw("Vertical");
             float h = Input.GetAxisRaw("Horizontal");
             float scroll = Input.GetAxis("Mouse ScrollWheel");
-
             float combinedInput = Mathf.Abs(v) > Mathf.Abs(h) ? v : h;
 
-            if (Mathf.Abs(scroll) > 0.01f)
-            {
-                inputDirection = scroll > 0 ? -1 : 1;
-            }
-
+            if (Mathf.Abs(scroll) > 0.01f) inputDirection = scroll > 0 ? -1 : 1;
             else if (Mathf.Abs(combinedInput) > 0.6f)
             {
                 int currentDir = combinedInput > 0 ? -1 : 1;
-
                 if (!isHolding || currentDir != lastDirection)
                 {
                     inputDirection = currentDir;
@@ -332,16 +306,11 @@ public class MainMenuUIManager : MonoBehaviour
                 else if (Time.unscaledTime >= nextActionTime)
                 {
                     inputDirection = currentDir;
-
                     currentRepeatInterval = Mathf.Max(minRepeatInterval, currentRepeatInterval - accelerationFactor);
                     nextActionTime = Time.unscaledTime + currentRepeatInterval;
                 }
             }
-            else
-            {
-                isHolding = false;
-                lastDirection = 0;
-            }
+            else { isHolding = false; lastDirection = 0; }
 
             if (inputDirection != 0)
             {
@@ -349,37 +318,23 @@ public class MainMenuUIManager : MonoBehaviour
                 RotateWheel(inputDirection);
             }
 
-            if (Input.GetButtonDown("Submit") || Input.GetKeyDown(KeyCode.Return))
-            {
-                SelectCurrentWheelOption();
-            }
+            if (Input.GetButtonDown("Submit") || Input.GetKeyDown(KeyCode.Return)) SelectCurrentWheelOption();
         }
 
-        if (Input.GetButtonDown("Cancel") || Input.GetKeyDown(KeyCode.Escape))
-        {
-            GoBack();
-        }
+        if (Input.GetButtonDown("Cancel") || Input.GetKeyDown(KeyCode.Escape)) GoBack();
     }
-
 
     private void RotateWheel(int direction)
     {
         float spawnDirection = reverseSpawnDirection ? -1f : 1f;
-
         if (currentState == MenuState.MainMenu)
         {
-            currentMainIndex += direction;
-            if (currentMainIndex >= mainMenuOptions.Length) currentMainIndex = 0;
-            if (currentMainIndex < 0) currentMainIndex = mainMenuOptions.Length - 1;
-
+            currentMainIndex = (currentMainIndex + direction + mainMenuOptions.Length) % mainMenuOptions.Length;
             targetMainAngle = initialMainAngle + (-currentMainIndex * customAnglePerOption * spawnDirection);
         }
         else if (currentState == MenuState.OptionsMenu)
         {
-            currentSettingsIndex += direction;
-            if (currentSettingsIndex >= settingsOptions.Length) currentSettingsIndex = 0;
-            if (currentSettingsIndex < 0) currentSettingsIndex = settingsOptions.Length - 1;
-
+            currentSettingsIndex = (currentSettingsIndex + direction + settingsOptions.Length) % settingsOptions.Length;
             targetSettingsAngle = initialSettingsAngle - (-currentSettingsIndex * customAnglePerOption * spawnDirection);
         }
     }
@@ -399,15 +354,11 @@ public class MainMenuUIManager : MonoBehaviour
             else if (selectedName.Contains("setting") || selectedName.Contains("option")) ChangeState(MenuState.OptionsMenu);
             else if (selectedName.Contains("quit") || selectedName.Contains("quitter"))
             {
-
-
 #if UNITY_EDITOR
                 UnityEditor.EditorApplication.isPlaying = false;
 #else
                 Application.Quit(); 
 #endif
-
-
             }
             else if (currentItem.windowToOpen != null) OpenWindow(currentItem.windowToOpen);
         }
@@ -426,75 +377,33 @@ public class MainMenuUIManager : MonoBehaviour
         ChangeState(MenuState.SubWindowOpen);
     }
 
-    public void ChangeState(MenuState newState)
+    private void GenerateWheel(WheelItem[] options, RectTransform wheelParent, List<RectTransform> generatedList, bool invertIdx)
     {
-        currentState = newState;
-    }
-
-    public void GoBack()
-    {
-        if (currentState == MenuState.SubWindowOpen)
+        if (buttonPrefab == null) return;
+        for (int i = 0; i < options.Length; i++)
         {
-            if (currentActiveWindow != null) currentActiveWindow.SetActive(false);
-            currentActiveWindow = null;
-            ChangeState(stateBeforeSubWindow);
-        }
-        else if (currentState == MenuState.OptionsMenu)
-        {
-            ChangeState(MenuState.MainMenu);
-        }
-    }
-    private void SmoothTransitions()
-    {
-        Vector3 targetPosition = Vector3.zero;
-        Quaternion targetRotation = Quaternion.identity;
+            GameObject btnObj = Instantiate(buttonPrefab, wheelParent);
+            btnObj.name = "Btn_" + options[i].itemName;
+            RectTransform rectT = btnObj.GetComponent<RectTransform>();
+            rectT.anchorMin = rectT.anchorMax = rectT.pivot = new Vector2(0.5f, 0.5f);
+            if (options[i].customSize != Vector2.zero) rectT.sizeDelta = options[i].customSize;
+            rectT.localScale = Vector3.one * normalScale;
 
-        switch (currentState)
-        {
-            case MenuState.TitleScreen:
-                targetPosition = titleScreenPosition.position;
-                targetRotation = titleScreenPosition.rotation;
-                break;
-            case MenuState.MainMenu:
-                targetPosition = mainMenuPosition.position;
-                targetRotation = mainMenuPosition.rotation;
-                break;
-            case MenuState.OptionsMenu:
-                targetPosition = optionsPosition.position;
-                targetRotation = optionsPosition.rotation;
-                break;
-            case MenuState.SubWindowOpen:
-                if (stateBeforeSubWindow == MenuState.MainMenu)
-                {
-                    targetPosition = mainMenuPosition.position;
-                    targetRotation = mainMenuPosition.rotation;
-                }
-                else
-                {
-                    targetPosition = optionsPosition.position;
-                    targetRotation = optionsPosition.rotation;
-                }
-                break;
-        }
+            float dirMult = reverseSpawnDirection ? -1f : 1f;
+            float k = invertIdx ? -i : i;
+            float angleRad = ((k * customAnglePerOption * dirMult) + startAngleOffset) * Mathf.Deg2Rad;
+            rectT.anchoredPosition = new Vector2(Mathf.Sin(angleRad), Mathf.Cos(angleRad)) * wheelRadius;
 
-        targetPosition.z += Zoffset;
-
-        if (viewContainer != null)
-        {
-            viewContainer.position = Vector3.Lerp(viewContainer.position, targetPosition, Time.deltaTime * transitionSpeed);
-            viewContainer.rotation = Quaternion.Lerp(viewContainer.rotation, targetRotation, Time.deltaTime * transitionSpeed);
-        }
-
-        if (mainWheelRect != null)
-        {
-            Quaternion targetMainRot = Quaternion.Euler(0, 0, targetMainAngle);
-            mainWheelRect.localRotation = Quaternion.Lerp(mainWheelRect.localRotation, targetMainRot, Time.deltaTime * wheelRotationSpeed);
-        }
-
-        if (settingsWheelRect != null)
-        {
-            Quaternion targetSettingsRot = Quaternion.Euler(0, 0, targetSettingsAngle);
-            settingsWheelRect.localRotation = Quaternion.Lerp(settingsWheelRect.localRotation, targetSettingsRot, Time.deltaTime * wheelRotationSpeed);
+            Image img = btnObj.GetComponent<Image>();
+            TextMeshProUGUI txt = btnObj.GetComponentInChildren<TextMeshProUGUI>();
+            if (img != null && options[i].buttonTexture != null) img.sprite = options[i].buttonTexture;
+            if (txt != null)
+            {
+                txt.text = options[i].itemName;
+                if (options[i].customFont != null) txt.font = options[i].customFont;
+            }
+            if (options[i].windowToOpen != null) options[i].windowToOpen.SetActive(false);
+            generatedList.Add(rectT);
         }
     }
 
@@ -503,62 +412,91 @@ public class MainMenuUIManager : MonoBehaviour
         for (int i = 0; i < mainButtonsGenerated.Count; i++)
         {
             float targetS = (currentState == MenuState.MainMenu && i == currentMainIndex) ? selectedScale : normalScale;
-            Vector3 targetScale = new Vector3(targetS, targetS, targetS);
-            mainButtonsGenerated[i].localScale = Vector3.Lerp(mainButtonsGenerated[i].localScale, targetScale, Time.deltaTime * scaleAnimSpeed);
+            mainButtonsGenerated[i].localScale = Vector3.Lerp(mainButtonsGenerated[i].localScale, Vector3.one * targetS, Time.deltaTime * scaleAnimSpeed);
         }
-
         for (int i = 0; i < settingsButtonsGenerated.Count; i++)
         {
             float targetS = (currentState == MenuState.OptionsMenu && i == currentSettingsIndex) ? selectedScale : normalScale;
-            Vector3 targetScale = new Vector3(targetS, targetS, targetS);
-            settingsButtonsGenerated[i].localScale = Vector3.Lerp(settingsButtonsGenerated[i].localScale, targetScale, Time.deltaTime * scaleAnimSpeed);
+            settingsButtonsGenerated[i].localScale = Vector3.Lerp(settingsButtonsGenerated[i].localScale, Vector3.one * targetS, Time.deltaTime * scaleAnimSpeed);
         }
     }
 
     private void UpdateButtonsRotation()
     {
         if (!keepButtonsUpright) return;
-
-        float mainWheelZ = mainWheelRect != null ? mainWheelRect.localEulerAngles.z : 0f;
-        foreach (RectTransform btn in mainButtonsGenerated)
+        if (mainWheelRect != null)
         {
-            btn.localRotation = Quaternion.Euler(0, 0, -mainWheelZ);
+            float z = mainWheelRect.localEulerAngles.z;
+            foreach (RectTransform btn in mainButtonsGenerated) btn.localRotation = Quaternion.Euler(0, 0, -z);
         }
-
-        float settingsWheelZ = settingsWheelRect != null ? settingsWheelRect.localEulerAngles.z : 0f;
-        foreach (RectTransform btn in settingsButtonsGenerated)
+        if (settingsWheelRect != null)
         {
-            btn.localRotation = Quaternion.Euler(0, 0, -settingsWheelZ);
+            float z = settingsWheelRect.localEulerAngles.z;
+            foreach (RectTransform btn in settingsButtonsGenerated) btn.localRotation = Quaternion.Euler(0, 0, -z);
         }
     }
 
-    public void LaunchScene(string sceneName)
-    {
-        StartCoroutine(TransitionAndLoad(sceneName));
-    }
+    public void LaunchScene(string sceneName) { StartCoroutine(TransitionAndLoad(sceneName)); }
 
     private IEnumerator TransitionAndLoad(string sceneName)
     {
         ChangeState(MenuState.Loading);
-
         if (transitionScreen != null)
         {
             transitionScreen.blocksRaycasts = true;
             float time = 0;
-            while (time < transitionDuration)
+            while (time < sceneTransitionDuration)
             {
-                transitionScreen.alpha = Mathf.Lerp(0, 1, time / transitionDuration);
+                transitionScreen.alpha = Mathf.Lerp(0, 1, time / sceneTransitionDuration);
                 time += Time.deltaTime;
                 yield return null;
             }
             transitionScreen.alpha = 1;
         }
+        SceneManager.LoadSceneAsync(sceneName);
+    }
 
-        AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
+    public void LoadSettings()
+    {
+        currentResIndex = PlayerPrefs.GetInt("ResIndex", 0);
+        currentFpsIndex = PlayerPrefs.GetInt("FpsIndex", 1);
+        isFullscreen = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
+        isVsync = PlayerPrefs.GetInt("Vsync", 0) == 1;
+        masterVol = PlayerPrefs.GetInt("MasterVol", 10);
+        musicVol = PlayerPrefs.GetInt("MusicVol", 10);
+        sfxVol = PlayerPrefs.GetInt("SfxVol", 10);
+    }
 
-        while (!asyncLoad.isDone)
+    public void SaveSettings()
+    {
+        PlayerPrefs.SetInt("ResIndex", currentResIndex);
+        PlayerPrefs.SetInt("FpsIndex", currentFpsIndex);
+        PlayerPrefs.SetInt("Fullscreen", isFullscreen ? 1 : 0);
+        PlayerPrefs.SetInt("Vsync", isVsync ? 1 : 0);
+        PlayerPrefs.SetInt("MasterVol", masterVol);
+        PlayerPrefs.SetInt("MusicVol", musicVol);
+        PlayerPrefs.SetInt("SfxVol", sfxVol);
+        PlayerPrefs.Save();
+    }
+
+    public void ApplySettings(bool shouldSave)
+    {
+        string[] resParts = resolutions[currentResIndex].Split('x');
+        if (resParts.Length == 2) Screen.SetResolution(int.Parse(resParts[0]), int.Parse(resParts[1]), isFullscreen);
+        QualitySettings.vSyncCount = isVsync ? 1 : 0;
+        Application.targetFrameRate = fpsValues[currentFpsIndex];
+        ApplyAudioVolumes();
+        if (shouldSave) SaveSettings();
+    }
+
+    public void ApplyAudioVolumes()
+    {
+        if (mainAudioMixer != null)
         {
-            yield return null;
+            mainAudioMixer.SetFloat("masterVolume", Mathf.Log10(Mathf.Max(masterVol, 0.0001f) / 10f) * 20f);
+            mainAudioMixer.SetFloat("musicVolume", Mathf.Log10(Mathf.Max(musicVol, 0.0001f) / 10f) * 20f);
+            mainAudioMixer.SetFloat("sfxVolume", Mathf.Log10(Mathf.Max(sfxVol, 0.0001f) / 10f) * 20f);
         }
+        else AudioListener.volume = masterVol / 10f;
     }
 }
