@@ -23,7 +23,6 @@ public class WheelItem
 
 public class MainMenuUIManager : MonoBehaviour
 {
-    // Ajout de l'état "Loading" pour bloquer les inputs pendant la transition
     public enum MenuState { TitleScreen, MainMenu, OptionsMenu, SubWindowOpen, Loading }
 
     [Header("--- États & Navigation ---")]
@@ -31,7 +30,6 @@ public class MainMenuUIManager : MonoBehaviour
     [Tooltip("Coche ça si tu trouves que Haut/Bas fait tourner la roue dans le mauvais sens !")]
     public bool invertNavigation = false;
 
-    // LA VARIABLE MAGIQUE : "static" fait qu'elle ne se réinitialise pas quand on recharge la scène !
     private static bool hasSeenTitleScreen = false;
 
     [Header("--- Configuration Générale des Roues ---")]
@@ -142,6 +140,7 @@ public class MainMenuUIManager : MonoBehaviour
         }
         if (transitionScreen != null)
         {
+            transitionScreen.gameObject.SetActive(true);
             transitionScreen.alpha = 0f;
             transitionScreen.blocksRaycasts = false;
         }
