@@ -128,7 +128,6 @@ public class MainMenuUIManager : MonoBehaviour
     {
         Time.timeScale = 1f;
 
-        // Init angles
         if (mainWheelRect != null) initialMainAngle = mainWheelRect.localEulerAngles.z;
         if (settingsWheelRect != null) initialSettingsAngle = settingsWheelRect.localEulerAngles.z;
         targetMainAngle = initialMainAngle;
@@ -137,7 +136,6 @@ public class MainMenuUIManager : MonoBehaviour
         GenerateWheel(mainMenuOptions, mainWheelRect, mainButtonsGenerated, true);
         GenerateWheel(settingsOptions, settingsWheelRect, settingsButtonsGenerated, false);
 
-        // Positionnement initial de la caméra
         if (hasSeenTitleScreen)
         {
             currentState = MenuState.MainMenu;
@@ -172,13 +170,11 @@ public class MainMenuUIManager : MonoBehaviour
         UpdateHoverEffects();
     }
 
-    // --- LOGIQUE DE TRANSITION AMÉLIORÉE ---
 
     public void ChangeState(MenuState newState)
     {
         if (newState == currentState) return;
 
-        // Préparation du mouvement
         startPos = CameraTransform.position;
         startRot = CameraTransform.rotation;
 
@@ -205,14 +201,13 @@ public class MainMenuUIManager : MonoBehaviour
         float t = transitionTimer / transitionDuration;
         float curveValue = transitionCurve.Evaluate(t);
 
-        // LerpUnclamped permet de dépasser la cible si la courbe va au dessus de 1
         CameraTransform.position = Vector3.LerpUnclamped(startPos, targetPos, curveValue);
         CameraTransform.rotation = Quaternion.LerpUnclamped(startRot, targetRot, curveValue);
 
         if (t >= 1f)
         {
             isTransitioning = false;
-            CameraTransform.position = targetPos; // Sécurité final
+            CameraTransform.position = targetPos;
             CameraTransform.rotation = targetRot;
         }
     }
@@ -237,7 +232,6 @@ public class MainMenuUIManager : MonoBehaviour
         pos.z += Zoffset;
         CameraTransform.position = pos;
         CameraTransform.rotation = anchor.rotation;
-        // On initialise les targets pour éviter les sauts au premier mouvement
         targetPos = pos;
         targetRot = anchor.rotation;
     }
@@ -257,7 +251,6 @@ public class MainMenuUIManager : MonoBehaviour
         }
     }
 
-    // --- LE RESTE DU SCRIPT ---
 
     public void GoBack()
     {

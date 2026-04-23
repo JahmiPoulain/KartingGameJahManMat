@@ -41,8 +41,6 @@ public class ControlsSettings : MonoBehaviour
     public AudioClip soundNav;
     public AudioClip soundSubmit;
 
-    private const string NomFichierSauvegarde = "MesTouchesCustom";
-
     private bool isVerticalAxisInUse = false;
     private Vector3 applyDefaultScale;
     private bool isInitialized = false;
@@ -244,7 +242,7 @@ public class ControlsSettings : MonoBehaviour
             .Replace("Right Button", "RB")
             .Replace("Left Trigger", "LT")
             .Replace("Right Trigger", "RT")
-            .Replace(" / ", "/")
+            .Replace("/", " ")
             .Trim();
     }
 
