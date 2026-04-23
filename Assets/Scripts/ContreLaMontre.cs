@@ -56,7 +56,7 @@ public class ContreLaMontre : MonoBehaviour
 
     private void CheckRaceCompletion()
     {
-        if (!raceFinished && lapManager.CurrentLap -1 >= MaxLaps)
+        if (raceStarted && !raceFinished && lapManager.CurrentLap -1 >= MaxLaps)
         {
             kartScript.canDrive = false;
             CompleteRace();
@@ -115,6 +115,7 @@ public class ContreLaMontre : MonoBehaviour
 
         kartScript.canDrive = true;
         raceStartTime = Time.time;
+        raceStarted = true;
 
         if (boostWindow && playerPressed)
         {
@@ -124,6 +125,5 @@ public class ContreLaMontre : MonoBehaviour
         yield return new WaitForSeconds(1);
 
         startUI.text = "";
-        raceStarted = true;
     }
 }
