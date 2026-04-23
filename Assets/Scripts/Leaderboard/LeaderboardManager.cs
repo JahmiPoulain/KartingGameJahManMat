@@ -6,7 +6,6 @@ using System.Collections.Generic;
 public class LeaderboardManager : MonoBehaviour
 {
     public static LeaderboardManager Instance;
-    private const int EncodedScoreBase = int.MaxValue;
     
     [Header("Leaderboard Setup")]
     [SerializeField] private string leaderboardKey;
@@ -21,6 +20,7 @@ public class LeaderboardManager : MonoBehaviour
     private bool isConnected = false;
     private bool isLoading = false;
     private bool pendingRefresh = false;
+    private System.Action pendingRefreshComplete;
     private int localPlayerId;
 
     void Awake()
@@ -39,18 +39,6 @@ public class LeaderboardManager : MonoBehaviour
             localPlayerId = response.player_id;
             isConnected = true;
 
-            LootLockerSDKManager.GetLeaderboardData(leaderboardKey, (leaderboardResponse) =>
-            {
-                if (leaderboardResponse.success)
-                {
-                    Debug.Log($"Leaderboard '{leaderboardKey}' direction={leaderboardResponse.direction_method}, overwrite={leaderboardResponse.overwrite_score_on_submit}, type={leaderboardResponse.type}");
-                }
-                else
-                {
-                    Debug.LogWarning($"Impossible de lire la config du leaderboard '{leaderboardKey}' : {leaderboardResponse.errorData.message}");
-                }
-            });
-
             string playerName = FormatPlayerName(response.player_identifier, response.player_id);
             if (response.player_name != playerName)
             {
@@ -66,64 +54,55 @@ public class LeaderboardManager : MonoBehaviour
         });
     }
 
-    public void SubmitScoreAndRefresh(int timeInMilliseconds)
+    public void SubmitScoreAndRefresh(int timeInMilliseconds, System.Action onComplete = null)
     {
-        if (!isConnected) return;
+        if (!isConnected)
+        {
+            onComplete?.Invoke();
+            return;
+        }
 
         LootLockerSDKManager.GetMemberRank(leaderboardKey, localPlayerId.ToString(), (rankResponse) =>
         {
             if (!rankResponse.success)
             {
-                RefreshLeaderboard();
+                RefreshLeaderboard(onComplete);
                 return;
             }
 
             bool hasNoScore = rankResponse.rank == 0;
-            int previousTime = DecodeScore(rankResponse.score);
-            bool isBetterTime = timeInMilliseconds < previousTime;
-            Debug.Log($"Leaderboard compare: nouveau={timeInMilliseconds}, ancien={previousTime}, rank={rankResponse.rank}, submit={hasNoScore || isBetterTime}");
+            bool isBetterTime = timeInMilliseconds < rankResponse.score;
 
             if (!hasNoScore && !isBetterTime)
             {
-                RefreshLeaderboard();
+                RefreshLeaderboard(onComplete);
                 return;
             }
 
-            SubmitScore(timeInMilliseconds);
+            LootLockerSDKManager.SubmitScore("", timeInMilliseconds, leaderboardKey, (_) =>
+            {
+                RefreshLeaderboard(onComplete);
+            });
         });
     }
 
-    private void SubmitScore(int timeInMilliseconds)
-    {
-        int encodedScore = EncodeScore(timeInMilliseconds);
-        LootLockerSDKManager.SubmitScore("", encodedScore, leaderboardKey, (scoreResponse) =>
-        {
-            if (scoreResponse.success)
-                Debug.Log($"Temps envoye: {timeInMilliseconds}, score encode LootLocker apres submit: {scoreResponse.score}");
-            else
-                Debug.LogWarning($"Erreur submit leaderboard: {scoreResponse.errorData.message}");
-
-            RefreshLeaderboard();
-        });
-    }
-
-    public void RefreshLeaderboard()
+    public void RefreshLeaderboard(System.Action onComplete = null)
     {
         if (isLoading)
         {
             pendingRefresh = true;
+            pendingRefreshComplete += onComplete;
             return;
         }
 
         isLoading = true;
-        pendingRefresh = false;
 
         LootLockerSDKManager.GetScoreList(leaderboardKey, maxResults, 0, (response) =>
         {
             if (!response.success)
             {
                 isLoading = false;
-                RefreshPendingLeaderboard();
+                FinishRefresh(onComplete);
                 return;
             }
 
@@ -174,7 +153,7 @@ public class LeaderboardManager : MonoBehaviour
                     entry.nameText.text = displayName;
 
                     // Score
-                    entry.scoreText.text = FormatTime(DecodeScore(item.score));
+                    entry.scoreText.text = FormatTime(item.score);
                 }
                 else
                 {
@@ -199,14 +178,22 @@ public class LeaderboardManager : MonoBehaviour
             scrollRect.verticalNormalizedPosition = 1f;
 
             isLoading = false;
-            RefreshPendingLeaderboard();
+            FinishRefresh(onComplete);
         });
     }
 
-    private void RefreshPendingLeaderboard()
+    private void FinishRefresh(System.Action onComplete)
     {
         if (pendingRefresh)
-            RefreshLeaderboard();
+        {
+            System.Action pendingComplete = pendingRefreshComplete;
+            pendingRefresh = false;
+            pendingRefreshComplete = null;
+            RefreshLeaderboard(pendingComplete);
+            return;
+        }
+
+        onComplete?.Invoke();
     }
 
     private string FormatTime(int milliseconds)
@@ -218,22 +205,11 @@ public class LeaderboardManager : MonoBehaviour
         return string.Format("{0:00}:{1:00}.{2:000}", min, sec, ms);
     }
 
-    private int EncodeScore(int milliseconds)
-    {
-        return EncodedScoreBase - milliseconds;
-    }
-
-    private int DecodeScore(int score)
-    {
-        // Anciennes valeurs deja envoyees en millisecondes directes.
-        if (score < 1000000000)
-            return score;
-
-        return EncodedScoreBase - score;
-    }
-
     private string FormatPlayerName(LootLockerPlayer player)
     {
+        if (!string.IsNullOrEmpty(player.name))
+            return player.name;
+
         if (!string.IsNullOrEmpty(player.ulid))
             return FormatPlayerName(player.ulid, player.id);
 

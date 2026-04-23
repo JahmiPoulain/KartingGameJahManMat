@@ -51,12 +51,13 @@ public class ContreLaMontre : MonoBehaviour
         {
             playerPressed = true;
         }
+
         CheckRaceCompletion();
     }
 
     private void CheckRaceCompletion()
     {
-        if (raceStarted && !raceFinished && lapManager.CurrentLap -1 >= MaxLaps)
+        if (!raceFinished && lapManager.CurrentLap -1 >= MaxLaps)
         {
             kartScript.canDrive = false;
             CompleteRace();
@@ -72,20 +73,26 @@ public class ContreLaMontre : MonoBehaviour
         scoreUI.text = $"Temps total : \n {FormatTime(finalTime)}";
         kartScript.ghostMode = true;
 
-        OnRaceFinished(finalTime);
+        OnRaceFinished(finalTime, ShowEndRaceUI);
+    }
 
+    void OnRaceFinished(int finalTime, System.Action onComplete)
+    {
+        if (LeaderboardManager.Instance != null)
+        {
+            LeaderboardManager.Instance.SubmitScoreAndRefresh(finalTime, onComplete);
+            return;
+        }
+
+        onComplete?.Invoke();
+    }
+
+    private void ShowEndRaceUI()
+    {
         if (leaderboardCanvas != null)
             leaderboardCanvas.SetActive(true);
 
         endCourseCanva.SetActive(true);
-    }
-
-    void OnRaceFinished(int finalTime)
-    {
-        if (LeaderboardManager.Instance != null)
-        {
-            LeaderboardManager.Instance.SubmitScoreAndRefresh(finalTime);
-        }
     }
 
     private string FormatTime(int milliseconds)
@@ -115,7 +122,6 @@ public class ContreLaMontre : MonoBehaviour
 
         kartScript.canDrive = true;
         raceStartTime = Time.time;
-        raceStarted = true;
 
         if (boostWindow && playerPressed)
         {
@@ -125,5 +131,6 @@ public class ContreLaMontre : MonoBehaviour
         yield return new WaitForSeconds(1);
 
         startUI.text = "";
+        raceStarted = true;
     }
 }
