@@ -36,6 +36,14 @@ public class LapManager : MonoBehaviour
         UpdateLapUI();
     }
 
+    // Supprime le Start et la Coroutine WaitForMode
+    // Ajoute cette méthode à la place :
+    public void SetGameMode(GameMode mode)
+    {
+        currentMode = mode;
+        UpdateLapUI();
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player") && !_isChecking)

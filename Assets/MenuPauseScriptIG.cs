@@ -2,7 +2,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
-// Ajout des namespaces pour le Post Processing (URP)
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
@@ -30,10 +29,11 @@ public class MenuPauseScriptIG : MonoBehaviour
     public AudioClip soundSubmit;
 
     [Header("Post Processing")]
-    public Volume globalVolume; // Glisse ton GameObject "Global Volume" ici
+    public Volume globalVolume;
     private DepthOfField depthOfField;
 
     private bool isVerticalAxisInUse = false;
+    private Canvas parentCanvas;
 
     void Awake()
     {
@@ -43,11 +43,11 @@ public class MenuPauseScriptIG : MonoBehaviour
             if (selectables[i] != null) defaultScales[i] = selectables[i].transform.localScale;
         }
 
-        // Récupération de l'effet Depth of Field dans le profil du Global Volume
         if (globalVolume != null && globalVolume.profile != null)
-        {
             globalVolume.profile.TryGet(out depthOfField);
-        }
+
+        parentCanvas = GetComponentInParent<Canvas>();
+        if (parentCanvas != null && !parentCanvas.isRootCanvas) parentCanvas = parentCanvas.rootCanvas;
     }
 
     void Update()
@@ -62,7 +62,7 @@ public class MenuPauseScriptIG : MonoBehaviour
         {
             HandleNavigation();
 
-            if (Input.GetButtonDown("Submit") || Input.GetKeyDown(KeyCode.Return))
+            if (Input.GetButtonDown("Submit") || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space))
             {
                 InteractWithCurrentSelection();
             }
@@ -74,12 +74,8 @@ public class MenuPauseScriptIG : MonoBehaviour
         pauseMenuUI.SetActive(false);
         Time.timeScale = 1f;
         isPaused = false;
-
-        // Désactiver le flou
-        if (depthOfField != null)
-        {
-            depthOfField.active = false;
-        }
+        if (depthOfField != null) depthOfField.active = false;
+        Debug.Log("Jeu Repris");
     }
 
     void Pause()
@@ -87,27 +83,24 @@ public class MenuPauseScriptIG : MonoBehaviour
         pauseMenuUI.SetActive(true);
         Time.timeScale = 0f;
         isPaused = true;
-
         index = 0;
         UpdateVisuals();
-
-        // Activer le flou
-        if (depthOfField != null)
-        {
-            depthOfField.active = true;
-        }
+        if (depthOfField != null) depthOfField.active = true;
+        Debug.Log("Jeu en Pause");
     }
 
     void HandleNavigation()
     {
         float v = Input.GetAxisRaw("Vertical");
 
-        if (Mathf.Abs(v) > 0.5f)
+        if (Input.GetKeyDown(KeyCode.UpArrow)) MoveSelection(-1);
+        else if (Input.GetKeyDown(KeyCode.DownArrow)) MoveSelection(1);
+        else if (Mathf.Abs(v) > 0.5f)
         {
             if (!isVerticalAxisInUse)
             {
                 int dir = v < -0.5f ? 1 : -1;
-                ChangeIndex(dir);
+                MoveSelection(dir);
                 isVerticalAxisInUse = true;
             }
         }
@@ -117,10 +110,10 @@ public class MenuPauseScriptIG : MonoBehaviour
         }
     }
 
-    void ChangeIndex(int dir)
+    void MoveSelection(int dir)
     {
         int oldIndex = index;
-        index = (index + dir + selectables.Length) % selectables.Length;
+        index = Mathf.Clamp(index + dir, 0, selectables.Length - 1);
 
         if (index != oldIndex)
         {
@@ -131,6 +124,8 @@ public class MenuPauseScriptIG : MonoBehaviour
 
     void UpdateVisuals()
     {
+        float currentScaleFactor = parentCanvas != null ? parentCanvas.scaleFactor : 1f;
+
         for (int i = 0; i < selectables.Length; i++)
         {
             if (selectables[i] == null) continue;
@@ -138,15 +133,17 @@ public class MenuPauseScriptIG : MonoBehaviour
             if (i == index)
             {
                 selectables[i].transform.localScale = defaultScales[i] * selectedScale;
-                SetColorRecursive(selectables[i], selectedColor);
+                SetColorRecursive(selectables[i].transform, selectedColor);
 
                 if (pointeur != null)
-                    pointeur.position = selectables[i].transform.position + Offset;
+                {
+                    pointeur.position = selectables[i].transform.position + (Offset * currentScaleFactor);
+                }
             }
             else
             {
                 selectables[i].transform.localScale = defaultScales[i];
-                SetColorRecursive(selectables[i], normalColor);
+                SetColorRecursive(selectables[i].transform, normalColor);
             }
         }
     }
@@ -154,42 +151,42 @@ public class MenuPauseScriptIG : MonoBehaviour
     void InteractWithCurrentSelection()
     {
         PlaySfx(soundSubmit);
+        Debug.Log("Selection validée : Index " + index);
 
-        if (index == 0)
-        {
-            Resume();
-        }
-        else if (index == 1)
-        {
-            QuitToMainMenu();
-        }
+        if (index == 0) Resume();
+        else if (index == 1) QuitToMainMenu();
     }
 
     void QuitToMainMenu()
     {
         Time.timeScale = 1f;
-
         if (depthOfField != null) depthOfField.active = false;
 
         if (MainMenuUIManager.Instance != null)
-        {
             MainMenuUIManager.Instance.LaunchScene("MainMenu2_0");
-        }
         else
-        {
             UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu2_0");
-        }
     }
 
-    void SetColorRecursive(GameObject obj, Color c)
+    void SetColorRecursive(Transform parent, Color c)
     {
-        if (obj.GetComponent<TMP_Text>()) obj.GetComponent<TMP_Text>().color = c;
-        Image img = obj.GetComponent<Image>();
+        TMP_Text text = parent.GetComponent<TMP_Text>();
+        if (text != null) text.color = c;
+
+        Image img = parent.GetComponent<Image>();
         if (img != null && img.gameObject.name != "Background") img.color = c;
+
+        foreach (Transform child in parent)
+        {
+            SetColorRecursive(child, c);
+        }
     }
 
     void PlaySfx(AudioClip clip)
     {
-        if (audioSource != null && clip != null) audioSource.PlayOneShot(clip);
+        if (audioSource != null && clip != null)
+        {
+            audioSource.PlayOneShot(clip);
+        }
     }
 }

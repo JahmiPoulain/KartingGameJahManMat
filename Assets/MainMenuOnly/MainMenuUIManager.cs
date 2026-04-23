@@ -53,6 +53,16 @@ public class MainMenuUIManager : MonoBehaviour
     public Transform mainMenuPosition;
     public Transform optionsPosition;
 
+    [Header("--- Navigation Avancée ---")]
+    public float initialRepeatDelay = 0.4f;
+    public float minRepeatInterval = 0.1f;
+    public float accelerationFactor = 0.02f;
+
+    private float nextActionTime = 0f;
+    private float currentRepeatInterval;
+    private int lastDirection = 0;
+    private bool isHolding = false;
+
     [Header("--- Transition de Scène ---")]
     [Tooltip("Un CanvasGroup noir (ou autre) qui va faire un fondu au noir.")]
     public CanvasGroup transitionScreen;
@@ -69,6 +79,7 @@ public class MainMenuUIManager : MonoBehaviour
     public float selectedScale = 1.3f;
     public float normalScale = 1.0f;
     public float scaleAnimSpeed = 12f;
+
 
     [Header("--- Roue Menu Principal ---")]
     public RectTransform mainWheelRect;
@@ -103,7 +114,7 @@ public class MainMenuUIManager : MonoBehaviour
 
     private void Awake()
     {
-        
+
         Instance = this;
     }
 
@@ -248,54 +259,86 @@ public class MainMenuUIManager : MonoBehaviour
     }
     private void HandleInputs()
     {
+        // 1. Écran de titre
         if (currentState == MenuState.TitleScreen && Input.anyKeyDown)
         {
             hasSeenTitleScreen = true;
-
             if (titleScreenPanel != null) titleScreenPanel.SetActive(false);
-
             ChangeState(MenuState.MainMenu);
             return;
         }
 
+        // 2. Navigation Roue
         if (currentState == MenuState.MainMenu || currentState == MenuState.OptionsMenu)
         {
             int inputDirection = 0;
 
-            float verticalInput = Input.GetAxisRaw("Vertical");
+            // LECTURE : On mixe Vertical (Z/S/Haut/Bas) et Horizontal (Q/D/Gauche/Droite)
+            // pour que le joueur puisse naviguer comme il veut sur la roue
+            float v = Input.GetAxisRaw("Vertical");
+            float h = Input.GetAxisRaw("Horizontal");
+            float scroll = Input.GetAxis("Mouse ScrollWheel");
 
-            if (Mathf.Abs(verticalInput) > 0.5f)
+            float combinedInput = Mathf.Abs(v) > Mathf.Abs(h) ? v : h;
+
+            // Priorité Molette (mouvement sec)
+            if (Mathf.Abs(scroll) > 0.01f)
             {
-                if (!isAxisInUse)
-                {
-                    if (verticalInput < -0.3f) inputDirection = 1;
-                    else if (verticalInput > 0.3f) inputDirection = -1;
+                inputDirection = scroll > 0 ? -1 : 1;
+            }
 
-                    isAxisInUse = true;
+            else if (Mathf.Abs(combinedInput) > 0.6f)
+            {
+                int currentDir = combinedInput > 0 ? -1 : 1;
+
+                if (!isHolding || currentDir != lastDirection)
+                {
+                    // PREMIER CLIC (Instantané)
+                    inputDirection = currentDir;
+                    lastDirection = currentDir;
+                    isHolding = true;
+                    currentRepeatInterval = initialRepeatDelay;
+                    nextActionTime = Time.unscaledTime + initialRepeatDelay;
+                }
+                else if (Time.unscaledTime >= nextActionTime)
+                {
+                    // DÉFILEMENT CONTINU
+                    inputDirection = currentDir;
+
+                    // On accélère doucement
+                    currentRepeatInterval = Mathf.Max(minRepeatInterval, currentRepeatInterval - accelerationFactor);
+                    nextActionTime = Time.unscaledTime + currentRepeatInterval;
                 }
             }
             else
             {
-                isAxisInUse = false;
+                // Reset quand on lâche
+                isHolding = false;
+                lastDirection = 0;
             }
 
+            // Application du mouvement
             if (inputDirection != 0)
             {
                 if (invertNavigation) inputDirection = -inputDirection;
                 RotateWheel(inputDirection);
             }
 
-            if (Input.GetKeyDown(KeyCode.Return) || Input.GetButtonDown("Submit"))
+            // 3. Validation
+            if (Input.GetButtonDown("Submit") || Input.GetKeyDown(KeyCode.Return))
             {
                 SelectCurrentWheelOption();
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.Escape) || Input.GetButtonDown("Cancel"))
+        // 4. Retour
+        if (Input.GetButtonDown("Cancel") || Input.GetKeyDown(KeyCode.Escape))
         {
             GoBack();
         }
     }
+
+
     private void RotateWheel(int direction)
     {
         float spawnDirection = reverseSpawnDirection ? -1f : 1f;
@@ -318,8 +361,6 @@ public class MainMenuUIManager : MonoBehaviour
         }
     }
 
-
-
     private void SelectCurrentWheelOption()
     {
         if (currentState == MenuState.MainMenu)
@@ -327,17 +368,11 @@ public class MainMenuUIManager : MonoBehaviour
             string selectedName = mainMenuOptions[currentMainIndex].itemName.ToLower();
             WheelItem currentItem = mainMenuOptions[currentMainIndex];
 
-            if (selectedName.Contains("attack")) // Si le bouton s'appelle "Time Attack"
+            if (selectedName.Contains("play") || selectedName.Contains("jouer"))
             {
-                GameManager.Instance().currentMode = GameManager.GameModeType.TimeAttack;
-                LaunchScene("MaSceneDeCourse");
+                if (currentItem.windowToOpen != null) OpenWindow(currentItem.windowToOpen);
+                else LaunchScene("TaSceneDeJeuIci");
             }
-            else if (selectedName.Contains("trial") || selectedName.Contains("contre"))
-            {
-                GameManager.Instance().currentMode = GameManager.GameModeType.TimeTrial;
-                LaunchScene("MaSceneDeCourse");
-            }
-
             else if (selectedName.Contains("setting") || selectedName.Contains("option")) ChangeState(MenuState.OptionsMenu);
             else if (selectedName.Contains("quit") || selectedName.Contains("quitter"))
             {

@@ -129,21 +129,32 @@ public class GameModes : MonoBehaviour
     void InteractWithCurrentSelection()
     {
         PlaySfx(soundSubmit);
-      // StartCoroutine(PulseEffect(selectables[index].transform));
 
-        if (index == 2)
+        if (index == 2) // Ligne "Map Inverted"
         {
             ToggleMapInverted();
         }
-        else if (index == 0)
+        else if (index == 0) // Première ligne (ex: Play Against Clock)
         {
             if (MainMenuUIManager.Instance != null)
+            {
+                // --- AJOUT ICI ---
+                Debug.Log("GameModes: Selection Index 0 -> TimeTrial");
+                GameManager.Instance().currentMode = GameManager.GameModeType.TimeTrial;
+                // -----------------
                 MainMenuUIManager.Instance.LaunchScene(sceneMode1);
+            }
         }
-        else if (index == 1)
+        else if (index == 1) // Deuxième ligne (ex: Play Against Ghost)
         {
             if (MainMenuUIManager.Instance != null)
-                MainMenuUIManager.Instance.LaunchScene(sceneMode2);
+            {
+                // --- AJOUT ICI ---
+                Debug.Log("GameModes: Selection Index 1 -> TimeAttack");
+                GameManager.Instance().currentMode = GameManager.GameModeType.TimeAttack;
+                // -----------------
+                MainMenuUIManager.Instance.LaunchScene(sceneMode1);
+            }
         }
     }
 
