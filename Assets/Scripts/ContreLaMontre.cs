@@ -66,32 +66,27 @@ public class ContreLaMontre : MonoBehaviour
 
     private void CompleteRace()
     {
+
         raceFinished = true;
         int finalTime = Mathf.RoundToInt((Time.time - raceStartTime) * 1000f);
 
         scoreUI.text = $"Temps total : \n {FormatTime(finalTime)}";
         kartScript.ghostMode = true;
 
-        OnRaceFinished(finalTime, ShowEndRaceUI);
-    }
+        OnRaceFinished(finalTime);
 
-    void OnRaceFinished(int finalTime, System.Action onComplete)
-    {
-        if (LeaderboardManager.Instance != null)
-        {
-            LeaderboardManager.Instance.SubmitScoreAndRefresh(finalTime, onComplete);
-            return;
-        }
-
-        onComplete?.Invoke();
-    }
-
-    private void ShowEndRaceUI()
-    {
         if (leaderboardCanvas != null)
             leaderboardCanvas.SetActive(true);
 
         endCourseCanva.SetActive(true);
+    }
+
+    void OnRaceFinished(int finalTime)
+    {
+        if (LeaderboardManager.Instance != null)
+        {
+            LeaderboardManager.Instance.SubmitScoreAndRefresh(finalTime);
+        }
     }
 
     private string FormatTime(int milliseconds)
