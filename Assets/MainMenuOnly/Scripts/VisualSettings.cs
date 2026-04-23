@@ -48,8 +48,7 @@ public class VisualSettings : MonoBehaviour
 
     void Start()
     {
-        LoadSettings();
-        ApplySettings(false);
+        UpdateUI();
     }
 
     void OnEnable()
@@ -189,7 +188,7 @@ public class VisualSettings : MonoBehaviour
             PlaySfx(soundNav);
         }
     }
-
+    /*
     void ChangeSettingValue(int dir)
     {
         bool changed = false;
@@ -218,7 +217,7 @@ public class VisualSettings : MonoBehaviour
             PlaySfx(soundChange);
            // StartCoroutine(PulseEffect(selectables[index].transform));
         }
-    }
+    }*/
 
     IEnumerator PulseEffect(Transform t)
     {
@@ -228,22 +227,55 @@ public class VisualSettings : MonoBehaviour
         t.localScale = m * selectedScale;
     }
 
+    void ChangeSettingValue(int dir)
+    {
+        bool changed = false;
+        GameObject selectedObject = selectables[index];
+        var manager = MainMenuUIManager.Instance;
+
+        if (selectedObject == itemResolution)
+        {
+            int oldRes = manager.currentResIndex;
+            manager.currentResIndex = Mathf.Clamp(manager.currentResIndex + dir, 0, manager.resolutions.Length - 1);
+            if (manager.currentResIndex != oldRes) changed = true;
+        }
+        else if (selectedObject == itemFps)
+        {
+            int oldFps = manager.currentFpsIndex;
+            manager.currentFpsIndex = Mathf.Clamp(manager.currentFpsIndex + dir, 0, manager.fpsLabels.Length - 1);
+            if (manager.currentFpsIndex != oldFps) changed = true;
+        }
+
+        if (changed)
+        {
+            UpdateUI();
+            PlaySfx(soundChange);
+        }
+    }
+
     void InteractWithCurrentSelection()
     {
         PlaySfx(soundSubmit);
-        if (selectables[index] == itemFullscreen) isFullscreen = !isFullscreen;
-        else if (selectables[index] == itemVsync) isVsync = !isVsync;
-        else if (selectables[index] == itemApply) { ApplySettings(true); MainMenuUIManager.Instance.GoBack(); }
+        var manager = MainMenuUIManager.Instance;
+
+        if (selectables[index] == itemFullscreen) manager.isFullscreen = !manager.isFullscreen;
+        else if (selectables[index] == itemVsync) manager.isVsync = !manager.isVsync;
+        else if (selectables[index] == itemApply)
+        {
+            manager.ApplySettings(true);
+            manager.GoBack();
+        }
 
         UpdateUI();
     }
 
     void UpdateUI()
     {
-        resText.text = resolutions[currentResIndex];
-        fpsText.text = fpsLabels[currentFpsIndex];
-        fullscreenToggle.color = isFullscreen ? Color.green : Color.gray;
-        VsyncToggle.color = isVsync ? Color.green : Color.gray;
+        var m = MainMenuUIManager.Instance;
+        resText.text = m.resolutions[m.currentResIndex];
+        fpsText.text = m.fpsLabels[m.currentFpsIndex];
+        fullscreenToggle.color = m.isFullscreen ? Color.green : Color.gray;
+        VsyncToggle.color = m.isVsync ? Color.green : Color.gray;
     }
 
     void UpdatePointerPosition()

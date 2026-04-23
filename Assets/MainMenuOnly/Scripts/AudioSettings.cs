@@ -67,10 +67,9 @@ public class AudioSettings : MonoBehaviour
     void OnEnable()
     {
         index = 0;
-        LoadAudioSettings();
+        UpdateUI();
         UpdatePointerPosition();
         UpdateVisualFeedback();
-        UpdateUI();
     }
 
     void Update()
@@ -136,53 +135,6 @@ public class AudioSettings : MonoBehaviour
         }
     }
 
-    void ChangeSettingValue(int dir)
-    {
-        bool changed = false;
-        GameObject selectedObject = selectables[index];
-
-        if (selectedObject == itemMaster)
-        {
-            int oldVol = masterVol;
-            masterVol = Mathf.Clamp(masterVol + dir, 0, 10);
-            if (masterVol != oldVol) changed = true;
-        }
-        else if (selectedObject == itemMusic)
-        {
-            int oldVol = musicVol;
-            musicVol = Mathf.Clamp(musicVol + dir, 0, 10);
-            if (musicVol != oldVol) changed = true;
-        }
-        else if (selectedObject == itemSfx)
-        {
-            int oldVol = sfxVol;
-            sfxVol = Mathf.Clamp(sfxVol + dir, 0, 10);
-            if (sfxVol != oldVol) changed = true;
-        }
-
-        if (changed)
-        {
-            UpdateUI();
-            PlaySfx(soundChange);
-            //StartCoroutine(PulseEffect(selectables[index].transform));
-            ApplyVolumesToMixer();
-        }
-    }
-
-    void InteractWithCurrentSelection()
-    {
-        PlaySfx(soundSubmit);
-
-        if (selectables[index] == itemApply)
-        {
-            SaveAndApplySettings();
-            if (MainMenuUIManager.Instance != null)
-            {
-                MainMenuUIManager.Instance.GoBack();
-            }
-        }
-    }
-
     void LoadAudioSettings()
     {
         masterVol = PlayerPrefs.GetInt("MasterVol", 10);
@@ -213,11 +165,56 @@ public class AudioSettings : MonoBehaviour
         }
     }
 
+    void ChangeSettingValue(int dir)
+    {
+        bool changed = false;
+        GameObject selectedObject = selectables[index];
+        var m = MainMenuUIManager.Instance;
+
+        if (selectedObject == itemMaster)
+        {
+            int old = m.masterVol;
+            m.masterVol = Mathf.Clamp(m.masterVol + dir, 0, 10);
+            if (m.masterVol != old) changed = true;
+        }
+        else if (selectedObject == itemMusic)
+        {
+            int old = m.musicVol;
+            m.musicVol = Mathf.Clamp(m.musicVol + dir, 0, 10);
+            if (m.musicVol != old) changed = true;
+        }
+        else if (selectedObject == itemSfx)
+        {
+            int old = m.sfxVol;
+            m.sfxVol = Mathf.Clamp(m.sfxVol + dir, 0, 10);
+            if (m.sfxVol != old) changed = true;
+        }
+
+        if (changed)
+        {
+            UpdateUI();
+            PlaySfx(soundChange);
+            m.ApplyAudioVolumes();
+        }
+    }
+
+    void InteractWithCurrentSelection()
+    {
+        PlaySfx(soundSubmit);
+
+        if (selectables[index] == itemApply)
+        {
+            MainMenuUIManager.Instance.SaveSettings();
+            MainMenuUIManager.Instance.GoBack();
+        }
+    }
+
     void UpdateUI()
     {
-        if (masterSlider != null) masterSlider.value = masterVol;
-        if (musicSlider != null) musicSlider.value = musicVol;
-        if (sfxSlider != null) sfxSlider.value = sfxVol;
+        var m = MainMenuUIManager.Instance;
+        if (masterSlider != null) masterSlider.value = m.masterVol;
+        if (musicSlider != null) musicSlider.value = m.musicVol;
+        if (sfxSlider != null) sfxSlider.value = m.sfxVol;
     }
 
     void UpdateVisualFeedback()
