@@ -66,7 +66,6 @@ public class ContreLaMontre : MonoBehaviour
 
     private void CompleteRace()
     {
-
         raceFinished = true;
         int finalTime = Mathf.RoundToInt((Time.time - raceStartTime) * 1000f);
 
