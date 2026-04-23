@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using LootLocker.Requests;
+using System.Collections;
 using System.Collections.Generic;
 
 public class LeaderboardManager : MonoBehaviour
@@ -81,9 +82,36 @@ public class LeaderboardManager : MonoBehaviour
 
             LootLockerSDKManager.SubmitScore("", timeInMilliseconds, leaderboardKey, (_) =>
             {
-                RefreshLeaderboard(onComplete);
+                StartCoroutine(RefreshAfterScoreUpdate(timeInMilliseconds, onComplete));
             });
         });
+    }
+
+    private IEnumerator RefreshAfterScoreUpdate(int expectedScore, System.Action onComplete)
+    {
+        const int maxAttempts = 5;
+        const float delaySeconds = 0.5f;
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            yield return new WaitForSeconds(delaySeconds);
+
+            bool requestDone = false;
+            bool scoreUpdated = false;
+
+            LootLockerSDKManager.GetMemberRank(leaderboardKey, localPlayerId.ToString(), (rankResponse) =>
+            {
+                scoreUpdated = rankResponse.success && rankResponse.rank != 0 && rankResponse.score == expectedScore;
+                requestDone = true;
+            });
+
+            yield return new WaitUntil(() => requestDone);
+
+            if (scoreUpdated)
+                break;
+        }
+
+        RefreshLeaderboard(onComplete);
     }
 
     public void RefreshLeaderboard(System.Action onComplete = null)
