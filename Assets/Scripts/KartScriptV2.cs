@@ -101,6 +101,7 @@ public class KartScriptV2 : MonoBehaviour
     public Transform groundNormalT;
     public Transform groundRayOrigin;
     private bool grounded;
+    float groundedCoyoteTimer;
 
     [Header("Drift")]
     private bool tryToDrift;
@@ -227,13 +228,21 @@ public class KartScriptV2 : MonoBehaviour
 
         if (grounded)
         {
+            groundedCoyoteTimer = 0.1f;
             gliderGO.SetActive(false);
             transform.Rotate(0, currentTurnSpeed + currentDriftForce, 0);
             rb.linearVelocity = (groundNormalT.transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
         }
         else if (!isFlying)
         {
-            transform.Rotate(0, (currentTurnSpeed + currentDriftForce) / 3f, 0);
+            if (groundedCoyoteTimer > 0)
+            {
+                Debug.Log(groundedCoyoteTimer);
+                groundedCoyoteTimer -= Time.fixedDeltaTime;
+                transform.Rotate(0, (currentTurnSpeed + currentDriftForce), 0);
+            }
+            else transform.Rotate(0, (currentTurnSpeed + currentDriftForce) / 3f, 0);
+                
             rb.linearVelocity = (groundNormalT.transform.forward * (airSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
 
             if (currentTurboForce <= 0)
