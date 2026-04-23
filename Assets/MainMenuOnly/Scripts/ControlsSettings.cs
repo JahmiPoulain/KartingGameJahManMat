@@ -200,13 +200,12 @@ public class ControlsSettings : MonoBehaviour
     {
         var asset = actionRef.action.actionMap.asset;
         string donnees = asset.SaveBindingOverridesAsJson();
-        PlayerPrefs.SetString(NomFichierSauvegarde, donnees);
+        PlayerPrefs.SetString(MainMenuUIManager.Instance.controlsSaveKey, donnees);
         PlayerPrefs.Save();
     }
-
     private void ChargerToutesLesTouches()
     {
-        string donneesSauvegardees = PlayerPrefs.GetString(NomFichierSauvegarde);
+        string donneesSauvegardees = PlayerPrefs.GetString(MainMenuUIManager.Instance.controlsSaveKey);
 
         foreach (var row in actionRows)
         {

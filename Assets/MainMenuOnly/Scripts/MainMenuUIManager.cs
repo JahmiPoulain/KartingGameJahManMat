@@ -3,7 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
-using System.Collections; // <-- Important pour la Coroutine
+using System.Collections;
+using UnityEngine.Audio;
 
 [System.Serializable]
 public class WheelItem
@@ -95,6 +96,15 @@ public class MainMenuUIManager : MonoBehaviour
     private float initialSettingsAngle = 0f;
     private List<RectTransform> settingsButtonsGenerated = new List<RectTransform>();
 
+    [Header("--- Paramètres Audio ---")]
+    public AudioMixer mainAudioMixer;
+    public int masterVol = 10;
+    public int musicVol = 10;
+    public int sfxVol = 10;
+
+    [Header("--- Paramètres Contrôles ---")]
+    public string controlsSaveKey = "Controles";
+
     private GameObject currentActiveWindow = null;
     private bool isAxisInUse = false;
 
@@ -175,21 +185,33 @@ public class MainMenuUIManager : MonoBehaviour
 
     public void LoadSettings()
     {
+        // Vidéo
         currentResIndex = PlayerPrefs.GetInt("ResIndex", 0);
         currentFpsIndex = PlayerPrefs.GetInt("FpsIndex", 1);
         isFullscreen = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
         isVsync = PlayerPrefs.GetInt("Vsync", 0) == 1;
+
+        // Audio
+        masterVol = PlayerPrefs.GetInt("MasterVol", 10);
+        musicVol = PlayerPrefs.GetInt("MusicVol", 10);
+        sfxVol = PlayerPrefs.GetInt("SfxVol", 10);
     }
 
     public void SaveSettings()
     {
+        // Vidéo
         PlayerPrefs.SetInt("ResIndex", currentResIndex);
         PlayerPrefs.SetInt("FpsIndex", currentFpsIndex);
         PlayerPrefs.SetInt("Fullscreen", isFullscreen ? 1 : 0);
         PlayerPrefs.SetInt("Vsync", isVsync ? 1 : 0);
 
+        // Audio
+        PlayerPrefs.SetInt("MasterVol", masterVol);
+        PlayerPrefs.SetInt("MusicVol", musicVol);
+        PlayerPrefs.SetInt("SfxVol", sfxVol);
+
         PlayerPrefs.Save();
-        Debug.Log("Paramètres sauvegardés !");
+        Debug.Log("Tous les paramètres ont été sauvegardés !");
     }
 
     public void ApplySettings(bool shouldSave)
@@ -201,14 +223,28 @@ public class MainMenuUIManager : MonoBehaviour
             int height = int.Parse(resParts[1]);
             Screen.SetResolution(width, height, isFullscreen);
         }
-
         QualitySettings.vSyncCount = isVsync ? 1 : 0;
         Application.targetFrameRate = fpsValues[currentFpsIndex];
 
-        if (shouldSave) SaveSettings();
+        ApplyAudioVolumes();
 
-        Debug.Log("Paramètres Appliqués !");
+        if (shouldSave) SaveSettings();
     }
+
+    public void ApplyAudioVolumes()
+    {
+        if (mainAudioMixer != null)
+        {
+            mainAudioMixer.SetFloat("masterVolume", Mathf.Log10(Mathf.Max(masterVol, 0.0001f) / 10f) * 20f);
+            mainAudioMixer.SetFloat("musicVolume", Mathf.Log10(Mathf.Max(musicVol, 0.0001f) / 10f) * 20f);
+            mainAudioMixer.SetFloat("sfxVolume", Mathf.Log10(Mathf.Max(sfxVol, 0.0001f) / 10f) * 20f);
+        }
+        else
+        {
+            AudioListener.volume = masterVol / 10f;
+        }
+    }
+
     private void GenerateWheel(WheelItem[] options, RectTransform wheelParent, List<RectTransform> generatedList, bool boolean)
     {
         int k;
@@ -258,7 +294,6 @@ public class MainMenuUIManager : MonoBehaviour
     }
     private void HandleInputs()
     {
-        // 1. Écran de titre
         if (currentState == MenuState.TitleScreen && Input.anyKeyDown)
         {
             hasSeenTitleScreen = true;
@@ -267,20 +302,16 @@ public class MainMenuUIManager : MonoBehaviour
             return;
         }
 
-        // 2. Navigation Roue
         if (currentState == MenuState.MainMenu || currentState == MenuState.OptionsMenu)
         {
             int inputDirection = 0;
 
-            // LECTURE : On mixe Vertical (Z/S/Haut/Bas) et Horizontal (Q/D/Gauche/Droite)
-            // pour que le joueur puisse naviguer comme il veut sur la roue
             float v = Input.GetAxisRaw("Vertical");
             float h = Input.GetAxisRaw("Horizontal");
             float scroll = Input.GetAxis("Mouse ScrollWheel");
 
             float combinedInput = Mathf.Abs(v) > Mathf.Abs(h) ? v : h;
 
-            // Priorité Molette (mouvement sec)
             if (Mathf.Abs(scroll) > 0.01f)
             {
                 inputDirection = scroll > 0 ? -1 : 1;
@@ -292,7 +323,6 @@ public class MainMenuUIManager : MonoBehaviour
 
                 if (!isHolding || currentDir != lastDirection)
                 {
-                    // PREMIER CLIC (Instantané)
                     inputDirection = currentDir;
                     lastDirection = currentDir;
                     isHolding = true;
@@ -301,36 +331,30 @@ public class MainMenuUIManager : MonoBehaviour
                 }
                 else if (Time.unscaledTime >= nextActionTime)
                 {
-                    // DÉFILEMENT CONTINU
                     inputDirection = currentDir;
 
-                    // On accélère doucement
                     currentRepeatInterval = Mathf.Max(minRepeatInterval, currentRepeatInterval - accelerationFactor);
                     nextActionTime = Time.unscaledTime + currentRepeatInterval;
                 }
             }
             else
             {
-                // Reset quand on lâche
                 isHolding = false;
                 lastDirection = 0;
             }
 
-            // Application du mouvement
             if (inputDirection != 0)
             {
                 if (invertNavigation) inputDirection = -inputDirection;
                 RotateWheel(inputDirection);
             }
 
-            // 3. Validation
             if (Input.GetButtonDown("Submit") || Input.GetKeyDown(KeyCode.Return))
             {
                 SelectCurrentWheelOption();
             }
         }
 
-        // 4. Retour
         if (Input.GetButtonDown("Cancel") || Input.GetKeyDown(KeyCode.Escape))
         {
             GoBack();
@@ -375,12 +399,15 @@ public class MainMenuUIManager : MonoBehaviour
             else if (selectedName.Contains("setting") || selectedName.Contains("option")) ChangeState(MenuState.OptionsMenu);
             else if (selectedName.Contains("quit") || selectedName.Contains("quitter"))
             {
-                Debug.Log("Fermeture du jeu !");
+
+
 #if UNITY_EDITOR
                 UnityEditor.EditorApplication.isPlaying = false;
 #else
                 Application.Quit(); 
 #endif
+
+
             }
             else if (currentItem.windowToOpen != null) OpenWindow(currentItem.windowToOpen);
         }

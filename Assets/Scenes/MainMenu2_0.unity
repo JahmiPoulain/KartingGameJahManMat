@@ -2084,6 +2084,11 @@ MonoBehaviour:
     customFont: {fileID: 11400000, guid: 0543bf76228002b4ea7986a19afcf224, type: 2}
     windowToOpen: {fileID: 248479595}
     customSize: {x: 8, y: 5}
+  mainAudioMixer: {fileID: 0}
+  masterVol: 10
+  musicVol: 10
+  sfxVol: 10
+  controlsSaveKey: Controles
   resolutions:
   - 2560x1440
   - 1920x1080
@@ -2575,7 +2580,7 @@ MonoBehaviour:
       m_Calls: []
   m_text: 1080p
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: d13103d8a2828b843803ab03a5bbab18, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 2e498d1c8094910479dc3e1b768306a4, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -7777,7 +7782,7 @@ MonoBehaviour:
 
 '
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: d13103d8a2828b843803ab03a5bbab18, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 2e498d1c8094910479dc3e1b768306a4, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
