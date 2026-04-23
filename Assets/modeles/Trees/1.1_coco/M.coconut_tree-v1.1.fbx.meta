@@ -3,7 +3,22 @@ guid: 59e3c662cffc9a84b9baa780f4414180
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: cocofknut
+    second: {fileID: 2100000, guid: 458d35540f2fae341a4c475d1cdab443, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: palmtree_leaf-v.01
+    second: {fileID: 2100000, guid: 6119c0584ccfa664e9b68add5c8c07c9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: wood
+    second: {fileID: 2100000, guid: 03d816b77dc97d64ca7a4fc0cb92f084, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
