@@ -49,8 +49,6 @@ public class MainMenuUIManager : MonoBehaviour
     public Transform mainMenuPosition;
     public Transform optionsPosition;
 
-<<<<<<< HEAD:Assets/MainMenuOnly/MainMenuUIManager.cs
-=======
     [Header("--- Transition Dynamique ---")]
     [Tooltip("Crée une courbe qui monte à 1.1 puis redescend à 1.0 pour l'effet d'élan !")]
     public AnimationCurve transitionCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
@@ -63,7 +61,6 @@ public class MainMenuUIManager : MonoBehaviour
     private Quaternion targetRot;
     private bool isTransitioning = false;
 
->>>>>>> Build-Complet-2:Assets/MainMenuOnly/Scripts/MainMenuUIManager.cs
     [Header("--- Navigation Avancée ---")]
     public float initialRepeatDelay = 0.4f;
     public float minRepeatInterval = 0.1f;
@@ -75,14 +72,8 @@ public class MainMenuUIManager : MonoBehaviour
     private bool isHolding = false;
 
     [Header("--- Transition de Scène ---")]
-<<<<<<< HEAD:Assets/MainMenuOnly/MainMenuUIManager.cs
-    [Tooltip("Un CanvasGroup noir (ou autre) qui va faire un fondu au noir.")]
-    public CanvasGroup transitionScreen;
-    public float transitionDuration = 1f;
-=======
     public CanvasGroup transitionScreen;
     public float sceneTransitionDuration = 1f;
->>>>>>> Build-Complet-2:Assets/MainMenuOnly/Scripts/MainMenuUIManager.cs
 
     public static MainMenuUIManager Instance;
 
@@ -93,7 +84,6 @@ public class MainMenuUIManager : MonoBehaviour
     public float selectedScale = 1.3f;
     public float normalScale = 1.0f;
     public float scaleAnimSpeed = 12f;
-
 
     [Header("--- Roue Menu Principal ---")]
     public RectTransform mainWheelRect;
@@ -132,15 +122,7 @@ public class MainMenuUIManager : MonoBehaviour
     [HideInInspector] public bool isFullscreen = true;
     [HideInInspector] public bool isVsync = false;
 
-<<<<<<< HEAD:Assets/MainMenuOnly/MainMenuUIManager.cs
-    private void Awake()
-    {
-
-        Instance = this;
-    }
-=======
     private void Awake() { Instance = this; }
->>>>>>> Build-Complet-2:Assets/MainMenuOnly/Scripts/MainMenuUIManager.cs
 
     void Start()
     {
@@ -286,7 +268,6 @@ public class MainMenuUIManager : MonoBehaviour
 
     private void HandleInputs()
     {
-        // 1. Écran de titre
         if (currentState == MenuState.TitleScreen && Input.anyKeyDown)
         {
             hasSeenTitleScreen = true;
@@ -295,7 +276,6 @@ public class MainMenuUIManager : MonoBehaviour
             return;
         }
 
-        // 2. Navigation Roue
         if (currentState == MenuState.MainMenu || currentState == MenuState.OptionsMenu)
         {
             int inputDirection = 0;
@@ -304,36 +284,12 @@ public class MainMenuUIManager : MonoBehaviour
             float scroll = Input.GetAxis("Mouse ScrollWheel");
             float combinedInput = Mathf.Abs(v) > Mathf.Abs(h) ? v : h;
 
-<<<<<<< HEAD:Assets/MainMenuOnly/MainMenuUIManager.cs
-            // LECTURE : On mixe Vertical (Z/S/Haut/Bas) et Horizontal (Q/D/Gauche/Droite)
-            // pour que le joueur puisse naviguer comme il veut sur la roue
-            float v = Input.GetAxisRaw("Vertical");
-            float h = Input.GetAxisRaw("Horizontal");
-            float scroll = Input.GetAxis("Mouse ScrollWheel");
-
-            float combinedInput = Mathf.Abs(v) > Mathf.Abs(h) ? v : h;
-
-            // Priorité Molette (mouvement sec)
-            if (Mathf.Abs(scroll) > 0.01f)
-            {
-                inputDirection = scroll > 0 ? -1 : 1;
-            }
-
-            else if (Mathf.Abs(combinedInput) > 0.6f)
-            {
-                int currentDir = combinedInput > 0 ? -1 : 1;
-
-                if (!isHolding || currentDir != lastDirection)
-                {
-                    // PREMIER CLIC (Instantané)
-=======
             if (Mathf.Abs(scroll) > 0.01f) inputDirection = scroll > 0 ? -1 : 1;
             else if (Mathf.Abs(combinedInput) > 0.6f)
             {
                 int currentDir = combinedInput > 0 ? -1 : 1;
                 if (!isHolding || currentDir != lastDirection)
                 {
->>>>>>> Build-Complet-2:Assets/MainMenuOnly/Scripts/MainMenuUIManager.cs
                     inputDirection = currentDir;
                     lastDirection = currentDir;
                     isHolding = true;
@@ -342,60 +298,25 @@ public class MainMenuUIManager : MonoBehaviour
                 }
                 else if (Time.unscaledTime >= nextActionTime)
                 {
-<<<<<<< HEAD:Assets/MainMenuOnly/MainMenuUIManager.cs
-                    // DÉFILEMENT CONTINU
                     inputDirection = currentDir;
-
-                    // On accélère doucement
-=======
-                    inputDirection = currentDir;
->>>>>>> Build-Complet-2:Assets/MainMenuOnly/Scripts/MainMenuUIManager.cs
                     currentRepeatInterval = Mathf.Max(minRepeatInterval, currentRepeatInterval - accelerationFactor);
                     nextActionTime = Time.unscaledTime + currentRepeatInterval;
                 }
             }
-<<<<<<< HEAD:Assets/MainMenuOnly/MainMenuUIManager.cs
-            else
-            {
-                // Reset quand on lâche
-                isHolding = false;
-                lastDirection = 0;
-            }
-=======
             else { isHolding = false; lastDirection = 0; }
->>>>>>> Build-Complet-2:Assets/MainMenuOnly/Scripts/MainMenuUIManager.cs
 
-            // Application du mouvement
             if (inputDirection != 0)
             {
                 if (invertNavigation) inputDirection = -inputDirection;
                 RotateWheel(inputDirection);
             }
 
-<<<<<<< HEAD:Assets/MainMenuOnly/MainMenuUIManager.cs
-            // 3. Validation
-            if (Input.GetButtonDown("Submit") || Input.GetKeyDown(KeyCode.Return))
-            {
-                SelectCurrentWheelOption();
-            }
-        }
-
-        // 4. Retour
-        if (Input.GetButtonDown("Cancel") || Input.GetKeyDown(KeyCode.Escape))
-        {
-            GoBack();
-        }
-    }
-
-
-=======
             if (Input.GetButtonDown("Submit") || Input.GetKeyDown(KeyCode.Return)) SelectCurrentWheelOption();
         }
 
         if (Input.GetButtonDown("Cancel") || Input.GetKeyDown(KeyCode.Escape)) GoBack();
     }
 
->>>>>>> Build-Complet-2:Assets/MainMenuOnly/Scripts/MainMenuUIManager.cs
     private void RotateWheel(int direction)
     {
         float spawnDirection = reverseSpawnDirection ? -1f : 1f;
