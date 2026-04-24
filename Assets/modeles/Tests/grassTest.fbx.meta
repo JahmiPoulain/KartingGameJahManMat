@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 59e3c662cffc9a84b9baa780f4414180
+guid: 2e3f7305b0edb864c90b56c20788c060
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,18 +7,8 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: cocofknut
-    second: {fileID: 2100000, guid: 458d35540f2fae341a4c475d1cdab443, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: palmtree_leaf-v.01
-    second: {fileID: 2100000, guid: 6119c0584ccfa664e9b68add5c8c07c9, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: wood
-    second: {fileID: 2100000, guid: 03d816b77dc97d64ca7a4fc0cb92f084, type: 2}
+      name: grass
+    second: {fileID: 2100000, guid: 347b1320dc315fb4fb259f5fde8c2a43, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -49,7 +39,7 @@ ModelImporter:
   meshes:
     lODScreenPercentages: []
     globalScale: 1
-    meshCompression: 3
+    meshCompression: 0
     addColliders: 0
     useSRGBMaterialColor: 1
     sortHierarchyByName: 1
@@ -83,7 +73,7 @@ ModelImporter:
     useFileScale: 1
     strictVertexDataChecks: 0
   tangentSpace:
-    normalSmoothAngle: 73
+    normalSmoothAngle: 60
     normalImportMode: 0
     tangentImportMode: 3
     normalCalculationMode: 4
