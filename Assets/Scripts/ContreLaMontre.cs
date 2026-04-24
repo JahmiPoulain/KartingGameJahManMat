@@ -18,7 +18,6 @@ public class ContreLaMontre : MonoBehaviour
 
     public GameObject endCourseCanva;
 
-
     [SerializeField] private int maxLaps = 3;
 
     private bool raceStarted = false;
@@ -27,7 +26,6 @@ public class ContreLaMontre : MonoBehaviour
 
     public bool getRaceStarted()
     {
-
         return raceStarted;
     }
 
@@ -76,7 +74,9 @@ public class ContreLaMontre : MonoBehaviour
         OnRaceFinished(finalTime);
 
         if (leaderboardCanvas != null)
+        {
             leaderboardCanvas.SetActive(true);
+        }   
 
         endCourseCanva.SetActive(true);
     }
