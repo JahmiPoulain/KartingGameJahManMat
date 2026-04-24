@@ -429,7 +429,11 @@ public class MainMenuUIManager : MonoBehaviour
         }
     }
 
-    public void LaunchScene(string sceneName) { StartCoroutine(TransitionAndLoad(sceneName)); }
+    public void LaunchScene(string sceneName)
+    {
+        // Au lieu de gérer la coroutine ici, on délègue au manager central
+        GameSceneManager.Instance.LoadGame(sceneName);
+    }
 
     private IEnumerator TransitionAndLoad(string sceneName)
     {
