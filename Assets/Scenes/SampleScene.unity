@@ -20166,8 +20166,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 498415606}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.6250978, z: -0, w: -0.7805465}
-  m_LocalPosition: {x: -1534.1, y: 102.2, z: 624.3}
+  m_LocalRotation: {x: -0, y: -0.70899373, z: -0, w: -0.70521474}
+  m_LocalPosition: {x: -1717.3, y: 98.5, z: 445.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -20179,7 +20179,7 @@ Transform:
   - {fileID: 1219606186}
   - {fileID: 1180524161}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 1877.379, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 1890.306, z: 0}
 --- !u!114 &498415611
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -78556,7 +78556,6 @@ MonoBehaviour:
   scoreUI: {fileID: 7253129876057067312}
   startUI: {fileID: 1349987410041600914}
   leaderboardCanvas: {fileID: 7375503349120402168}
-  lbActive: 0
   endCourseCanva: {fileID: 1492876748}
   maxLaps: 3
 --- !u!114 &1546263594
@@ -106130,7 +106129,7 @@ MonoBehaviour:
   scrollRect: {fileID: 6983034975821311569}
   scrollbar: {fileID: 8674141633659344392}
   maxResults: 100
-  contreLaMontre: {fileID: 1546263593}
+  serverRefreshDelay: 2
 --- !u!224 &2120857440
 RectTransform:
   m_ObjectHideFlags: 0
