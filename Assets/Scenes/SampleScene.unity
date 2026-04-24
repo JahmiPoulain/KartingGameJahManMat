@@ -11858,10 +11858,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 255727985}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
-<<<<<<< HEAD
---- !u!1 &259659946
-GameObject:
-=======
 --- !u!1001 &258051798
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11937,137 +11933,10 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
 --- !u!183 &258051800
 Cloth:
->>>>>>> Build-Complet-2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-<<<<<<< HEAD
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 259659947}
-  - component: {fileID: 259659949}
-  - component: {fileID: 259659948}
-  m_Layer: 5
-  m_Name: BestScoreUI
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &259659947
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 259659946}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 2298732223678612441}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 13, y: 187.1}
-  m_SizeDelta: {x: 200, y: 77.8}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &259659948
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 259659946}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_text: 
-  m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_fontSharedMaterials: []
-  m_fontMaterial: {fileID: 0}
-  m_fontMaterials: []
-  m_fontColor32:
-    serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 0.6603774, g: 0, b: 0, a: 1}
-  m_enableVertexGradient: 0
-  m_colorMode: 3
-  m_fontColorGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
-  m_fontColorGradientPreset: {fileID: 0}
-  m_spriteAsset: {fileID: 0}
-  m_tintAllSprites: 0
-  m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: -1183493901
-  m_overrideHtmlColors: 0
-  m_faceColor:
-    serializedVersion: 2
-    rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
-  m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
-  m_fontStyle: 0
-  m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
-  m_textAlignment: 65535
-  m_characterSpacing: 0
-  m_wordSpacing: 0
-  m_lineSpacing: 0
-  m_lineSpacingMax: 0
-  m_paragraphSpacing: 0
-  m_charWidthMaxAdj: 0
-  m_TextWrappingMode: 1
-  m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
-  m_linkedTextComponent: {fileID: 0}
-  parentLinkedComponent: {fileID: 0}
-  m_enableKerning: 0
-  m_ActiveFontFeatures: 6e72656b
-  m_enableExtraPadding: 0
-  checkPaddingRequired: 0
-  m_isRichText: 1
-  m_EmojiFallbackSupport: 1
-  m_parseCtrlCharacters: 1
-  m_isOrthographic: 1
-  m_isCullingEnabled: 0
-  m_horizontalMapping: 0
-  m_verticalMapping: 0
-  m_uvLineOffset: 0
-  m_geometrySortingOrder: 0
-  m_IsTextObjectScaleStatic: 0
-  m_VertexBufferAutoSizeReduction: 0
-  m_useMaxVisibleDescender: 1
-  m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 3.48629, w: 0}
-  m_isUsingLegacyAnimationComponent: 0
-  m_isVolumetricText: 0
-  m_hasFontAssetChanged: 0
-  m_baseMaterial: {fileID: 0}
-  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!222 &259659949
-CanvasRenderer:
-=======
   m_GameObject: {fileID: 258051799}
   m_Enabled: 1
   m_StretchingStiffness: 1
@@ -12532,15 +12401,10 @@ CanvasRenderer:
   m_VirtualParticleIndices: 
 --- !u!137 &258051801
 SkinnedMeshRenderer:
->>>>>>> Build-Complet-2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-<<<<<<< HEAD
-  m_GameObject: {fileID: 259659946}
-  m_CullTransparentMesh: 1
-=======
   m_GameObject: {fileID: 258051799}
   m_Enabled: 1
   m_CastShadows: 1
@@ -12591,7 +12455,6 @@ SkinnedMeshRenderer:
     m_Center: {x: 0, y: 0, z: 0}
     m_Extent: {x: 0.01, y: 0.01, z: 0}
   m_DirtyAABB: 0
->>>>>>> Build-Complet-2
 --- !u!1 &261210186 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 5cc545d359fe17148be972c27650dcd7, type: 3}
@@ -78698,13 +78561,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86faaa5dab2333140a7a73fb9db4f8ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-<<<<<<< HEAD
   chronoUI: {fileID: 3709806865398118134}
-  lapManager: {fileID: 610095864}
-=======
-  contreLaMontre: {fileID: 1546263593}
-  chronoUI: {fileID: 3709806865398118134}
->>>>>>> Build-Complet-2
+  lapManager: {fileID: 0}
 --- !u!114 &1546263592
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -78719,7 +78577,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startUI: {fileID: 1349987410041600914}
   currentTimerUI: {fileID: 3709806865398118134}
-  bestScoreUI: {fileID: 259659948}
+  bestScoreUI: {fileID: 0}
 --- !u!114 &1546263593
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -78732,28 +78590,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74fc50378e879dc40b84cbbd3d4e7f11, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-<<<<<<< HEAD
-=======
-  lapManager: {fileID: 610095864}
-  kartScript: {fileID: 498415611}
-  scoreUI: {fileID: 7253129876057067312}
-  startUI: {fileID: 1349987410041600914}
-  leaderboardCanvas: {fileID: 7375503349120402168}
-  endCourseCanva: {fileID: 1492876748}
-  maxLaps: 3
---- !u!114 &1546263594
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1546263590}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2cf87d13b7797c245a25e96441877ef8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
->>>>>>> Build-Complet-2
 --- !u!4 &1546263595
 Transform:
   m_ObjectHideFlags: 0
@@ -108632,7 +108468,6 @@ RectTransform:
   - {fileID: 5056535494028548128}
   - {fileID: 146661452027828708}
   - {fileID: 8008660297593440891}
-  - {fileID: 259659947}
   - {fileID: 50934346}
   - {fileID: 981974877}
   - {fileID: 1352873151}
@@ -110423,12 +110258,7 @@ SceneRoots:
   - {fileID: 1993349076}
   - {fileID: 1938332768}
   - {fileID: 720336950}
-<<<<<<< HEAD
-  - {fileID: 319213608}
-  - {fileID: 1546263595}
-=======
   - {fileID: 178413076}
->>>>>>> Build-Complet-2
   - {fileID: 1691792946}
   - {fileID: 1546263595}
   - {fileID: 828535826}
@@ -110466,3 +110296,4 @@ SceneRoots:
   - {fileID: 2072728591}
   - {fileID: 586614270}
   - {fileID: 1230093674}
+  - {fileID: 319213608}
