@@ -1,22 +1,17 @@
-﻿using System.Collections;
-using Unity.VisualScripting;
+﻿
 using UnityEngine;
-using static UnityEditor.VersionControl.Message;
 
 public class Respawner : MonoBehaviour
 {
-    [SerializeField] Transform kartTransform;
-    [SerializeField] CheckpointManager checkPointManager;
-    [SerializeField] KartScriptV2 kartScriptV2;
+    [SerializeField] private Transform kartTransform;
+    [SerializeField] private CheckpointManager checkPointManager;
+    [SerializeField] private KartScriptV2 kartScriptV2;
 
     Vector3 dir;
 
     private bool isOffTrack = false;
 
     public bool IsOffTrack { get => isOffTrack; set => isOffTrack = value; }
-
-
-
 
     // Update is called once per frame
     void Update()
@@ -35,19 +30,18 @@ public class Respawner : MonoBehaviour
 
     void CheckIfOffTrack()
     {
+        if (kartScriptV2 == null) kartScriptV2 = FindFirstObjectByType<KartScriptV2>();
+        
         if (kartScriptV2.outOfBounds)
         {
             isOffTrack = true;  
         }
-        if (kartTransform.position.y <= 2)
+
+        if (kartTransform.position.y <= 6)
         {
-
             isOffTrack = true;
-
-
         }
     }
-
 
     public void Respawn()
     {
@@ -55,9 +49,8 @@ public class Respawner : MonoBehaviour
 
         kartScriptV2.outOfBounds = true;
 
-
-
         kartScriptV2.canDrive = false;
+
         // ✅ si aucun checkpoint → on utilise la position de départ
         if (checkPointManager.HasCheckpoint)
         {
@@ -78,7 +71,9 @@ public class Respawner : MonoBehaviour
             kartTransform.position += (dir.normalized * 0.5f + dir + new Vector3(0, upForce, 0)) * Time.fixedDeltaTime;
 
         }
+
         Debug.Log(dir.sqrMagnitude);
+
         if (dir.sqrMagnitude < 0.1f)
         {
             Debug.Log("retour effectué");
@@ -87,7 +82,5 @@ public class Respawner : MonoBehaviour
             isOffTrack = false;
             kartScriptV2.outOfBounds = false;
         }
-
     }
-
 }

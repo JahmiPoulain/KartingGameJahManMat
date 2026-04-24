@@ -29,7 +29,11 @@
 .vs/
 
 # Masquer ces fichiers indésirables de MacOs
-.vscode/
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
 .DS_Store
 
 # Gradle cache directory
