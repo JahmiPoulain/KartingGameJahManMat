@@ -446,7 +446,9 @@ public class MainMenuUIManager : MonoBehaviour
             }
             transitionScreen.alpha = 1;
         }
-        SceneManager.LoadSceneAsync(sceneName);
+        SceneManager.LoadSceneAsync(sceneName,LoadSceneMode.Additive);
+        SceneManager.LoadSceneAsync("GraphScene", LoadSceneMode.Additive);
+        SceneManager.UnloadSceneAsync("MainMenu2_0",UnloadSceneOptions.UnloadAllEmbeddedSceneObjects);
     }
 
     public void LoadSettings()
