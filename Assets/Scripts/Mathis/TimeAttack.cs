@@ -21,7 +21,7 @@ public class TimeAttack : GameMode
         currentTimerUI = GameObject.Find("ChronoUI").GetComponent<TextMeshProUGUI>();
         bestScoreUI = GameObject.Find("BestScoreUI").GetComponent<TextMeshProUGUI>();
 
-        maxLaps = 999;
+        maxLaps = 99999;
         LoadBestScore();
         StartCoroutine(InitialCountdown());
     }
