@@ -555,7 +555,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 974441711}
   - {fileID: 1900983599}
   - {fileID: 2067554410}
   m_Father: {fileID: 0}
@@ -646,12 +645,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 974441708}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.2139682, y: 0, z: 0, w: 0.9768406}
-  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalRotation: {x: -0, y: 0.9768406, z: -0.2139682, w: 0}
+  m_LocalPosition: {x: 0.235, y: 3.404, z: 1.916}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 926957596}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 24.71, y: 0, z: 0}
 --- !u!114 &974441712
 MonoBehaviour:
@@ -843,14 +842,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1900983598}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5874346, y: 0.272712, z: 0.07093856}
+  m_LocalRotation: {x: -0, y: 0.148429, z: -0, w: 0.9889231}
+  m_LocalPosition: {x: 0.47364658, y: 0.272712, z: 0.09799287}
   m_LocalScale: {x: 0.1072, y: 0.1384, z: 0.83}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 330966649}
   m_Father: {fileID: 926957596}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 17.072, z: 0}
 --- !u!114 &1900983600
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -922,14 +921,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2067554409}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.488, y: 0.272712, z: 0.07093856}
+  m_LocalRotation: {x: -0, y: -0.07533162, z: -0, w: 0.9971585}
+  m_LocalPosition: {x: -0.5006418, y: 0.272712, z: 0.07040176}
   m_LocalScale: {x: 0.1072, y: 0.1384, z: 0.83}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 276665534}
   m_Father: {fileID: 926957596}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -8.641, z: 0}
 --- !u!114 &2067554411
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -981,5 +980,6 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1660239282}
+  - {fileID: 974441711}
   - {fileID: 926957596}
   - {fileID: 280580375}
