@@ -228,10 +228,12 @@ public class KartScriptV2 : MonoBehaviour
 
         if (grounded)
         {
-            if (flightSpeed > 0f) { 
+            if (flightSpeed > 0f)
+            { 
                 currentSpeed = flightSpeed;
                 flightSpeed = 0f;
             }
+
             groundedCoyoteTimer = 0.3f;
             gliderGO.SetActive(false);
             transform.Rotate(0, currentTurnSpeed + currentDriftForce, 0);
