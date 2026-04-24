@@ -78556,6 +78556,7 @@ MonoBehaviour:
   scoreUI: {fileID: 7253129876057067312}
   startUI: {fileID: 1349987410041600914}
   leaderboardCanvas: {fileID: 7375503349120402168}
+  lbActive: 0
   endCourseCanva: {fileID: 1492876748}
   maxLaps: 3
 --- !u!114 &1546263594
@@ -106129,6 +106130,7 @@ MonoBehaviour:
   scrollRect: {fileID: 6983034975821311569}
   scrollbar: {fileID: 8674141633659344392}
   maxResults: 100
+  contreLaMontre: {fileID: 1546263593}
 --- !u!224 &2120857440
 RectTransform:
   m_ObjectHideFlags: 0
