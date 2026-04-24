@@ -25,7 +25,7 @@ public class PnjScript : MonoBehaviour
             // Passer au point suivant
             currentPointIndex = (currentPointIndex + 1) % points.Length; // Boucle à travers les points
         }
+
+
     }
-
-
 }
