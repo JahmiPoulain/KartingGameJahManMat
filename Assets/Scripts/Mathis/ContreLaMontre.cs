@@ -52,9 +52,10 @@ public class ContreLaMontre : GameMode
 
     private string FormatTime(float time)
     {
-        int min = (int)time / 60;
-        float sec = time % 60;
-        return $"{min:00}:{sec:00.000}";
+        int minutes = (int)(time / 60);
+        float seconds = time % 60;
+
+        return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:00}:{1:00.000}", minutes, seconds);
     }
 
     IEnumerator StartCountdown()

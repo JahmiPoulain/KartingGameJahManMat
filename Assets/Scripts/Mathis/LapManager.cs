@@ -78,10 +78,19 @@ public class LapManager : MonoBehaviour
         if (currentMode.RaceFinished) lapUI.text = $"Tour {currentMode.MaxLaps}/{currentMode.MaxLaps}";
     }
 
+    private string FormatTime(float time)
+    {
+        int minutes = (int)(time / 60);
+        float seconds = time % 60;
+
+
+        return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:00}:{1:00.000}", minutes, seconds);
+    }
+
     private IEnumerator LapCompletionAnimation(float timeToShow)
     {
         _isChecking = true;
-        string formatted = $"{((int)timeToShow / 60):00}:{(timeToShow % 60):00.000}";
+        string formatted = FormatTime(timeToShow);
 
         for (int i = 0; i < 3; i++)
         {

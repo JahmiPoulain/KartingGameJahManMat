@@ -52,7 +52,9 @@ public class TimeAttack : GameMode
     {
         int minutes = (int)(time / 60);
         float seconds = time % 60;
-        return $"{minutes:00}:{seconds:00.000}";
+
+
+        return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:00}:{1:00.000}", minutes, seconds);
     }
 
     private void LoadBestScore()
