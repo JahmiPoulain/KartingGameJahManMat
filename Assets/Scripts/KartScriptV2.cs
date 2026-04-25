@@ -237,7 +237,7 @@ public class KartScriptV2 : MonoBehaviour
             groundedCoyoteTimer = 0.3f;
             gliderGO.SetActive(false);
             transform.Rotate(0, currentTurnSpeed + currentDriftForce, 0);
-            rb.linearVelocity = (groundNormalT.transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
+            rb.linearVelocity = (preOrientation.transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
         }
         else if (!isFlying)
         {
@@ -249,7 +249,7 @@ public class KartScriptV2 : MonoBehaviour
             }
             else transform.Rotate(0, (currentTurnSpeed + currentDriftForce) / 3f, 0);
                 
-            rb.linearVelocity = (groundNormalT.transform.forward * (airSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
+            rb.linearVelocity = (preOrientation.transform.forward * (airSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
 
             if (currentTurboForce <= 0)
             {
@@ -445,7 +445,13 @@ public class KartScriptV2 : MonoBehaviour
         }
         else if (forwardDirection < 0) // si on veut accelerer en arière
         {
-            nextSpeed -= flatAccelSpeed + (maxSpeed - currentSpeed) * accelSpeed * Time.fixedDeltaTime;
+            float breakForce = 0;
+            if (currentSpeed > 0f)
+            {
+                breakForce = 0.1f;
+            }
+            else breakForce = 0f;
+            nextSpeed -= flatAccelSpeed + breakForce + (maxSpeed - currentSpeed) * accelSpeed * Time.fixedDeltaTime;
         }
         else // si on ne veut pas accelerer
         {
@@ -520,16 +526,16 @@ public class KartScriptV2 : MonoBehaviour
         if (keepDrifting && grounded && driftDir != 0)
         {
             // on fait monter ou descendre la rotation Y vers targetYRot
-            float targetYRot = (driftDir + turnDirection) * 18f;
+            float targetYRot = (driftDir + turnDirection) * 15f; // correspond au tournant max du drift
 
             if (nextYDriftRot < targetYRot)
             {
-                nextYDriftRot += 12f * Time.fixedDeltaTime;
+                nextYDriftRot += 10f * Time.fixedDeltaTime;
                 if (nextYDriftRot > targetYRot) { nextYDriftRot = targetYRot; } // on dépasse pas targetYRot
             }
             else if (nextYDriftRot > targetYRot)
             {
-                nextYDriftRot += -12f * Time.fixedDeltaTime;
+                nextYDriftRot += -10f * Time.fixedDeltaTime;
                 if (nextYDriftRot < targetYRot) { nextYDriftRot = targetYRot; } // on dépasse pas targetYRot
             }
 
@@ -696,6 +702,7 @@ public class KartScriptV2 : MonoBehaviour
                 }
             }*/
             nextTurnSpeed = IncrementTowardsValue(nextTurnSpeed, 0, turnDecelSpeed * Time.fixedDeltaTime);
+            Debug.Log(nextTurnSpeed);
         }
 
         // on clamp
@@ -829,9 +836,9 @@ public class KartScriptV2 : MonoBehaviour
         float nextTotalSpeed = visKartXRot + -currentTurboForce * 0.5f;
         nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -(maxSpeed), maxSpeed + 2f);
         groundNormalT.transform.rotation = Quaternion.LookRotation(Vector3.Cross(transform.right, groundNormal), groundNormal); // oriente le y vers le haut de la normale et le x vers l'avant du kart ( 2 semaines de galère )
-        preOrientation.localRotation = Quaternion.RotateTowards(preOrientation.localRotation, groundNormalT.localRotation, 1f);
+        preOrientation.localRotation = Quaternion.RotateTowards(preOrientation.localRotation, groundNormalT.localRotation, 0.2f);
         Quaternion rotTarget = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);
-        visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 10f);
+        visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 0.8f);
     }
 
     void HandleVisualKartWheels()

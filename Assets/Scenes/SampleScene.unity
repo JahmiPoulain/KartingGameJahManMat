@@ -20413,7 +20413,7 @@ MonoBehaviour:
   maxTurnSpeed: 1.75
   currentTurnSpeed: 0
   turnAccelSpeed: 12
-  turnDecelSpeed: 20
+  turnDecelSpeed: 15
   currentTurboForce: 0
   turboAccelSpeed: 1
   minTurboDecel: 0.5
@@ -20425,7 +20425,7 @@ MonoBehaviour:
   minBounceDecelForce: 200
   playerCamera: {fileID: 330585543}
   camPivot: {fileID: 1219606186}
-  thirdPersonCamPos: {x: 0, y: 1.8, z: -3}
+  thirdPersonCamPos: {x: 0, y: 1.9, z: -3}
   firstPersonCamPos: {x: 0, y: 1.1, z: -0.2}
   visualKartBody: {fileID: 1294875084}
   visualKartWheelsParent: {fileID: 1770855206}
