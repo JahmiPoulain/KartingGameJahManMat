@@ -836,7 +836,7 @@ public class KartScriptV2 : MonoBehaviour
         float nextTotalSpeed = visKartXRot + -currentTurboForce * 0.5f;
         nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -(maxSpeed), maxSpeed + 2f);
         groundNormalT.transform.rotation = Quaternion.LookRotation(Vector3.Cross(transform.right, groundNormal), groundNormal); // oriente le y vers le haut de la normale et le x vers l'avant du kart ( 2 semaines de galère )
-        preOrientation.localRotation = Quaternion.RotateTowards(preOrientation.localRotation, groundNormalT.localRotation, 0.2f);
+        preOrientation.localRotation = Quaternion.RotateTowards(preOrientation.localRotation, groundNormalT.localRotation, 0.4f);
         Quaternion rotTarget = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);
         visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 0.8f);
     }
@@ -935,7 +935,7 @@ public class KartScriptV2 : MonoBehaviour
         // Debug.Log("apres " + playerCamera.transform.localPosition + camXpos);
         Vector3 targetDir = (transform.forward + (transform.right * currentTurnSpeed * Mathf.Clamp(currentDriftForce, -1f, 1f) * 0.05f)).normalized;
         float rotSpeed = 0.1f + (camPivot.forward - targetDir).magnitude * 2f; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        camPivot.forward = Vector3.RotateTowards(camPivot.forward, targetDir, 1 * Time.deltaTime, 0.0f);
+        camPivot.forward = Vector3.RotateTowards(camPivot.forward, targetDir, 1.5f * Time.deltaTime, 0.0f);
         
        /* if (InputSystemHandler.instance.inputCameraMode)
         {
@@ -969,6 +969,13 @@ public class KartScriptV2 : MonoBehaviour
                 currentCamPosCenter = firstPersonCamPos;
             }
         }*/
+    }
+
+    public void ReorientKart(Vector3 newDir)
+    {
+        Quaternion oldYRot = camPivot.transform.rotation;
+        transform.eulerAngles = new Vector3(transform.eulerAngles.x, newDir.y, transform.eulerAngles.z);
+        camPivot.transform.rotation = oldYRot;
     }
 
     private void OnCollisionEnter(Collision collision)
