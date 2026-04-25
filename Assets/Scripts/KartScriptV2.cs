@@ -935,7 +935,7 @@ public class KartScriptV2 : MonoBehaviour
         // Debug.Log("apres " + playerCamera.transform.localPosition + camXpos);
         Vector3 targetDir = (transform.forward + (transform.right * currentTurnSpeed * Mathf.Clamp(currentDriftForce, -1f, 1f) * 0.05f)).normalized;
         float rotSpeed = 0.1f + (camPivot.forward - targetDir).magnitude * 2f; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        camPivot.forward = Vector3.RotateTowards(camPivot.forward, targetDir, 1.5f * Time.deltaTime, 0.0f);
+        camPivot.forward = Vector3.RotateTowards(camPivot.forward, targetDir, 1f * Time.deltaTime, 0.0f);
         
        /* if (InputSystemHandler.instance.inputCameraMode)
         {
