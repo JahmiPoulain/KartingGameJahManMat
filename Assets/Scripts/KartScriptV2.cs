@@ -898,6 +898,12 @@ public class KartScriptV2 : MonoBehaviour
             driftForce = -driftForce;
         }
 
+        /*if (preOrientation.eulerAngles.x < 0f)
+        {
+            camPivot.transform.localPosition = new Vector3(camPivot.transform.localPosition.x,preOrientation.eulerAngles.x / 10f, camPivot.transform.localPosition.z);
+        }
+        else camPivot.transform.localPosition = new Vector3(camPivot.transform.localPosition.x, 0, camPivot.transform.localPosition.z);*/
+
         float targetX = Mathf.Clamp((currentSpeed * -currentTurnSpeed / 110f * forwardDirection) + (turnDirection * driftForce), -10f, 10f);
 
         //  Debug.Log("avant " + playerCamera.transform.localPosition + camXpos);
