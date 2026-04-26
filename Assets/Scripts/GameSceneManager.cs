@@ -27,6 +27,11 @@ public class GameSceneManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
+    private void Start()
+    {
+        SceneManager.LoadScene(mainMenuSceneName);
+    }
+
     public void LoadGame(string gameplaySceneName)
     {
         StartCoroutine(TransitionRoutine(gameplaySceneName, true));
