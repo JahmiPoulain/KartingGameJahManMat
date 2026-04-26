@@ -9,7 +9,11 @@ public class BoosterScript : MonoBehaviour
     public Transform turnDir;
     public GameObject windBox;
     //public bool turnForward;
-   
+
+    private void FixedUpdate()
+    {
+        if (windBox != null && !KartScriptV2.instance.isFlying) windBox.SetActive(false);
+    }
     private void OnTriggerStay(Collider collision)
     {
         if (collision.gameObject.layer == 8)
