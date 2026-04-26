@@ -3,6 +3,7 @@ using UnityEngine;
 public class WlindBlower : MonoBehaviour
 {
     public float force;
+    
     private void OnTriggerStay(Collider collision)
     {
         if (collision.gameObject.layer == 8)
