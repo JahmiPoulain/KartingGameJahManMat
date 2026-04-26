@@ -7,6 +7,7 @@ public class BoosterScript : MonoBehaviour
     public bool activateFlight;
     public bool turnsKart;
     public Transform turnDir;
+    public GameObject windBox;
     //public bool turnForward;
    
     private void OnTriggerStay(Collider collision)
@@ -17,6 +18,7 @@ public class BoosterScript : MonoBehaviour
             if (turnsKart) KartScriptV2.instance.ReorientKart(turnDir.eulerAngles);                 
             if (!activateFlight) return;
             KartScriptV2.instance.StartFlight(35f);
+            if (windBox != null) { windBox.SetActive(true); }
             //KartScriptV2.instance.flightSpeed = ;
         }
     }

@@ -1,6 +1,8 @@
-using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
+using UnityEditor.Experimental.GraphView;
+using UnityEngine;
 
 [RequireComponent(typeof(SphereCollider))]
 [RequireComponent(typeof(Rigidbody))]
@@ -129,6 +131,10 @@ public class KartScriptV2 : MonoBehaviour
     public GameObject gliderGO;
     // visual flight
     private float visualFlightRotSpeedZ;
+    [Header("Wind")]
+    float currentTargetWindForce;
+    float currentWindForce;
+    Vector3 currentWindDir;
 
     [Header("Respawn Points")]
     public List<Transform> respawnPoints;
@@ -212,6 +218,7 @@ public class KartScriptV2 : MonoBehaviour
 
         // on gère la force du bounce contre les murs        
         HandleBounceForce();
+        HandleWindBlow();
         HandleGravity();
 
         if (outOfBounds)
@@ -243,12 +250,12 @@ public class KartScriptV2 : MonoBehaviour
         {
             if (groundedCoyoteTimer > 0)
             {
-                Debug.Log(groundedCoyoteTimer);
+                //Debug.Log(groundedCoyoteTimer);
                 groundedCoyoteTimer -= Time.fixedDeltaTime;
                 transform.Rotate(0, (currentTurnSpeed + currentDriftForce), 0);
             }
             else transform.Rotate(0, (currentTurnSpeed + currentDriftForce) / 3f, 0);
-                
+
             rb.linearVelocity = (preOrientation.transform.forward * (airSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
 
             if (currentTurboForce <= 0)
@@ -264,6 +271,55 @@ public class KartScriptV2 : MonoBehaviour
         }
     }
 
+    public void StartWindBlow(Vector3 dir, float force)
+    {
+        currentWindDir = dir;
+        currentTargetWindForce = force;
+        Debug.Log(dir + " " + force);
+        //if (flightSpeed < 6f) { flightSpeed = 6f; }
+        //flightDir.forward = dir;
+    }
+
+    void HandleWindBlow()
+    {
+        if (!isFlying) { return; }   
+        float nextWindForce = currentWindForce;
+        Debug.Log(nextWindForce + " " + currentTargetWindForce);
+        if (flightSpeed < 14f) { flightSpeed += 5f * Time.fixedDeltaTime; }
+        if (nextWindForce > currentTargetWindForce)
+        {
+            nextWindForce -= 100f * Time.fixedDeltaTime;
+            if (nextWindForce < currentTargetWindForce)
+            {
+                Debug.Log(1);
+                nextWindForce = currentTargetWindForce;
+                currentTargetWindForce = 0f;
+            }
+            //currentWindForce = Mathf.Lerp(currentWindForce, currentTargetWindForce, 20f * Time.fixedDeltaTime);
+        }
+        else if (nextWindForce < currentTargetWindForce)
+        {
+            nextWindForce += 100f * Time.fixedDeltaTime;
+            if (nextWindForce > currentTargetWindForce)
+            {
+                Debug.Log(2);
+                nextWindForce = currentTargetWindForce;
+                currentTargetWindForce = 0f;
+            }
+        }
+        else if(nextWindForce == currentTargetWindForce)
+            {
+            currentTargetWindForce = 0f;
+        }
+            
+            //Debug.Log(nextWindForce);
+            currentWindForce = nextWindForce;
+        /*else
+        {
+            currentTargetWindForce = 0f;
+        }*/
+
+    }
     private void HandleGliderFlight()
     {
         gliderGO.SetActive(true);
@@ -343,7 +399,7 @@ public class KartScriptV2 : MonoBehaviour
 
         transform.Rotate(0, currentFlightTurnForce, 0);//(0, (currentTurnSpeed + currentDriftForce) / 1.5f, 0);
         flightDir.localEulerAngles = new Vector3(flightDir.localEulerAngles.x, 0f, currentFlightTurnForce * 10f);
-        rb.linearVelocity = (flightDir.forward * (flightSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + (currentFallSpeed / (1f + flightSpeed / 2.5f)) / 1.2f);
+        rb.linearVelocity = (flightDir.forward * (flightSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + (currentFallSpeed / (1f + flightSpeed / 2.5f)) / 1.2f) + currentWindDir * currentWindForce;
     }
 
     private void LateUpdate()
@@ -1030,7 +1086,7 @@ public class KartScriptV2 : MonoBehaviour
             grounded = false;
             airSpeed = currentSpeed;
             flightSpeed = currentSpeed;
-            flightDir.forward = visualKartBody.transform.forward;
+            flightDir.forward = groundNormalT.forward;
         }
     }
     void SquishAnimation()
