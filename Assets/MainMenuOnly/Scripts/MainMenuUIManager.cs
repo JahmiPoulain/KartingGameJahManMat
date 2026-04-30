@@ -122,7 +122,7 @@ public class MainMenuUIManager : MonoBehaviour
     [HideInInspector] public bool isFullscreen = true;
     [HideInInspector] public bool isVsync = false;
 
-    private void Awake() { Instance = this; }
+    private void Awake() { if (Instance == null) Instance = this; else Destroy(this); }
 
     void Start()
     {
