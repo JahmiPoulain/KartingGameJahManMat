@@ -60,6 +60,7 @@ public class KartScriptV2 : MonoBehaviour
     public Vector3 firstPersonCamPos;
     private Vector3 currentCamPosCenter;
     private float turboTimer;
+    float cameraZoneUp;
 
     [Header("Visual Kart")]
     public GameObject visualKartBody;
@@ -450,6 +451,13 @@ public class KartScriptV2 : MonoBehaviour
         preOrientation.transform.localEulerAngles = Vector3.zero;
     }
 
+    public void StopFlight()
+    {
+        isFlying = false;
+        gliderGO.SetActive(false);
+        flightSpeed = 0f;
+    }
+
     private void HandleBounceForce()
     {
         // on baisse la force jusqu'a qu'elle soit à 0
@@ -689,12 +697,12 @@ public class KartScriptV2 : MonoBehaviour
 
             if (driftDir > 0 && turnDirection < 0)
             {
-                nextDriftForceTarget = 3f;
+                nextDriftForceTarget = 2.5f;
                 driftTurboGauge += 0.2f * Time.deltaTime;
             }
             else if (driftDir < 0 && turnDirection > 0)
             {
-                nextDriftForceTarget = 3f;
+                nextDriftForceTarget = 2.5f;
                 driftTurboGauge += 0.2f * Time.deltaTime;
             }
             else if (driftDir > 0 && turnDirection > 0)
@@ -712,14 +720,14 @@ public class KartScriptV2 : MonoBehaviour
 
             if (driftCatchUp < nextDriftForceTarget)
             {
-                driftCatchUp += 5f * Time.deltaTime;
+                driftCatchUp += 4f * Time.deltaTime;
             }
             else if (driftCatchUp > nextDriftForceTarget)
             {
-                driftCatchUp -= 5f * Time.deltaTime;
+                driftCatchUp -= 4f * Time.deltaTime;
             }
 
-            currentDriftForce = driftDir * driftCatchUp;
+            currentDriftForce = driftDir * driftCatchUp * 0.8f;
         }
     }
 
@@ -946,7 +954,7 @@ public class KartScriptV2 : MonoBehaviour
     }
     void HandleCameraTransform()
     {
-        float driftForce = Mathf.Clamp(currentDriftForce, -1.5f, 1.5f);
+        float driftForce = Mathf.Clamp(currentDriftForce, -1f, 1f);
 
         if (driftForce < 0)
         {
@@ -987,8 +995,8 @@ public class KartScriptV2 : MonoBehaviour
         // Debug.Log("apres " + playerCamera.transform.localPosition + camXpos);
         // Debug.Log("avant "+playerCamera.transform.localPosition + camXpos);
         // playerCamera.transform.localPosition = new Vector3(IncrementTowardsValue(playerCamera.transform.localPosition.x, camXpos, 0.15f * Time.deltaTime), playerCamera.transform.localPosition.y, playerCamera.transform.localPosition.z);
-        // Debug.Log("apres " + playerCamera.transform.localPosition + camXpos);
-        Vector3 targetDir = (transform.forward + (transform.right * currentTurnSpeed * Mathf.Clamp(currentDriftForce, -1f, 1f) * 0.05f)).normalized;
+        // Debug.Log("apres " + playerCamera.transform.localPosition + camXpos);        
+        Vector3 targetDir = Vector3.down * cameraZoneUp + (transform.forward + (transform.right * currentTurnSpeed * Mathf.Clamp(currentDriftForce, -1f, 1f) * 0.05f)).normalized;
         float rotSpeed = 0.1f + (camPivot.forward - targetDir).magnitude * 2f; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // Debug.Log(2 * Mathf.Atan2(camPivot.rotation, Quaternion.Euler(targetDir));
         camPivot.forward = Vector3.RotateTowards(camPivot.forward, targetDir, Time.deltaTime, 0.0f);
@@ -1066,6 +1074,20 @@ public class KartScriptV2 : MonoBehaviour
         }
 
     }
+    private void OnTriggerStay(Collider other)
+    {
+        if (other.gameObject.layer == 10)
+        {
+            cameraZoneUp = 0.32f;
+        }
+    }
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.gameObject.layer == 10)
+        {
+            cameraZoneUp = 0f;
+        }
+    }
     private void OnCollisionStay(Collision collision)
     {
         if (collision.gameObject.layer == 7)
@@ -1073,6 +1095,7 @@ public class KartScriptV2 : MonoBehaviour
             grounded = true;
             groundNormal = collision.contacts[0].normal; // l'orientation du kart visuel
         }
+        
     }
 
     private void OnCollisionExit(Collision collision)

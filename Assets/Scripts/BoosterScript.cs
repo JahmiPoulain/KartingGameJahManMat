@@ -5,6 +5,7 @@ public class BoosterScript : MonoBehaviour
     public float boostForce;
     public float boostTime;
     public bool activateFlight;
+    public bool deactivatesFlight;
     public bool turnsKart;
     public Transform turnDir;
     public GameObject windBox;
@@ -19,9 +20,11 @@ public class BoosterScript : MonoBehaviour
         if (collision.gameObject.layer == 8)
         {
             KartScriptV2.instance.StartTurbo(boostForce, boostTime);
-            if (turnsKart) KartScriptV2.instance.ReorientKart(turnDir.eulerAngles);                 
+            if (turnsKart) KartScriptV2.instance.ReorientKart(turnDir.eulerAngles);   
+            if (deactivatesFlight) KartScriptV2.instance.StopFlight();              
             if (!activateFlight) return;
             KartScriptV2.instance.StartFlight(35f);
+            
             if (windBox != null) { windBox.SetActive(true); }
             //KartScriptV2.instance.flightSpeed = ;
         }
