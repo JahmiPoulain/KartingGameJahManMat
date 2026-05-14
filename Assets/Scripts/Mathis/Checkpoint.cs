@@ -19,7 +19,7 @@ public class Checkpoint : MonoBehaviour
                 tutoUI.SetActive(false);
             }
             checkpointManager.CompareCheckpoint(this);
-            Debug.Log("Tu as traversé le checkpoint n" + Index);
+            //Debug.Log("Tu as traversé le checkpoint n" + Index);
             gameObject.SetActive(false);
 
         }

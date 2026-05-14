@@ -38,22 +38,37 @@ public class CheckpointManager : MonoBehaviour
 
     public void CompareCheckpoint(Checkpoint checkpoint)
     {
-        // Si le joueur traverse le bon checkpoint dans l'ordre
-        if (checkpoint.Index == nextIndex)
+        // On calcule l'index que le joueur DOIT percuter maintenant
+        int expectedIndex;
+
+        if (GameModes.isMapInverted)
         {
-            nextIndex++;
-
-            // Enregistrement de la position de respawn sécurisée
-            newPos = checkpoint.transform.position + Vector3.up * 0.5f;
-            newRotation = checkpoint.transform.rotation;
-
-            hasCheckpoint = true;
-
-            Debug.Log($"Checkpoint {checkpoint.Index} validé. Prochain attendu : {nextIndex}");
+            // Formule : Total - (Nombre déjà validés)
+            // Exemple : 10 total, 0 validés -> on attend le 10.
+            expectedIndex = TotalCheckpointCount - (nextIndex - 1);
         }
         else
         {
-            Debug.LogWarning($"Mauvais checkpoint ! Traversé : {checkpoint.Index}, Attendu : {nextIndex}");
+            expectedIndex = nextIndex;
+        }
+
+        if (checkpoint.Index == expectedIndex)
+        {
+            nextIndex++; // On progresse (on a validé un checkpoint de plus)
+
+            // Enregistrement du respawn
+            newPos = checkpoint.transform.position + Vector3.up * 0.5f;
+            newRotation = checkpoint.transform.rotation;
+
+            // Si inversé, on tourne la rotation de 180° pour réapparaître dans le bon sens
+            if (GameModes.isMapInverted) newRotation *= Quaternion.Euler(0, 180, 0);
+
+            hasCheckpoint = true;
+            Debug.Log($"Checkpoint {checkpoint.Index} validé. Progrès : {nextIndex - 1}/{TotalCheckpointCount}");
+        }
+        else
+        {
+            Debug.LogWarning($"Mauvais sens ! Traversé : {checkpoint.Index}, Attendu : {expectedIndex}");
         }
     }
 

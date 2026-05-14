@@ -190,6 +190,11 @@ public class KartScriptV2 : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         groundNormal = new Vector3(0, 1, 0);
         activeRespawnPoints = respawnPoints;
+        if (GameModes.isMapInverted)
+        {
+            // On fait faire demi-tour au kart immédiatement
+            transform.rotation *= Quaternion.Euler(0, 180, 0);
+        }
     }
 
     void Update()
