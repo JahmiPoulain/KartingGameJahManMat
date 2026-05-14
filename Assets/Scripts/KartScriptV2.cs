@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Splines;
 
 [RequireComponent(typeof(SphereCollider))]
 [RequireComponent(typeof(Rigidbody))]
@@ -161,8 +162,12 @@ public class KartScriptV2 : MonoBehaviour
     [SerializeField] ContreLaMontre contreLaMontre;
     [SerializeField] private GameObject trackPath;
     public bool ghostMode = false;
-    public Transform currentWaypoint;
-    public Transform firstWaypoint;
+    public SplineContainer raceSpline;
+    [Range(0, 1)] public float splineProgress = 0f;
+    public float ghostSpeed = 15f; // Vitesse cible du ghost
+    public float lookAheadDistance = 0.05f; // Distance d'anticipation (0.01 à 0.1)
+    //public Transform currentWaypoint;
+    //public Transform firstWaypoint;
 
     public Vector3 StartPosition { get => startPosition; set => startPosition = value; }
     public Quaternion StartRotation { get => startRotation; set => startRotation = value; }
@@ -201,6 +206,10 @@ public class KartScriptV2 : MonoBehaviour
     {
         PlayerInputs();
         HandleDrift();
+        if(ghostMode)
+        {
+            GhostDrive();
+        }
     }
 
     private void FixedUpdate()
@@ -1222,6 +1231,50 @@ public class KartScriptV2 : MonoBehaviour
 
     void GhostDrive()
     {
+        if (raceSpline == null)
+        {
+            Debug.LogWarning("RaceSpline manquante sur le Kart !");
+            return;
+        }
+
+        // 1. GESTION DU PROGRÈS (Avancement sur la ligne)
+        // La vitesse est divisée par la longueur de la spline pour rester cohérent
+        float splineLength = raceSpline.CalculateLength();
+        float progressStep = (ghostSpeed / splineLength) * Time.deltaTime;
+
+        if (GameModes.isMapInverted)
+            splineProgress -= progressStep;
+        else
+            splineProgress += progressStep;
+
+        // Boucle le progrès pour que le ghost continue après un tour
+        splineProgress = Mathf.Repeat(splineProgress, 1f);
+
+        // 2. CALCUL DE LA CIBLE
+        // On cherche un point un peu plus loin sur la spline pour "anticiper" le virage
+        float targetProgress;
+        if (GameModes.isMapInverted)
+            targetProgress = Mathf.Repeat(splineProgress - lookAheadDistance, 1f);
+        else
+            targetProgress = Mathf.Repeat(splineProgress + lookAheadDistance, 1f);
+
+        Vector3 targetPosition = (Vector3)raceSpline.EvaluatePosition(targetProgress);
+        Vector3 directionToTarget = targetPosition - transform.position;
+
+        // 3. LOGIQUE DE DIRECTION (Basée sur ton système actuel)
+        float angle = Vector3.SignedAngle(transform.forward, directionToTarget, Vector3.up);
+
+        // On adoucit la rotation pour éviter les coups de volant secs
+        turnDirection = Mathf.Clamp(angle / 20f, -1f, 1f);
+
+        // Gaz à fond !
+        accelerate = true;
+        forwardDirection = 1f;
+    }
+}
+
+    /*void GhostDrive()
+    {
         if (currentWaypoint == null)
         {
             currentWaypoint = firstWaypoint;
@@ -1258,5 +1311,5 @@ public class KartScriptV2 : MonoBehaviour
             currentWaypoint = currentWaypoint.GetComponent<Waypoints>().nextWaypoint;
             Debug.Log(currentWaypoint);
         }
-    }
-}
+    }*/
+
