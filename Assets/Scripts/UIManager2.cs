@@ -194,7 +194,8 @@ public class UIManager2 : MonoBehaviour
     {
         Time.timeScale = 1f;
         if (depthOfField != null) depthOfField.active = false;
-        SceneManager.LoadScene("MainMenu2_0");
+
+        GameSceneManager.Instance.ReturnToMainMenu();
     }
 
     void SetColorRecursive(Transform parent, Color c)

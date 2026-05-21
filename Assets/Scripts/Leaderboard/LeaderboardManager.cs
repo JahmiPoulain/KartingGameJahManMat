@@ -1,8 +1,20 @@
 using UnityEngine;
 using UnityEngine.UI;
 using LootLocker.Requests;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+
+// Fonction à placer dans le script qui gère la fin de la course :
+
+// void OnRaceFinished(float totalTime)
+// {
+//     // Conversion secondes → millisecondes
+//     int finalTime = Mathf.RoundToInt(totalTime * 1000f);
+
+//     // Envoi au leaderboard
+//     LeaderboardManager.Instance.SubmitScoreAndRefresh(finalTime);
+// }
 
 public class LeaderboardManager : MonoBehaviour
 {
@@ -15,14 +27,36 @@ public class LeaderboardManager : MonoBehaviour
     [SerializeField] private ScrollRect scrollRect;
     [SerializeField] private GameObject scrollbar;
     [SerializeField] private int maxResults;
+    [SerializeField] private float serverRefreshDelay = 2f;
       
     private readonly List<GameObject> spawnedEntries = new();
+    private readonly List<LeaderboardDisplayEntry> leaderboardEntries = new();
 
     private bool isConnected = false;
     private bool isLoading = false;
-    private bool pendingRefresh = false;
-    private System.Action pendingRefreshComplete;
     private int localPlayerId;
+    private string localPlayerName = "Player";
+    private Coroutine pendingServerRefresh;
+    private bool hasPendingLocalScore = false;
+    private int pendingLocalScore;
+
+    private struct LeaderboardDisplayEntry
+    {
+        public int PlayerId;
+        public string PlayerName;
+        public int Score;
+        public int Rank;
+        public bool IsLocalPlayer;
+
+        public LeaderboardDisplayEntry(int playerId, string playerName, int score, int rank, bool isLocalPlayer)
+        {
+            PlayerId = playerId;
+            PlayerName = playerName;
+            Score = score;
+            Rank = rank;
+            IsLocalPlayer = isLocalPlayer;
+        }
+    }
 
     void Awake()
     {
@@ -35,94 +69,62 @@ public class LeaderboardManager : MonoBehaviour
         // Expression Lambda / Fonction Callback
         LootLockerSDKManager.StartGuestSession((response) =>
         {
-            if (!response.success) return;
-
-            localPlayerId = response.player_id;
-            isConnected = true;
-
-            string playerName = FormatPlayerName(response.player_identifier, response.player_id);
-            if (response.player_name != playerName)
+            // Si le joueur n'a pas encore de nom
+            if (string.IsNullOrEmpty(response.player_name))
             {
-                LootLockerSDKManager.SetPlayerName(playerName, (_) =>
+                // On fabrique son nom unique à partir de son ID LootLocker publique
+                // On prend les 5 premiers caractères de cet ID pour pas que ce soit trop long
+                string publicUid = response.public_uid ?? response.player_id.ToString();
+                string uniqueName = "Joueur_" + publicUid[..Mathf.Min(4, publicUid.Length)];
+                localPlayerName = uniqueName;
+
+                // On envoie ce nom au serveur
+                LootLockerSDKManager.SetPlayerName(uniqueName, (nameResponse) =>
                 {
-                    RefreshLeaderboard();
+                    if (nameResponse.success)
+                    {
+                        Debug.Log("Nom unique enregistré : " + uniqueName);
+                    }
                 });
             }
             else
             {
-                RefreshLeaderboard();
+                localPlayerName = response.player_name;
+            }
+
+            localPlayerId = response.player_id;
+            isConnected = true;
+            RefreshLeaderboard();
+        });
+    }
+
+    public void SubmitScoreAndRefresh(int timeInMilliseconds)
+    {
+        if (!isConnected) return;
+
+        hasPendingLocalScore = true;
+        pendingLocalScore = timeInMilliseconds;
+        ApplyLocalScore(timeInMilliseconds);
+
+        LootLockerSDKManager.SubmitScore("", timeInMilliseconds, leaderboardKey, (scoreResponse) =>
+        {
+            if (scoreResponse.success)
+            {
+                if (pendingServerRefresh != null)
+                    StopCoroutine(pendingServerRefresh);
+
+                pendingServerRefresh = StartCoroutine(RefreshLeaderboardAfterDelay());
+            }
+            else
+            {
+                Debug.LogWarning("Impossible d'envoyer le score au leaderboard LootLocker.");
             }
         });
     }
 
-    public void SubmitScoreAndRefresh(int timeInMilliseconds, System.Action onComplete = null)
+    public void RefreshLeaderboard()
     {
-        if (!isConnected)
-        {
-            onComplete?.Invoke();
-            return;
-        }
-
-        LootLockerSDKManager.GetMemberRank(leaderboardKey, localPlayerId.ToString(), (rankResponse) =>
-        {
-            if (!rankResponse.success)
-            {
-                RefreshLeaderboard(onComplete);
-                return;
-            }
-
-            bool hasNoScore = rankResponse.rank == 0;
-            bool isBetterTime = timeInMilliseconds < rankResponse.score;
-
-            if (!hasNoScore && !isBetterTime)
-            {
-                RefreshLeaderboard(onComplete);
-                return;
-            }
-
-            LootLockerSDKManager.SubmitScore("", timeInMilliseconds, leaderboardKey, (_) =>
-            {
-                StartCoroutine(RefreshAfterScoreUpdate(timeInMilliseconds, onComplete));
-            });
-        });
-    }
-
-    private IEnumerator RefreshAfterScoreUpdate(int expectedScore, System.Action onComplete)
-    {
-        const int maxAttempts = 5;
-        const float delaySeconds = 0.5f;
-
-        for (int attempt = 0; attempt < maxAttempts; attempt++)
-        {
-            yield return new WaitForSeconds(delaySeconds);
-
-            bool requestDone = false;
-            bool scoreUpdated = false;
-
-            LootLockerSDKManager.GetMemberRank(leaderboardKey, localPlayerId.ToString(), (rankResponse) =>
-            {
-                scoreUpdated = rankResponse.success && rankResponse.rank != 0 && rankResponse.score == expectedScore;
-                requestDone = true;
-            });
-
-            yield return new WaitUntil(() => requestDone);
-
-            if (scoreUpdated)
-                break;
-        }
-
-        RefreshLeaderboard(onComplete);
-    }
-
-    public void RefreshLeaderboard(System.Action onComplete = null)
-    {
-        if (isLoading)
-        {
-            pendingRefresh = true;
-            pendingRefreshComplete += onComplete;
-            return;
-        }
-
+        if (isLoading) return;
         isLoading = true;
 
         LootLockerSDKManager.GetScoreList(leaderboardKey, maxResults, 0, (response) =>
@@ -130,98 +132,191 @@ public class LeaderboardManager : MonoBehaviour
             if (!response.success)
             {
                 isLoading = false;
-                FinishRefresh(onComplete);
                 return;
             }
 
-            LootLockerLeaderboardMember[] items = response.items ?? new LootLockerLeaderboardMember[0];
+            SyncEntriesFromServer(response.items ?? new LootLockerLeaderboardMember[0]);
 
-            // Nettoyage des anciennes entrées
-            foreach (var obj in spawnedEntries)
-            {
-                Destroy(obj);
-            }
-            spawnedEntries.Clear();
+            if (ServerAlreadyHasLocalScore())
+                hasPendingLocalScore = false;
 
-            int displayCount = Mathf.Max(items.Length, 5);
+            if (hasPendingLocalScore)
+                ApplyLocalScore(pendingLocalScore, false);
 
-            for (int i = 0; i < displayCount; i++)
-            {
-                GameObject obj = Instantiate(entryPrefab, contentParent);
-                spawnedEntries.Add(obj);
-
-                if (!obj.TryGetComponent<LeaderboardEntryUI>(out var entry))
-                {
-                    Debug.LogError("Prefab sans LeaderboardEntryUI !");
-                    continue;
-                }
-
-                if (i < items.Length)
-                {
-                    var item = items[i];
-
-                    // Couleur joueur local
-                    if (item.player != null && item.player.id == localPlayerId)
-                        entry.SetColor(Color.yellow);
-                    else
-                        entry.SetColor(Color.white);
-
-                    // Rank
-                    entry.rankText.text = "#" + item.rank;
-
-                    // Nom
-                    string displayName = "Unknown";
-                    if (item.player != null)
-                    {
-                        if (!string.IsNullOrEmpty(item.player.name))
-                            displayName = item.player.name;
-                        else
-                            displayName = FormatPlayerName(item.player);
-                    }
-                    entry.nameText.text = displayName;
-
-                    // Score
-                    entry.scoreText.text = FormatTime(item.score);
-                }
-                else
-                {
-                    // Ligne vide
-                    entry.rankText.text = "#" + (i + 1);
-                    entry.nameText.text = "--";
-                    entry.scoreText.text = "--:--.--";
-                }
-
-                // Alternance visuelle
-                Image bg = obj.GetComponent<Image>();
-                if (bg != null && i % 2 == 0)
-                    bg.color = new Color(1f, 1f, 1f, 0.05f);
-            }
-
-            // Activation du scroll si nécessaire
-            bool needScroll = items.Length > 5;
-            scrollRect.vertical = needScroll;
-            scrollbar.SetActive(needScroll);
-
-            Canvas.ForceUpdateCanvases();
-            scrollRect.verticalNormalizedPosition = 1f;
+            RenderLeaderboard();
 
             isLoading = false;
-            FinishRefresh(onComplete);
         });
     }
 
-    private void FinishRefresh(System.Action onComplete)
+    private IEnumerator RefreshLeaderboardAfterDelay()
     {
-        if (pendingRefresh)
+        yield return new WaitForSeconds(serverRefreshDelay);
+        pendingServerRefresh = null;
+        RefreshLeaderboard();
+    }
+
+    private void SyncEntriesFromServer(LootLockerLeaderboardMember[] items)
+    {
+        leaderboardEntries.Clear();
+
+        foreach (var item in items)
         {
-            System.Action pendingComplete = pendingRefreshComplete;
-            pendingRefresh = false;
-            pendingRefreshComplete = null;
-            RefreshLeaderboard(pendingComplete);
-            return;
+            int playerId = item.player != null ? item.player.id : 0;
+            string displayName = GetDisplayName(item);
+            bool isLocalPlayerEntry = playerId == localPlayerId;
+
+            leaderboardEntries.Add(new LeaderboardDisplayEntry(
+                playerId,
+                displayName,
+                item.score,
+                item.rank,
+                isLocalPlayerEntry
+            ));
+        }
+    }
+
+    private bool ServerAlreadyHasLocalScore()
+    {
+        if (!hasPendingLocalScore)
+            return false;
+
+        return leaderboardEntries.Exists(entry =>
+            entry.PlayerId == localPlayerId &&
+            entry.Score <= pendingLocalScore
+        );
+    }
+
+    private void ApplyLocalScore(int timeInMilliseconds, bool renderAfterApply = true)
+    {
+        int existingIndex = leaderboardEntries.FindIndex(entry => entry.PlayerId == localPlayerId || entry.IsLocalPlayer);
+
+        if (existingIndex >= 0)
+        {
+            LeaderboardDisplayEntry existingEntry = leaderboardEntries[existingIndex];
+
+            // En contre-la-montre, le meilleur score est le temps le plus bas.
+            if (existingEntry.Score <= timeInMilliseconds)
+            {
+                existingEntry.IsLocalPlayer = true;
+                existingEntry.PlayerName = localPlayerName;
+                leaderboardEntries[existingIndex] = existingEntry;
+                if (renderAfterApply)
+                    RenderLeaderboard();
+
+                return;
+            }
+
+            existingEntry.Score = timeInMilliseconds;
+            existingEntry.PlayerName = localPlayerName;
+            existingEntry.IsLocalPlayer = true;
+            leaderboardEntries[existingIndex] = existingEntry;
+        }
+        else
+        {
+            leaderboardEntries.Add(new LeaderboardDisplayEntry(
+                localPlayerId,
+                localPlayerName,
+                timeInMilliseconds,
+                0,
+                true
+            ));
         }
 
-        onComplete?.Invoke();
+        SortAndRankEntries();
+
+        if (renderAfterApply)
+            RenderLeaderboard();
+    }
+
+    private void SortAndRankEntries()
+    {
+        leaderboardEntries.Sort((a, b) =>
+        {
+            int scoreComparison = a.Score.CompareTo(b.Score);
+            if (scoreComparison != 0)
+                return scoreComparison;
+
+            return string.Compare(a.PlayerName, b.PlayerName, StringComparison.Ordinal);
+        });
+
+        for (int i = 0; i < leaderboardEntries.Count; i++)
+        {
+            LeaderboardDisplayEntry entry = leaderboardEntries[i];
+            entry.Rank = i + 1;
+            leaderboardEntries[i] = entry;
+        }
+    }
+
+    private void RenderLeaderboard()
+    {
+        foreach (var obj in spawnedEntries)
+        {
+            Destroy(obj);
+        }
+        spawnedEntries.Clear();
+
+        int visibleEntryCount = leaderboardEntries.Count;
+        int displayCount = Mathf.Max(visibleEntryCount, 5);
+
+        for (int i = 0; i < displayCount; i++)
+        {
+            GameObject obj = Instantiate(entryPrefab, contentParent);
+            spawnedEntries.Add(obj);
+
+                
+            if (!obj.TryGetComponent<LeaderboardEntryUI>(out var entry))
+            {
+                Debug.LogError("Prefab sans LeaderboardEntryUI !");
+                continue;
+            }
+
+            if (i < visibleEntryCount)
+            {
+                LeaderboardDisplayEntry leaderboardEntry = leaderboardEntries[i];
+
+                if (leaderboardEntry.IsLocalPlayer)
+                    entry.SetColor(Color.yellow);
+                else
+                    entry.SetColor(Color.white);
+
+                entry.rankText.text = "#" + leaderboardEntry.Rank;
+                entry.nameText.text = leaderboardEntry.PlayerName;
+                entry.scoreText.text = FormatTime(leaderboardEntry.Score);
+            }
+            else
+            {
+                // Ligne vide
+                entry.SetColor(Color.white);
+                entry.rankText.text = "#" + (i + 1);
+                entry.nameText.text = "--";
+                entry.scoreText.text = "--:--.--";
+            }
+
+            // Alternance visuelle
+            Image bg = obj.GetComponent<Image>();
+            if (bg != null && i % 2 == 0)
+                bg.color = new Color(1f, 1f, 1f, 0.05f);
+        }
+
+        // Activation du scroll si nécessaire
+        bool needScroll = leaderboardEntries.Count > 5;
+        scrollRect.vertical = needScroll;
+        scrollbar.SetActive(needScroll);
+
+        Canvas.ForceUpdateCanvases();
+        scrollRect.verticalNormalizedPosition = 1f;
+    }
+
+    private string GetDisplayName(LootLockerLeaderboardMember item)
+    {
+        if (item.player == null)
+            return "Unknown";
+
+        if (!string.IsNullOrEmpty(item.player.name))
+            return item.player.name;
+
+        return "Player " + item.player.id;
     }
 
     private string FormatTime(int milliseconds)
@@ -231,27 +326,5 @@ public class LeaderboardManager : MonoBehaviour
         int ms = milliseconds % 1000;
 
         return string.Format("{0:00}:{1:00}.{2:000}", min, sec, ms);
-    }
-
-    private string FormatPlayerName(LootLockerPlayer player)
-    {
-        if (!string.IsNullOrEmpty(player.name))
-            return player.name;
-
-        if (!string.IsNullOrEmpty(player.ulid))
-            return FormatPlayerName(player.ulid, player.id);
-
-        if (!string.IsNullOrEmpty(player.public_uid))
-            return FormatPlayerName(player.public_uid, player.id);
-
-        return FormatPlayerName(null, player.id);
-    }
-
-    private string FormatPlayerName(string playerIdentifier, int fallbackPlayerId)
-    {
-        string id = !string.IsNullOrEmpty(playerIdentifier) ? playerIdentifier : fallbackPlayerId.ToString();
-        string shortId = id.Length > 4 ? id.Substring(0, 4) : id;
-
-        return "Joueur_" + shortId.ToUpperInvariant();
     }
 }

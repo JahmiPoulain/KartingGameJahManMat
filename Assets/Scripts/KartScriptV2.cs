@@ -1,6 +1,6 @@
-using UnityEngine;
 using System.Collections.Generic;
-using System.Linq;
+using UnityEngine;
+using UnityEngine.Splines;
 
 [RequireComponent(typeof(SphereCollider))]
 [RequireComponent(typeof(Rigidbody))]
@@ -61,6 +61,7 @@ public class KartScriptV2 : MonoBehaviour
     public Vector3 firstPersonCamPos;
     private Vector3 currentCamPosCenter;
     private float turboTimer;
+    float cameraZoneUp;
 
     [Header("Visual Kart")]
     public GameObject visualKartBody;
@@ -129,6 +130,10 @@ public class KartScriptV2 : MonoBehaviour
     public GameObject gliderGO;
     // visual flight
     private float visualFlightRotSpeedZ;
+    [Header("Wind")]
+    float currentTargetWindForce;
+    float currentWindForce;
+    Vector3 currentWindDir;
 
     [Header("Respawn Points")]
     public List<Transform> respawnPoints;
@@ -157,8 +162,12 @@ public class KartScriptV2 : MonoBehaviour
     [SerializeField] ContreLaMontre contreLaMontre;
     [SerializeField] private GameObject trackPath;
     public bool ghostMode = false;
-    public Transform currentWaypoint;
-    public Transform firstWaypoint;
+    public SplineContainer raceSpline;
+    [Range(0, 1)] public float splineProgress = 0f;
+    public float ghostSpeed = 15f; // Vitesse cible du ghost
+    public float lookAheadDistance = 0.05f; // Distance d'anticipation (0.01 à 0.1)
+    //public Transform currentWaypoint;
+    //public Transform firstWaypoint;
 
     public Vector3 StartPosition { get => startPosition; set => startPosition = value; }
     public Quaternion StartRotation { get => startRotation; set => startRotation = value; }
@@ -186,12 +195,21 @@ public class KartScriptV2 : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         groundNormal = new Vector3(0, 1, 0);
         activeRespawnPoints = respawnPoints;
+        if (GameModes.isMapInverted)
+        {
+            // On fait faire demi-tour au kart immédiatement
+            transform.rotation *= Quaternion.Euler(0, 180, 0);
+        }
     }
 
     void Update()
     {
         PlayerInputs();
         HandleDrift();
+        if(ghostMode)
+        {
+            GhostDrive();
+        }
     }
 
     private void FixedUpdate()
@@ -212,6 +230,7 @@ public class KartScriptV2 : MonoBehaviour
 
         // on gère la force du bounce contre les murs        
         HandleBounceForce();
+        HandleWindBlow();
         HandleGravity();
 
         if (outOfBounds)
@@ -228,22 +247,28 @@ public class KartScriptV2 : MonoBehaviour
 
         if (grounded)
         {
-            groundedCoyoteTimer = 0.1f;
+            if (flightSpeed > 0f)
+            { 
+                currentSpeed = flightSpeed;
+                flightSpeed = 0f;
+            }
+
+            groundedCoyoteTimer = 0.3f;
             gliderGO.SetActive(false);
             transform.Rotate(0, currentTurnSpeed + currentDriftForce, 0);
-            rb.linearVelocity = (groundNormalT.transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
+            rb.linearVelocity = (preOrientation.transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
         }
         else if (!isFlying)
         {
             if (groundedCoyoteTimer > 0)
             {
-                Debug.Log(groundedCoyoteTimer);
+                //Debug.Log(groundedCoyoteTimer);
                 groundedCoyoteTimer -= Time.fixedDeltaTime;
                 transform.Rotate(0, (currentTurnSpeed + currentDriftForce), 0);
             }
             else transform.Rotate(0, (currentTurnSpeed + currentDriftForce) / 3f, 0);
-                
-            rb.linearVelocity = (groundNormalT.transform.forward * (airSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
+
+            rb.linearVelocity = (preOrientation.transform.forward * (airSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
 
             if (currentTurboForce <= 0)
             {
@@ -258,6 +283,55 @@ public class KartScriptV2 : MonoBehaviour
         }
     }
 
+    public void StartWindBlow(Vector3 dir, float force)
+    {
+        currentWindDir = dir;
+        currentTargetWindForce = force;
+        Debug.Log(dir + " " + force);
+        //if (flightSpeed < 6f) { flightSpeed = 6f; }
+        //flightDir.forward = dir;
+    }
+
+    void HandleWindBlow()
+    {
+        if (!isFlying) { return; }   
+        float nextWindForce = currentWindForce;
+        Debug.Log(nextWindForce + " " + currentTargetWindForce);
+        if (flightSpeed < 14f) { flightSpeed += 5f * Time.fixedDeltaTime; }
+        if (nextWindForce > currentTargetWindForce)
+        {
+            nextWindForce -= 100f * Time.fixedDeltaTime;
+            if (nextWindForce < currentTargetWindForce)
+            {
+                Debug.Log(1);
+                nextWindForce = currentTargetWindForce;
+                currentTargetWindForce = 0f;
+            }
+            //currentWindForce = Mathf.Lerp(currentWindForce, currentTargetWindForce, 20f * Time.fixedDeltaTime);
+        }
+        else if (nextWindForce < currentTargetWindForce)
+        {
+            nextWindForce += 100f * Time.fixedDeltaTime;
+            if (nextWindForce > currentTargetWindForce)
+            {
+                Debug.Log(2);
+                nextWindForce = currentTargetWindForce;
+                currentTargetWindForce = 0f;
+            }
+        }
+        else if(nextWindForce == currentTargetWindForce)
+            {
+            currentTargetWindForce = 0f;
+        }
+            
+            //Debug.Log(nextWindForce);
+            currentWindForce = nextWindForce;
+        /*else
+        {
+            currentTargetWindForce = 0f;
+        }*/
+
+    }
     private void HandleGliderFlight()
     {
         gliderGO.SetActive(true);
@@ -337,7 +411,7 @@ public class KartScriptV2 : MonoBehaviour
 
         transform.Rotate(0, currentFlightTurnForce, 0);//(0, (currentTurnSpeed + currentDriftForce) / 1.5f, 0);
         flightDir.localEulerAngles = new Vector3(flightDir.localEulerAngles.x, 0f, currentFlightTurnForce * 10f);
-        rb.linearVelocity = (flightDir.forward * (flightSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + (currentFallSpeed / (1f + flightSpeed / 2.5f)) / 1.2f);
+        rb.linearVelocity = (flightDir.forward * (flightSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + (currentFallSpeed / (1f + flightSpeed / 2.5f)) / 1.2f) + currentWindDir * currentWindForce;
     }
 
     private void LateUpdate()
@@ -391,6 +465,13 @@ public class KartScriptV2 : MonoBehaviour
         preOrientation.transform.localEulerAngles = Vector3.zero;
     }
 
+    public void StopFlight()
+    {
+        isFlying = false;
+        gliderGO.SetActive(false);
+        flightSpeed = 0f;
+    }
+
     private void HandleBounceForce()
     {
         // on baisse la force jusqu'a qu'elle soit à 0
@@ -439,7 +520,13 @@ public class KartScriptV2 : MonoBehaviour
         }
         else if (forwardDirection < 0) // si on veut accelerer en arière
         {
-            nextSpeed -= flatAccelSpeed + (maxSpeed - currentSpeed) * accelSpeed * Time.fixedDeltaTime;
+            float breakForce = 0;
+            if (currentSpeed > 0f)
+            {
+                breakForce = 0.1f;
+            }
+            else breakForce = 0f;
+            nextSpeed -= flatAccelSpeed + breakForce + (maxSpeed - currentSpeed) * accelSpeed * Time.fixedDeltaTime;
         }
         else // si on ne veut pas accelerer
         {
@@ -479,7 +566,7 @@ public class KartScriptV2 : MonoBehaviour
         if (tryToDrift) //if (tryToDrift && grounded)
         {
             tryDriftCoyoteTime = 0.4f;
-            if (grounded && tryDriftCoyoteTime > 0f)
+            if (groundedCoyoteTimer > 0f && tryDriftCoyoteTime > 0f)
             {
                 if (turnDirection > 0) //if (currentTurnSpeed > 0.05f && turnDirection > 0)
                 {
@@ -514,23 +601,25 @@ public class KartScriptV2 : MonoBehaviour
         if (keepDrifting && grounded && driftDir != 0)
         {
             // on fait monter ou descendre la rotation Y vers targetYRot
-            float targetYRot = (driftDir + turnDirection) * 18f;
+            float targetYRot = (driftDir + turnDirection) * 15f; // correspond au tournant max du drift
 
             if (nextYDriftRot < targetYRot)
             {
-                nextYDriftRot += 12f * Time.fixedDeltaTime;
+                nextYDriftRot += 10f * Time.fixedDeltaTime;
+                //nextYDriftRot += (nextYDriftRot + (targetYRot - nextYDriftRot)) * Time.fixedDeltaTime;
                 if (nextYDriftRot > targetYRot) { nextYDriftRot = targetYRot; } // on dépasse pas targetYRot
             }
             else if (nextYDriftRot > targetYRot)
             {
-                nextYDriftRot += -12f * Time.fixedDeltaTime;
+                nextYDriftRot += -10f * Time.fixedDeltaTime;
+                //nextYDriftRot -= (nextYDriftRot - (targetYRot + nextYDriftRot)) * Time.fixedDeltaTime;
                 if (nextYDriftRot < targetYRot) { nextYDriftRot = targetYRot; } // on dépasse pas targetYRot
             }
 
             driftPivot.localRotation = Quaternion.Euler(0, nextYDriftRot, 0);
 
             //oldKeepD = keepDrifting;
-            driftCoyoteTime = 0.25f;
+            driftCoyoteTime = 0.3f;
         }
         else // quand on lache le drift
         {
@@ -622,12 +711,12 @@ public class KartScriptV2 : MonoBehaviour
 
             if (driftDir > 0 && turnDirection < 0)
             {
-                nextDriftForceTarget = 3f;
+                nextDriftForceTarget = 2.5f;
                 driftTurboGauge += 0.2f * Time.deltaTime;
             }
             else if (driftDir < 0 && turnDirection > 0)
             {
-                nextDriftForceTarget = 3f;
+                nextDriftForceTarget = 2.5f;
                 driftTurboGauge += 0.2f * Time.deltaTime;
             }
             else if (driftDir > 0 && turnDirection > 0)
@@ -645,14 +734,14 @@ public class KartScriptV2 : MonoBehaviour
 
             if (driftCatchUp < nextDriftForceTarget)
             {
-                driftCatchUp += 5f * Time.deltaTime;
+                driftCatchUp += 4f * Time.deltaTime;
             }
             else if (driftCatchUp > nextDriftForceTarget)
             {
-                driftCatchUp -= 5f * Time.deltaTime;
+                driftCatchUp -= 4f * Time.deltaTime;
             }
 
-            currentDriftForce = driftDir * driftCatchUp;
+            currentDriftForce = driftDir * driftCatchUp * 0.8f;
         }
     }
 
@@ -690,6 +779,7 @@ public class KartScriptV2 : MonoBehaviour
                 }
             }*/
             nextTurnSpeed = IncrementTowardsValue(nextTurnSpeed, 0, turnDecelSpeed * Time.fixedDeltaTime);
+            //Debug.Log(nextTurnSpeed);
         }
 
         // on clamp
@@ -823,9 +913,9 @@ public class KartScriptV2 : MonoBehaviour
         float nextTotalSpeed = visKartXRot + -currentTurboForce * 0.5f;
         nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -(maxSpeed), maxSpeed + 2f);
         groundNormalT.transform.rotation = Quaternion.LookRotation(Vector3.Cross(transform.right, groundNormal), groundNormal); // oriente le y vers le haut de la normale et le x vers l'avant du kart ( 2 semaines de galère )
-        preOrientation.localRotation = Quaternion.RotateTowards(preOrientation.localRotation, groundNormalT.localRotation, 1f);
+        preOrientation.localRotation = Quaternion.RotateTowards(preOrientation.localRotation, groundNormalT.localRotation, 0.4f);
         Quaternion rotTarget = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);
-        visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 10f);
+        visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 0.8f);
     }
 
     void HandleVisualKartWheels()
@@ -878,12 +968,18 @@ public class KartScriptV2 : MonoBehaviour
     }
     void HandleCameraTransform()
     {
-        float driftForce = Mathf.Clamp(currentDriftForce, -1.5f, 1.5f);
+        float driftForce = Mathf.Clamp(currentDriftForce, -1f, 1f);
 
         if (driftForce < 0)
         {
             driftForce = -driftForce;
         }
+
+        /*if (preOrientation.eulerAngles.x < 0f)
+        {
+            camPivot.transform.localPosition = new Vector3(camPivot.transform.localPosition.x,preOrientation.eulerAngles.x / 10f, camPivot.transform.localPosition.z);
+        }
+        else camPivot.transform.localPosition = new Vector3(camPivot.transform.localPosition.x, 0, camPivot.transform.localPosition.z);*/
 
         float targetX = Mathf.Clamp((currentSpeed * -currentTurnSpeed / 110f * forwardDirection) + (turnDirection * driftForce), -10f, 10f);
 
@@ -913,43 +1009,52 @@ public class KartScriptV2 : MonoBehaviour
         // Debug.Log("apres " + playerCamera.transform.localPosition + camXpos);
         // Debug.Log("avant "+playerCamera.transform.localPosition + camXpos);
         // playerCamera.transform.localPosition = new Vector3(IncrementTowardsValue(playerCamera.transform.localPosition.x, camXpos, 0.15f * Time.deltaTime), playerCamera.transform.localPosition.y, playerCamera.transform.localPosition.z);
-        // Debug.Log("apres " + playerCamera.transform.localPosition + camXpos);
-        Vector3 targetDir = (transform.forward + (transform.right * currentTurnSpeed * Mathf.Clamp(currentDriftForce, -1f, 1f) * 0.05f)).normalized;
+        // Debug.Log("apres " + playerCamera.transform.localPosition + camXpos);        
+        Vector3 targetDir = Vector3.down * cameraZoneUp + (transform.forward + (transform.right * currentTurnSpeed * Mathf.Clamp(currentDriftForce, -1f, 1f) * 0.05f)).normalized;
         float rotSpeed = 0.1f + (camPivot.forward - targetDir).magnitude * 2f; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        camPivot.forward = Vector3.RotateTowards(camPivot.forward, targetDir, 1 * Time.deltaTime, 0.0f);
-        
-       /* if (InputSystemHandler.instance.inputCameraMode)
-        {
-            Vector3 nextDir = thirdPersonCamPos - currentCamPosCenter; //playerCamera.transform.localPosition;
-            Vector3 nextDirNorm = nextDir.normalized;
-            Vector3 nextPos = (nextDirNorm + nextDir * 8f) * Time.deltaTime;
-            if (nextDir.sqrMagnitude > 0.0001f)
-            {
-                //playerCamera.transform.localPosition += nextPos;
-                currentCamPosCenter += nextPos;
-            }
-            else
-            {
-                //playerCamera.transform.localPosition = thirdPersonCamPos;
-                currentCamPosCenter = thirdPersonCamPos;
-            }
-        }
-        else
-        {
-            Vector3 nextDir = firstPersonCamPos - currentCamPosCenter;//playerCamera.transform.localPosition;
-            Vector3 nextDirNorm = nextDir.normalized;
-            Vector3 nextPos = (nextDirNorm + nextDir * 8f) * Time.deltaTime;
-            if (nextDir.sqrMagnitude > 0.0001f)
-            {
-                //playerCamera.transform.localPosition += nextPos;
-                currentCamPosCenter += nextPos;
-            }
-            else
-            {
-                //playerCamera.transform.localPosition = firstPersonCamPos;
-                currentCamPosCenter = firstPersonCamPos;
-            }
-        }*/
+        // Debug.Log(2 * Mathf.Atan2(camPivot.rotation, Quaternion.Euler(targetDir));
+        camPivot.forward = Vector3.RotateTowards(camPivot.forward, targetDir, Time.deltaTime, 0.0f);
+        //camPivot.localRotation = Quaternion.Slerp(camPivot.localRotation, Quaternion.Euler(targetDir), 2f * Time.deltaTime);
+        //camPivot.localEulerAngles = Vector3.Lerp(camPivot.localEulerAngles, targetDir, Time.deltaTime);
+        /* if (InputSystemHandler.instance.inputCameraMode)
+         {
+             Vector3 nextDir = thirdPersonCamPos - currentCamPosCenter; //playerCamera.transform.localPosition;
+             Vector3 nextDirNorm = nextDir.normalized;
+             Vector3 nextPos = (nextDirNorm + nextDir * 8f) * Time.deltaTime;
+             if (nextDir.sqrMagnitude > 0.0001f)
+             {
+                 //playerCamera.transform.localPosition += nextPos;
+                 currentCamPosCenter += nextPos;
+             }
+             else
+             {
+                 //playerCamera.transform.localPosition = thirdPersonCamPos;
+                 currentCamPosCenter = thirdPersonCamPos;
+             }
+         }
+         else
+         {
+             Vector3 nextDir = firstPersonCamPos - currentCamPosCenter;//playerCamera.transform.localPosition;
+             Vector3 nextDirNorm = nextDir.normalized;
+             Vector3 nextPos = (nextDirNorm + nextDir * 8f) * Time.deltaTime;
+             if (nextDir.sqrMagnitude > 0.0001f)
+             {
+                 //playerCamera.transform.localPosition += nextPos;
+                 currentCamPosCenter += nextPos;
+             }
+             else
+             {
+                 //playerCamera.transform.localPosition = firstPersonCamPos;
+                 currentCamPosCenter = firstPersonCamPos;
+             }
+         }*/
+    }
+
+    public void ReorientKart(Vector3 newDir)
+    {
+        Quaternion oldYRot = camPivot.transform.rotation;
+        transform.eulerAngles = new Vector3(transform.eulerAngles.x, newDir.y, transform.eulerAngles.z);
+        camPivot.transform.rotation = oldYRot;
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -983,6 +1088,20 @@ public class KartScriptV2 : MonoBehaviour
         }
 
     }
+    private void OnTriggerStay(Collider other)
+    {
+        if (other.gameObject.layer == 10)
+        {
+            cameraZoneUp = 0.32f;
+        }
+    }
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.gameObject.layer == 10)
+        {
+            cameraZoneUp = 0f;
+        }
+    }
     private void OnCollisionStay(Collision collision)
     {
         if (collision.gameObject.layer == 7)
@@ -990,6 +1109,7 @@ public class KartScriptV2 : MonoBehaviour
             grounded = true;
             groundNormal = collision.contacts[0].normal; // l'orientation du kart visuel
         }
+        
     }
 
     private void OnCollisionExit(Collision collision)
@@ -1000,7 +1120,7 @@ public class KartScriptV2 : MonoBehaviour
             grounded = false;
             airSpeed = currentSpeed;
             flightSpeed = currentSpeed;
-            flightDir.forward = visualKartBody.transform.forward;
+            flightDir.forward = groundNormalT.forward;
         }
     }
     void SquishAnimation()
@@ -1111,6 +1231,50 @@ public class KartScriptV2 : MonoBehaviour
 
     void GhostDrive()
     {
+        if (raceSpline == null)
+        {
+            Debug.LogWarning("RaceSpline manquante sur le Kart !");
+            return;
+        }
+
+        // 1. GESTION DU PROGRÈS (Avancement sur la ligne)
+        // La vitesse est divisée par la longueur de la spline pour rester cohérent
+        float splineLength = raceSpline.CalculateLength();
+        float progressStep = (ghostSpeed / splineLength) * Time.deltaTime;
+
+        if (GameModes.isMapInverted)
+            splineProgress -= progressStep;
+        else
+            splineProgress += progressStep;
+
+        // Boucle le progrès pour que le ghost continue après un tour
+        splineProgress = Mathf.Repeat(splineProgress, 1f);
+
+        // 2. CALCUL DE LA CIBLE
+        // On cherche un point un peu plus loin sur la spline pour "anticiper" le virage
+        float targetProgress;
+        if (GameModes.isMapInverted)
+            targetProgress = Mathf.Repeat(splineProgress - lookAheadDistance, 1f);
+        else
+            targetProgress = Mathf.Repeat(splineProgress + lookAheadDistance, 1f);
+
+        Vector3 targetPosition = (Vector3)raceSpline.EvaluatePosition(targetProgress);
+        Vector3 directionToTarget = targetPosition - transform.position;
+
+        // 3. LOGIQUE DE DIRECTION (Basée sur ton système actuel)
+        float angle = Vector3.SignedAngle(transform.forward, directionToTarget, Vector3.up);
+
+        // On adoucit la rotation pour éviter les coups de volant secs
+        turnDirection = Mathf.Clamp(angle / 20f, -1f, 1f);
+
+        // Gaz à fond !
+        accelerate = true;
+        forwardDirection = 1f;
+    }
+}
+
+    /*void GhostDrive()
+    {
         if (currentWaypoint == null)
         {
             currentWaypoint = firstWaypoint;
@@ -1147,5 +1311,5 @@ public class KartScriptV2 : MonoBehaviour
             currentWaypoint = currentWaypoint.GetComponent<Waypoints>().nextWaypoint;
             Debug.Log(currentWaypoint);
         }
-    }
-}
+    }*/
+

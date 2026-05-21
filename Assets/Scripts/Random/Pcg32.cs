@@ -1,3 +1,5 @@
+// Ceci est un script d'aléatoire cool
+
 using System;
 using System.Security.Cryptography;
 
@@ -15,7 +17,7 @@ public class Pcg32
         Init();
     }
 
-    // -------- INITIALISATION --------
+    // -------- INITIALISATION -------- 
     public void Init()
     {
         // Génère 128 bits aléatoires
