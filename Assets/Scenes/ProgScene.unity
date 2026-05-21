@@ -1126,25 +1126,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   followTarget: {fileID: 0}
-  areaSize: {x: 500, y: 500}
-  cloudCount: 43
-  textureVariants: 10
-  altitudeRange: {x: 175, y: 200}
+  areaSize: {x: 20000, y: 20000}
+  cloudCount: 500
+  textureVariants: 32
+  altitudeRange: {x: 450, y: 500}
   altitudeRelativeToTarget: 0
-  sizeRange: {x: 25, y: 75}
-  stretchRange: {x: 0.8, y: 1.8}
-  windDirectionXZ: {x: 1, y: 0.25}
-  speedRange: {x: 2, y: 7}
+  sizeRange: {x: 135, y: 185}
+  stretchRange: {x: 0.6, y: 2.3}
+  windDirectionXZ: {x: 3, y: 0.75}
+  speedRange: {x: 6, y: 21}
   spinSpeedRange: {x: -3, y: 3}
   verticalWobble: 1.2
   wobbleFrequencyRange: {x: 0.08, y: 0.18}
   seed: 12345
-  textureSize: 256
-  noiseScale: 2.7
-  noiseOctaves: 4
-  cloudDensity: 0.46
-  edgeSoftness: 0.2
-  cloudTint: {r: 0.9890353, g: 0.9292453, b: 1, a: 0.82}
+  textureSize: 780
+  noiseScale: 3.63
+  noiseOctaves: 5
+  cloudDensity: 0.375
+  edgeSoftness: 0.243
+  cloudTint: {r: 1, g: 0.8066038, b: 0.9669503, a: 0.82}
 --- !u!1 &154696849
 GameObject:
   m_ObjectHideFlags: 0
