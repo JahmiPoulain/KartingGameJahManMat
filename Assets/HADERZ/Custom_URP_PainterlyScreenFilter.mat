@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Test
-  m_Shader: {fileID: 4800000, guid: 50c188af487c90f4f966d7e2543294c1, type: 3}
+  m_Name: Custom_URP_PainterlyScreenFilter
+  m_Shader: {fileID: 4800000, guid: 23eb4b17d31b39744b04b2b0e3aa1ae6, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -23,29 +23,31 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _BaseMap:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     - _BrushTex:
         m_Texture: {fileID: 2800000, guid: 3f20eb3e72231d944a749236e8e83166, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _AmbientStrength: 0.25
-    - _Bands: 3
-    - _BrushScale: 0.9
-    - _BrushStrength: 0.278
-    - _OutlineWidth: 0.0101
-    - _RimPower: 3.8
-    - _RimStrength: 0.38
-    - _ShadowBreakup: 0.194
+    - _BrushContrast: 1.42
+    - _BrushDetailScale: 95
+    - _BrushScale: 3.8
+    - _BrushStrength: 0.126
+    - _ColorSteps: 10
+    - _Contrast: 1.08
+    - _DitherStrength: 0.0145
+    - _EdgeSoftness: 0.001
+    - _EdgeStrength: 0
+    - _EdgeThreshold: 0.005
+    - _EdgeWidth: 0.5
+    - _EffectStrength: 0
+    - _LightStrength: 0.268
+    - _PixelSize: 1
+    - _Saturation: 1.06
+    - _ShadowStrength: 0.283
     m_Colors:
-    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _LightTint: {r: 1, g: 1, b: 1, a: 1}
-    - _OutlineColor: {r: 0.04, g: 0.025, b: 0.02, a: 1}
-    - _RimColor: {r: 0.7783019, g: 1, b: 0.99803054, a: 1}
-    - _ShadowColor: {r: 0.13705021, g: 0.08201318, b: 0.1792453, a: 1}
+    - _EdgeColor: {r: 0, g: 0, b: 0, a: 1}
+    - _LightTint: {r: 1.18, g: 1.08, b: 0.82, a: 1}
+    - _ShadowTint: {r: 0.63182795, g: 0.59741014, b: 0.7075472, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
