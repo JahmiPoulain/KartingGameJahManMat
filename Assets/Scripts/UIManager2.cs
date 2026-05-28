@@ -11,6 +11,7 @@ public class UIManager2 : MonoBehaviour
 {
     [Header("UI Panels")]
     public GameObject pauseMenuUI;
+    public GameObject mainCanva;
     private bool isPaused = false;
 
     public bool canPause = true;
@@ -59,6 +60,8 @@ public class UIManager2 : MonoBehaviour
 
         if (globalVolume != null && globalVolume.profile != null)
             globalVolume.profile.TryGet(out depthOfField);
+
+        depthOfField.active = false;
 
         parentCanvas = GetComponentInParent<Canvas>();
         if (parentCanvas != null && !parentCanvas.isRootCanvas) parentCanvas = parentCanvas.rootCanvas;
@@ -110,6 +113,7 @@ public class UIManager2 : MonoBehaviour
     public void Resume()
     {
         KartScriptV2.instance.canDrive = true;
+        mainCanva.SetActive(true);
         pauseMenuUI.SetActive(false);
         Time.timeScale = 1f;
         isPaused = false;
@@ -120,6 +124,7 @@ public class UIManager2 : MonoBehaviour
     {
         if (canPause == false) return;
         KartScriptV2.instance.canDrive = false;
+        mainCanva.SetActive(false);
         pauseMenuUI.SetActive(true);
         Time.timeScale = 0f;
         isPaused = true;
