@@ -4317,7 +4317,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 843152256}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 368.4975}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 2.4, y: 2.4, z: 2.4}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4325,7 +4325,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1895.3394, y: -32.714462}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &843152259
@@ -4343,13 +4343,13 @@ MonoBehaviour:
   birdPrefab: {fileID: -6106673338637625708, guid: 02d719823442be24482c5a968de5466a, type: 3}
   poolSize: 25
   playerCamera: {fileID: 1969114860}
-  minBirdsPerFlock: 2
-  maxBirdsPerFlock: 10
+  minBirdsPerFlock: 1
+  maxBirdsPerFlock: 20
   flockRadius: 5
-  spawnInterval: 1
-  spawnDistance: 125
-  minAltitude: 29.9
-  maxAltitude: 77.6
+  spawnInterval: 0.1
+  spawnDistance: 85
+  minAltitude: -15
+  maxAltitude: 15
   minSpeed: 8
   maxSpeed: 15
   minSize: 0.5
