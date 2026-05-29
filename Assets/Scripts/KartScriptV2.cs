@@ -57,6 +57,7 @@ public class KartScriptV2 : MonoBehaviour
     [Header("Camera")]
     public GameObject playerCamera;
     public Transform camPivot;
+    [SerializeField] Transform emptyCamSpot;
     public Vector3 thirdPersonCamPos;
     public Vector3 firstPersonCamPos;
     private Vector3 currentCamPosCenter;
@@ -1014,6 +1015,13 @@ public class KartScriptV2 : MonoBehaviour
         float rotSpeed = 0.1f + (camPivot.forward - targetDir).magnitude * 2f; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // Debug.Log(2 * Mathf.Atan2(camPivot.rotation, Quaternion.Euler(targetDir));
         camPivot.forward = Vector3.RotateTowards(camPivot.forward, targetDir, Time.deltaTime, 0.0f);
+
+
+        /* camDir = emptyCamSpot.transform.position - transform.position;
+        if (Physics.Raycast(groundRayOrigin.position, camDir.normalized, out RaycastHit hit, camDir.magnitude))
+        {
+            groundNormal = hit.normal;
+        }/
         //camPivot.localRotation = Quaternion.Slerp(camPivot.localRotation, Quaternion.Euler(targetDir), 2f * Time.deltaTime);
         //camPivot.localEulerAngles = Vector3.Lerp(camPivot.localEulerAngles, targetDir, Time.deltaTime);
         /* if (InputSystemHandler.instance.inputCameraMode)
