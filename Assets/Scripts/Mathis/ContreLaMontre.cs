@@ -34,8 +34,8 @@ public class ContreLaMontre : GameMode
         if (raceFinished) return;
         raceFinished = true;
 
-        kartScript.canDrive = false;
-        kartScript.ghostMode = true;
+        kartScript.CanDrive = false;
+        kartScript.GhostMode = true;
         float totalTime = 0;
         string detailScores = "Résultats :\n";
 
@@ -60,7 +60,7 @@ public class ContreLaMontre : GameMode
 
     IEnumerator StartCountdown()
     {
-        if (kartScript != null) kartScript.canDrive = false;
+        if (kartScript != null) kartScript.CanDrive = false;
 
         if (startUI != null) startUI.text = "3";
         yield return new WaitForSeconds(1);
@@ -72,7 +72,7 @@ public class ContreLaMontre : GameMode
         if (startUI != null) startUI.text = "GO!";
 
         raceStarted = true;
-        if (kartScript != null) kartScript.canDrive = true;
+        if (kartScript != null) kartScript.CanDrive = true;
 
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "";

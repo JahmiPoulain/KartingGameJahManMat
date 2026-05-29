@@ -112,7 +112,7 @@ public class UIManager2 : MonoBehaviour
 
     public void Resume()
     {
-        KartScriptV2.instance.canDrive = true;
+        KartScriptV2.instance.CanDrive = true;
         mainCanva.SetActive(true);
         pauseMenuUI.SetActive(false);
         Time.timeScale = 1f;
@@ -123,7 +123,7 @@ public class UIManager2 : MonoBehaviour
     void Pause()
     {
         if (canPause == false) return;
-        KartScriptV2.instance.canDrive = false;
+        KartScriptV2.instance.CanDrive = false;
         mainCanva.SetActive(false);
         pauseMenuUI.SetActive(true);
         Time.timeScale = 0f;

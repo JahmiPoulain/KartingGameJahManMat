@@ -73,7 +73,7 @@ public class EndCourseCanva : MonoBehaviour
 
     void Pause()
     {
-        KartScriptV2.instance.canDrive = false;
+        KartScriptV2.instance.CanDrive = false;
         pauseMenuUI.SetActive(true);
         index = 0;
         UpdateVisuals();

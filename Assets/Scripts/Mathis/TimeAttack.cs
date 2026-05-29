@@ -72,7 +72,7 @@ public class TimeAttack : GameMode
 
     IEnumerator InitialCountdown()
     {
-        kartScript.canDrive = false;
+        kartScript.CanDrive = false;
         startUI.text = "3";
         yield return new WaitForSeconds(1);
         startUI.text = "2";
@@ -81,7 +81,7 @@ public class TimeAttack : GameMode
         yield return new WaitForSeconds(1);
         startUI.text = "GO!";
 
-        kartScript.canDrive = true;
+        kartScript.CanDrive = true;
         raceStarted = true;
 
         yield return new WaitForSeconds(1);

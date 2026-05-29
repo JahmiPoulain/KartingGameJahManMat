@@ -152,25 +152,24 @@ public class KartScriptV2 : MonoBehaviour
     [SerializeField] private CheckpointManager checkPointManager;
 
     [Header("Respawn")]
-    public bool canDrive = true;
+    [SerializeField] private bool canDrive = true;
 
     private float respawnCooldown = 0f;
     private Vector3 startPosition;
     private Quaternion startRotation;
 
     [Header("Ghost")]
-    [SerializeField] ContreLaMontre contreLaMontre;
-    [SerializeField] private GameObject trackPath;
-    public bool ghostMode = false;
-    public SplineContainer raceSpline;
-    [Range(0, 1)] public float splineProgress = 0f;
-    public float ghostSpeed = 15f; // Vitesse cible du ghost
-    public float lookAheadDistance = 0.05f; // Distance d'anticipation (0.01 à 0.1)
-    //public Transform currentWaypoint;
-    //public Transform firstWaypoint;
+    [SerializeField] private bool ghostMode = false;
+    [SerializeField] private SplineContainer raceSpline;
+    [Range(0, 1)] private float splineProgress = 0f;
+    [SerializeField] private float ghostSpeed = 15f; // Vitesse cible du ghost
+    [SerializeField] private float lookAheadDistance = 0.05f; // Distance d'anticipation (0.01 à 0.1)
+
 
     public Vector3 StartPosition { get => startPosition; set => startPosition = value; }
     public Quaternion StartRotation { get => startRotation; set => startRotation = value; }
+    public bool GhostMode { get => ghostMode; set => ghostMode = value; }
+    public bool CanDrive { get => canDrive; set => canDrive = value; }
 
     private void Awake()
     {
@@ -204,12 +203,13 @@ public class KartScriptV2 : MonoBehaviour
 
     void Update()
     {
-        PlayerInputs();
-        HandleDrift();
-        if(ghostMode)
+        if(GhostMode)
         {
             GhostDrive();
+            return;
         }
+        PlayerInputs();
+        HandleDrift();
     }
 
     private void FixedUpdate()
@@ -433,13 +433,13 @@ public class KartScriptV2 : MonoBehaviour
             return;
         }
 
-        if (ghostMode == true)
+        if (GhostMode == true)
         {
             GhostDrive();
             return;
         }
 
-        if (!canDrive)
+        if (!CanDrive)
         {
             forwardDirection = 0;
             turnDirection = 0;

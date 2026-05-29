@@ -49,7 +49,7 @@ public class Respawner : MonoBehaviour
 
         kartScriptV2.outOfBounds = true;
 
-        kartScriptV2.canDrive = false;
+        kartScriptV2.CanDrive = false;
 
         // ✅ si aucun checkpoint → on utilise la position de départ
         if (checkPointManager.HasCheckpoint)
@@ -78,7 +78,7 @@ public class Respawner : MonoBehaviour
         {
             Debug.Log("retour effectué");
             kartScriptV2.GetComponent<SphereCollider>().enabled = true;
-            kartScriptV2.canDrive = true;
+            kartScriptV2.CanDrive = true;
             isOffTrack = false;
             kartScriptV2.outOfBounds = false;
         }
