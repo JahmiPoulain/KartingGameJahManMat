@@ -15542,7 +15542,8 @@ MonoBehaviour:
   minBounceDecelForce: 200
   playerCamera: {fileID: 7218662819663366578}
   camPivot: {fileID: 5820615964939844709}
-  thirdPersonCamPos: {x: 0, y: 2, z: -3}
+  emptyCamSpot: {fileID: 0}
+  thirdPersonCamPos: {x: 0, y: 12.02, z: -3}
   firstPersonCamPos: {x: 0, y: 1.1, z: -0.2}
   visualKartBody: {fileID: 5991814583004002587}
   visualKartWheelsParent: {fileID: 8628050714628093902}
@@ -15597,11 +15598,10 @@ MonoBehaviour:
   lastTurnTime: 0
   checkPointManager: {fileID: 0}
   canDrive: 0
-  contreLaMontre: {fileID: 0}
-  trackPath: {fileID: 0}
   ghostMode: 0
-  currentWaypoint: {fileID: 0}
-  firstWaypoint: {fileID: 0}
+  raceSpline: {fileID: 0}
+  ghostSpeed: 10
+  lookAheadDistance: 0.05
 --- !u!114 &8955766991317346168
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21130,9 +21130,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4944221790687961309}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.28, z: 0}
-  m_LocalScale: {x: 0.08708148, y: 1, z: 0.3717}
+  m_LocalRotation: {x: -0, y: -0.000000119209275, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.28000176, z: 0}
+  m_LocalScale: {x: 0.08708148, y: 1, z: 0.37170005}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5680251655472052470}
@@ -26470,6 +26470,8 @@ GameObject:
   - component: {fileID: 4710703601205481783}
   - component: {fileID: 8178231880157707161}
   - component: {fileID: 2651555179505156836}
+  - component: {fileID: 3566270072467217817}
+  - component: {fileID: 7910342243421678893}
   m_Layer: 8
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -26523,8 +26525,8 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
-  far clip plane: 1000
+  near clip plane: 0.01
+  far clip plane: 20000
   field of view: 90
   orthographic: 0
   orthographic size: 5
@@ -26595,6 +26597,54 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+--- !u!54 &3566270072467217817
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7218662819663366578}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 126
+  m_CollisionDetection: 0
+--- !u!135 &7910342243421678893
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7218662819663366578}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.5
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &7369617221102960926
 GameObject:
   m_ObjectHideFlags: 0

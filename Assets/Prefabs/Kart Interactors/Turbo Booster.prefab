@@ -82,8 +82,10 @@ MonoBehaviour:
   boostForce: 25
   boostTime: 0.1
   activateFlight: 0
+  deactivatesFlight: 0
   turnsKart: 0
   turnDir: {fileID: 8677680643751666528}
+  windBox: {fileID: 0}
 --- !u!33 &2748824298285420522
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -115,7 +117,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 3083e8575daab2445871c3b89bd63d30, type: 2}
+  - {fileID: -876546973899608171, guid: 67e67b6c245ab5846936d62da4942926, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
