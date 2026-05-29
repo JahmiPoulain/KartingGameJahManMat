@@ -16,8 +16,8 @@ public class GameSceneManager : MonoBehaviour
     public float transitionDuration = 1f;
 
     [Header("Loading UI")]
-    public RectTransform loadingIcon; // Glisse ton image ici
-    public float rotationSpeed = -360f; // Vitesse de rotation (négatif = sens horaire)
+    public RectTransform loadingIcon;
+    public float rotationSpeed = -360f;
 
     private List<string> loadedGameplayScenes = new List<string>();
 

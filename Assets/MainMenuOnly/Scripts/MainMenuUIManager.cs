@@ -24,7 +24,7 @@ public class WheelItem
 
 public class MainMenuUIManager : MonoBehaviour
 {
-    public enum MenuState { TitleScreen, MainMenu, OptionsMenu, SubWindowOpen, Loading }
+    public enum MenuState { TitleScreen, MainMenu, PlayBasurd, OptionsMenu, SubWindowOpen, Loading }
 
     [Header("--- États & Navigation ---")]
     public MenuState currentState = MenuState.TitleScreen;
@@ -101,11 +101,36 @@ public class MainMenuUIManager : MonoBehaviour
     private float initialSettingsAngle = 0f;
     private List<RectTransform> settingsButtonsGenerated = new List<RectTransform>();
 
+    [Header("--- Roue Play ---")]
+    public RectTransform playWheelRect;
+    public WheelItem[] playButtons;
+    private int currentPlayIndex = 0;
+    private float targetPlayAngle = 0f;
+    private float InitialPlayAngle = 0f;
+    private List<RectTransform> playButtonsGenerated = new List<RectTransform>();
+
+    [Header("--- Positions Hors-Écran (À la main) ---")]
+    [Tooltip("Coordonnées X/Y quand la roue est masquée (ex: X = -1500 pour la mettre à gauche toute)")]
+    public Vector2 mainWheelInactivePos;
+    public Vector2 settingsWheelInactivePos;
+    public Vector2 playWheelInactivePos;
+
+    [Tooltip("Vitesse de glissement de la roue")]
+    public float wheelMoveSpeed = 8f;
+
+    // Ces variables vont capturer AUTOMATIQUEMENT la position de ton éditeur Unity !
+    private Vector2 mainWheelActivePos;
+    private Vector2 settingsWheelActivePos;
+    private Vector2 playWheelActivePos;
+
     [Header("--- Paramètres Audio ---")]
     public AudioMixer mainAudioMixer;
     public int masterVol = 10;
     public int musicVol = 10;
     public int sfxVol = 10;
+
+    [Header("--- Paramètres de Jeu (Play) ---")]
+    public bool isMapInverted = false;
 
     public string controlsSaveKey = ("Controles");
 
@@ -128,25 +153,39 @@ public class MainMenuUIManager : MonoBehaviour
     {
         Time.timeScale = 1f;
 
+        if (mainWheelRect != null) mainWheelActivePos = mainWheelRect.anchoredPosition;
+        if (settingsWheelRect != null) settingsWheelActivePos = settingsWheelRect.anchoredPosition;
+        if (playWheelRect != null) playWheelActivePos = playWheelRect.anchoredPosition;
+
         if (mainWheelRect != null) initialMainAngle = mainWheelRect.localEulerAngles.z;
         if (settingsWheelRect != null) initialSettingsAngle = settingsWheelRect.localEulerAngles.z;
+        if (playWheelRect != null) InitialPlayAngle = playWheelRect.localEulerAngles.z;
         targetMainAngle = initialMainAngle;
         targetSettingsAngle = initialSettingsAngle;
 
         GenerateWheel(mainMenuOptions, mainWheelRect, mainButtonsGenerated, true);
         GenerateWheel(settingsOptions, settingsWheelRect, settingsButtonsGenerated, false);
+        GenerateWheel(playButtons, playWheelRect, playButtonsGenerated, false);
 
         if (hasSeenTitleScreen)
         {
             currentState = MenuState.MainMenu;
             if (titleScreenPanel != null) titleScreenPanel.SetActive(false);
             SetCameraPositionImmediate(mainMenuPosition);
+
+            if (mainWheelRect != null) mainWheelRect.anchoredPosition = mainWheelActivePos;
+            if (settingsWheelRect != null) settingsWheelRect.anchoredPosition = settingsWheelInactivePos;
+            if (playWheelRect != null) playWheelRect.anchoredPosition = playWheelInactivePos;
         }
         else
         {
             currentState = MenuState.TitleScreen;
             if (titleScreenPanel != null) titleScreenPanel.SetActive(true);
             SetCameraPositionImmediate(titleScreenPosition);
+
+            if (mainWheelRect != null) mainWheelRect.anchoredPosition = mainWheelInactivePos;
+            if (settingsWheelRect != null) settingsWheelRect.anchoredPosition = settingsWheelInactivePos;
+            if (playWheelRect != null) playWheelRect.anchoredPosition = playWheelInactivePos;
         }
 
         if (transitionScreen != null)
@@ -195,21 +234,39 @@ public class MainMenuUIManager : MonoBehaviour
     {
         UpdateWheelsRotation();
 
-        if (!isTransitioning || CameraTransform == null) return;
+        Vector2 targetMainPos = mainWheelInactivePos;
+        Vector2 targetSettingsPos = settingsWheelInactivePos;
+        Vector2 targetPlayPos = playWheelInactivePos;
 
+        switch (currentState)
+        {
+            case MenuState.MainMenu:
+                targetMainPos = mainWheelActivePos;
+                break;
+            case MenuState.OptionsMenu:
+                targetSettingsPos = settingsWheelActivePos;
+                break;
+            case MenuState.PlayBasurd:
+                targetPlayPos = playWheelActivePos;
+                break;
+            case MenuState.SubWindowOpen:
+                if (stateBeforeSubWindow == MenuState.OptionsMenu) targetSettingsPos = settingsWheelActivePos;
+                else if (stateBeforeSubWindow == MenuState.PlayBasurd) targetPlayPos = playWheelActivePos;
+                else targetMainPos = mainWheelActivePos;
+                break;
+        }
+
+        if (mainWheelRect != null) mainWheelRect.anchoredPosition = Vector2.Lerp(mainWheelRect.anchoredPosition, targetMainPos, Time.deltaTime * wheelMoveSpeed);
+        if (settingsWheelRect != null) settingsWheelRect.anchoredPosition = Vector2.Lerp(settingsWheelRect.anchoredPosition, targetSettingsPos, Time.deltaTime * wheelMoveSpeed);
+        if (playWheelRect != null) playWheelRect.anchoredPosition = Vector2.Lerp(playWheelRect.anchoredPosition, targetPlayPos, Time.deltaTime * wheelMoveSpeed);
+
+        if (!isTransitioning || CameraTransform == null) return;
         transitionTimer += Time.deltaTime;
         float t = transitionTimer / transitionDuration;
         float curveValue = transitionCurve.Evaluate(t);
-
         CameraTransform.position = Vector3.LerpUnclamped(startPos, targetPos, curveValue);
         CameraTransform.rotation = Quaternion.LerpUnclamped(startRot, targetRot, curveValue);
-
-        if (t >= 1f)
-        {
-            isTransitioning = false;
-            CameraTransform.position = targetPos;
-            CameraTransform.rotation = targetRot;
-        }
+        if (t >= 1f) { isTransitioning = false; CameraTransform.position = targetPos; CameraTransform.rotation = targetRot; }
     }
 
     private Transform GetTargetTransform(MenuState state)
@@ -218,6 +275,7 @@ public class MainMenuUIManager : MonoBehaviour
         {
             case MenuState.TitleScreen: return titleScreenPosition;
             case MenuState.MainMenu: return mainMenuPosition;
+            case MenuState.PlayBasurd: return optionsPosition;
             case MenuState.OptionsMenu: return optionsPosition;
             case MenuState.SubWindowOpen:
                 return (stateBeforeSubWindow == MenuState.OptionsMenu) ? optionsPosition : mainMenuPosition;
@@ -249,6 +307,12 @@ public class MainMenuUIManager : MonoBehaviour
             Quaternion targetSettingsRot = Quaternion.Euler(0, 0, targetSettingsAngle);
             settingsWheelRect.localRotation = Quaternion.Lerp(settingsWheelRect.localRotation, targetSettingsRot, Time.deltaTime * wheelRotationSpeed);
         }
+
+        if (playWheelRect != null)
+        {
+            Quaternion targetPlayRot = Quaternion.Euler(0, 0, targetPlayAngle);
+            playWheelRect.localRotation = Quaternion.Lerp(playWheelRect.localRotation, targetPlayRot, Time.deltaTime * wheelRotationSpeed);
+        }
     }
 
 
@@ -264,6 +328,10 @@ public class MainMenuUIManager : MonoBehaviour
         {
             ChangeState(MenuState.MainMenu);
         }
+        else if (currentState == MenuState.PlayBasurd)
+        {
+            ChangeState(MenuState.MainMenu);
+        }
     }
 
     private void HandleInputs()
@@ -276,7 +344,7 @@ public class MainMenuUIManager : MonoBehaviour
             return;
         }
 
-        if (currentState == MenuState.MainMenu || currentState == MenuState.OptionsMenu)
+        if (currentState == MenuState.MainMenu || currentState == MenuState.OptionsMenu || currentState == MenuState.PlayBasurd)
         {
             int inputDirection = 0;
             float v = Input.GetAxisRaw("Vertical");
@@ -330,6 +398,11 @@ public class MainMenuUIManager : MonoBehaviour
             currentSettingsIndex = (currentSettingsIndex + direction + settingsOptions.Length) % settingsOptions.Length;
             targetSettingsAngle = initialSettingsAngle - (-currentSettingsIndex * customAnglePerOption * spawnDirection);
         }
+        else if (currentState == MenuState.PlayBasurd)
+        {
+            currentPlayIndex = (currentPlayIndex + direction + playButtons.Length) % playButtons.Length;
+            targetPlayAngle = InitialPlayAngle - (-currentPlayIndex * customAnglePerOption * spawnDirection);
+        }
     }
 
     private void SelectCurrentWheelOption()
@@ -341,8 +414,8 @@ public class MainMenuUIManager : MonoBehaviour
 
             if (selectedName.Contains("play") || selectedName.Contains("jouer"))
             {
-                if (currentItem.windowToOpen != null) OpenWindow(currentItem.windowToOpen);
-                else LaunchScene("TaSceneDeJeuIci");
+                if (currentItem.windowToOpen != null) ChangeState(MenuState.PlayBasurd);
+                //else LaunchScene("");
             }
             else if (selectedName.Contains("setting") || selectedName.Contains("option")) ChangeState(MenuState.OptionsMenu);
             else if (selectedName.Contains("quit") || selectedName.Contains("quitter"))
@@ -359,6 +432,30 @@ public class MainMenuUIManager : MonoBehaviour
         {
             WheelItem currentItem = settingsOptions[currentSettingsIndex];
             if (currentItem.windowToOpen != null) OpenWindow(currentItem.windowToOpen);
+        }
+        else if (currentState == MenuState.PlayBasurd)
+        {
+            string selectedName = playButtons[currentPlayIndex].itemName.ToLower();
+
+            if (selectedName.Contains("INVERTED") || selectedName.Contains("toggle"))
+            {
+                isMapInverted = !isMapInverted;
+                Debug.Log("Map inversée est maintenant sur : " + isMapInverted);
+
+                TextMeshProUGUI btnText = playButtonsGenerated[currentPlayIndex].GetComponentInChildren<TextMeshProUGUI>();
+                if (btnText != null)
+                {
+                    btnText.text = isMapInverted ? "INVERTED Y" : "INVERTED N";
+                }
+            }
+            else if (selectedName.Contains("GHOST") || selectedName.Contains("Jouer contre le fantome"))
+            {
+                LaunchScene("ProgScene");
+            }
+            else if (selectedName.Contains("TIME ATTACK") || selectedName.Contains("Jouer contre la montre"))
+            {
+                LaunchScene("GraphScene");
+            }
         }
     }
 
@@ -412,6 +509,12 @@ public class MainMenuUIManager : MonoBehaviour
             float targetS = (currentState == MenuState.OptionsMenu && i == currentSettingsIndex) ? selectedScale : normalScale;
             settingsButtonsGenerated[i].localScale = Vector3.Lerp(settingsButtonsGenerated[i].localScale, Vector3.one * targetS, Time.deltaTime * scaleAnimSpeed);
         }
+
+        for (int i = 0; i < playButtonsGenerated.Count; i++)
+        {
+            float targetS = (currentState == MenuState.PlayBasurd && i == currentPlayIndex) ? selectedScale : normalScale;
+            playButtonsGenerated[i].localScale = Vector3.Lerp(playButtonsGenerated[i].localScale, Vector3.one * targetS, Time.deltaTime * scaleAnimSpeed);
+        }
     }
 
     private void UpdateButtonsRotation()
@@ -427,14 +530,17 @@ public class MainMenuUIManager : MonoBehaviour
             float z = settingsWheelRect.localEulerAngles.z;
             foreach (RectTransform btn in settingsButtonsGenerated) btn.localRotation = Quaternion.Euler(0, 0, -z);
         }
+        if (playWheelRect != null)
+        {
+            float z = playWheelRect.localEulerAngles.z;
+            foreach (RectTransform btn in playButtonsGenerated) btn.localRotation = Quaternion.Euler(0, 0, -z);
+        }
     }
 
     public void LaunchScene(string sceneName)
     {
-        // Au lieu de gérer la coroutine ici, on délègue au manager central
         GameSceneManager.Instance.LoadGame(sceneName);
     }
-
     private IEnumerator TransitionAndLoad(string sceneName)
     {
         ChangeState(MenuState.Loading);
