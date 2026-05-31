@@ -3,17 +3,17 @@ using System.Collections.Generic;
 
 public class BirdFlockManager : MonoBehaviour
 {
-    [Header("--- CONFIGURATION PRÉFAB ---")]
+    [Header("--- CONFIGURATION PRÃ‰FAB ---")]
     [Tooltip("Le prefab de l'oiseau avec le script BirdIndividual")]
     [SerializeField] private BirdIndividual birdPrefab;
-    [Tooltip("Nombre max d'oiseaux actifs en même temps (Optimisation)")]
+    [Tooltip("Nombre max d'oiseaux actifs en mï¿½me temps (Optimisation)")]
     [SerializeField] private int poolSize = 150;
 
-    [Header("--- RÉFÉRENCES ---")]
-    [Tooltip("La caméra principale du joueur. Laisse vide pour utiliser Camera.main")]
+    [Header("--- RÃ‰FÃ‰RENCES ---")]
+    [Tooltip("La camÃ©ra principale du joueur. Laisse vide pour utiliser Camera.main")]
     [SerializeField] private Camera playerCamera;
 
-    [Header("--- PARAMÈTRES DES GROUPES (FLOCKS) ---")]
+    [Header("--- PARAMï¿½TRES DES GROUPES (FLOCKS) ---")]
     [Range(1, 20)][SerializeField] private int minBirdsPerFlock = 3;
     [Range(1, 20)][SerializeField] private int maxBirdsPerFlock = 10;
     [Tooltip("Rayon de dispersion des oiseaux au sein d'un groupe")]
@@ -22,7 +22,7 @@ public class BirdFlockManager : MonoBehaviour
     [SerializeField] private float spawnInterval = 3f;
 
     [Header("--- ZONE DE VOL ---")]
-    [Tooltip("Distance de base pour l'apparition par rapport à la caméra")]
+    [Tooltip("Distance de base pour l'apparition par rapport ï¿½ la camï¿½ra")]
     [SerializeField] private float spawnDistance = 80f;
     [SerializeField] private float minAltitude = 15f;
     [SerializeField] private float maxAltitude = 40f;
@@ -33,10 +33,10 @@ public class BirdFlockManager : MonoBehaviour
     [SerializeField] private float minSize = 0.5f;
     [SerializeField] private float maxSize = 2.0f;
 
-    // On augmente un peu la distance max pour laisser le temps à l'oiseau de sortir de l'écran avant de despawn
+    // On augmente un peu la distance max pour laisser le temps ï¿½ l'oiseau de sortir de l'ï¿½cran avant de despawn
     public float MaxDistance => spawnDistance * 1.5f;
 
-    // Propriété publique pour que les oiseaux connaissent la position de la caméra
+    // Propriï¿½tï¿½ publique pour que les oiseaux connaissent la position de la camï¿½ra
     public Vector3 CameraPosition => playerCamera != null ? playerCamera.transform.position : Vector3.zero;
 
     private Stack<BirdIndividual> birdPool = new Stack<BirdIndividual>();
@@ -49,7 +49,7 @@ public class BirdFlockManager : MonoBehaviour
 
         if (playerCamera == null)
         {
-            playerCamera = Camera.main; // Récupère la caméra si on a oublié de l'assigner
+            playerCamera = Camera.main; // Rï¿½cupï¿½re la camï¿½ra si on a oubliï¿½ de l'assigner
         }
 
         if (birdPrefab == null)
@@ -84,22 +84,22 @@ public class BirdFlockManager : MonoBehaviour
         bool validSpawn = false;
         int attempts = 0;
 
-        // On fait plusieurs essais (max 10) pour trouver un point hors du champ de vision de la caméra
+        // On fait plusieurs essais (max 10) pour trouver un point hors du champ de vision de la camï¿½ra
         while (!validSpawn && attempts < 10)
         {
-            // Direction de vol aléatoire
+            // Direction de vol alï¿½atoire
             float angle = rng.NextFloat() * Mathf.PI * 2f;
             flyDir = new Vector3(Mathf.Cos(angle), (rng.NextFloat() - 0.5f) * 0.1f, Mathf.Sin(angle));
 
-            // On spawn autour de la CAMÉRA, et en face de la direction de vol pour qu'ils volent VERS/AU-DESSUS de la zone du joueur
+            // On spawn autour de la CAMï¿½RA, et en face de la direction de vol pour qu'ils volent VERS/AU-DESSUS de la zone du joueur
             spawnOrigin = playerCamera.transform.position - (flyDir * spawnDistance);
             spawnOrigin.y = playerCamera.transform.position.y + minAltitude + (rng.NextFloat() * (maxAltitude - minAltitude));
 
-            // INTELLIGENCE : Vérifier si le point est dans l'écran
+            // INTELLIGENCE : Vï¿½rifier si le point est dans l'ï¿½cran
             Vector3 viewportPoint = playerCamera.WorldToViewportPoint(spawnOrigin);
 
-            // Si x et y sont entre 0 et 1, ET z > 0, c'est que c'est visible à l'écran.
-            // On élargit un peu (-0.2 à 1.2) pour être sûr qu'ils spawnent vraiment bien au-delà des bords.
+            // Si x et y sont entre 0 et 1, ET z > 0, c'est que c'est visible ï¿½ l'ï¿½cran.
+            // On ï¿½largit un peu (-0.2 ï¿½ 1.2) pour ï¿½tre sï¿½r qu'ils spawnent vraiment bien au-delï¿½ des bords.
             bool isVisible = viewportPoint.z > 0 && viewportPoint.x > -0.2f && viewportPoint.x < 1.2f && viewportPoint.y > -0.2f && viewportPoint.y < 1.2f;
 
             if (!isVisible)

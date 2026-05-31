@@ -9,7 +9,7 @@ public class BirdIndividual : MonoBehaviour
     private float internalTimer;
     private float currentBanking;
 
-    // Pour éviter l'effet toupie, on stocke la rotation de direction séparément
+    // Pour Ã©viter l'effet toupie, on stocke la rotation de direction sï¿½parï¿½ment
     private Quaternion lookRotation;
 
     public void Initialize(BirdFlockManager manager, Pcg32 sharedRng, Vector3 startPos, Vector3 dir, float speed, float scale)
@@ -24,7 +24,7 @@ public class BirdIndividual : MonoBehaviour
         this.internalTimer = 0f;
         this.currentBanking = 0f;
 
-        // Initialise la rotation pour éviter un "snap" au départ
+        // Initialise la rotation pour ï¿½viter un "snap" au dï¿½part
         this.lookRotation = Quaternion.LookRotation(direction);
     }
 
@@ -35,7 +35,7 @@ public class BirdIndividual : MonoBehaviour
         // 1. Direction organique (Perlin Noise)
         float nX = Mathf.PerlinNoise(internalTimer * 0.4f, noiseOffset) - 0.5f;
         float nY = Mathf.PerlinNoise(noiseOffset, internalTimer * 0.4f) - 0.5f;
-        Vector3 noiseVec = new Vector3(nX, nY, 0);
+        Vector3 noiseVec = new(nX, nY, 0);
         Vector3 finalDir = (direction + transform.TransformDirection(noiseVec)).normalized;
 
         // 2. Calcul du Banking (Inclinaison)
@@ -49,11 +49,11 @@ public class BirdIndividual : MonoBehaviour
         lookRotation = Quaternion.Slerp(lookRotation, targetLook, Time.deltaTime * 2.5f);
 
         // On applique : Rotation de direction + Rotation d'inclinaison (Banking)
-        // L'utilisation du "=" au lieu du "*=" empêche l'accumulation infinie
+        // L'utilisation du "=" au lieu du "*=" empÃªche l'accumulation infinie
         transform.rotation = lookRotation * Quaternion.Euler(0, 0, currentBanking);
 
         // 4. Avancement
-        transform.position += transform.forward * speed * Time.deltaTime;
+        transform.position += speed * Time.deltaTime * transform.forward;
 
         if (Vector3.Distance(transform.position, manager.transform.position) > manager.MaxDistance)
         {
