@@ -15,20 +15,20 @@ public class CloudManager : MonoBehaviour
     [Range(1, 500)]
     public int cloudCount = 90;
 
-    [Tooltip("Nombre de textures procédurales différentes générées au lancement.")]
+    [Tooltip("Nombre de textures procï¿½durales diffï¿½rentes gï¿½nï¿½rï¿½es au lancement.")]
     [Range(1, 32)]
     public int textureVariants = 10;
 
     [Tooltip("Hauteur des nuages. Si altitudeRelativeToTarget est false, c'est une hauteur monde.")]
     public Vector2 altitudeRange = new Vector2(55f, 95f);
 
-    [Tooltip("Active ça si tu veux que les nuages restent au-dessus du joueur/caméra en Y.")]
+    [Tooltip("Active ï¿½a si tu veux que les nuages restent au-dessus du joueur/camï¿½ra en Y.")]
     public bool altitudeRelativeToTarget = false;
 
-    [Tooltip("Taille générale des planes.")]
+    [Tooltip("Taille gï¿½nï¿½rale des planes.")]
     public Vector2 sizeRange = new Vector2(25f, 75f);
 
-    [Tooltip("Étirement aléatoire des nuages.")]
+    [Tooltip("ï¿½tirement alï¿½atoire des nuages.")]
     public Vector2 stretchRange = new Vector2(0.8f, 1.8f);
 
     [Header("Mouvement")]
@@ -38,16 +38,16 @@ public class CloudManager : MonoBehaviour
     [Tooltip("Vitesse des nuages.")]
     public Vector2 speedRange = new Vector2(2f, 7f);
 
-    [Tooltip("Rotation lente aléatoire des nuages.")]
+    [Tooltip("Rotation lente alï¿½atoire des nuages.")]
     public Vector2 spinSpeedRange = new Vector2(-3f, 3f);
 
-    [Tooltip("Petit mouvement vertical pour éviter que ce soit trop statique.")]
+    [Tooltip("Petit mouvement vertical pour ï¿½viter que ce soit trop statique.")]
     public float verticalWobble = 1.2f;
 
     public Vector2 wobbleFrequencyRange = new Vector2(0.08f, 0.18f);
 
-    [Header("Texture procédurale")]
-    [Tooltip("0 = seed aléatoire à chaque play. Sinon, même seed = mêmes nuages.")]
+    [Header("Texture procï¿½durale")]
+    [Tooltip("0 = seed alï¿½atoire ï¿½ chaque play. Sinon, mï¿½me seed = mï¿½mes nuages.")]
     public int seed = 12345;
 
     [Range(32, 1024)]
@@ -59,7 +59,7 @@ public class CloudManager : MonoBehaviour
     [Range(1, 6)]
     public int noiseOctaves = 4;
 
-    [Tooltip("Plus bas = nuages plus pleins. Plus haut = nuages plus troués.")]
+    [Tooltip("Plus bas = nuages plus pleins. Plus haut = nuages plus trouï¿½s.")]
     [Range(0.25f, 0.75f)]
     public float cloudDensity = 0.46f;
 
@@ -75,7 +75,7 @@ public class CloudManager : MonoBehaviour
     private readonly List<Texture2D> generatedTextures = new List<Texture2D>();
 
     private Mesh cloudMesh;
-    private System.Random rng;
+    private Pcg32 rng;
 
     private class CloudRuntime
     {
@@ -133,14 +133,27 @@ public class CloudManager : MonoBehaviour
         if (followTarget == null && Camera.main != null)
             followTarget = Camera.main.transform;
 
-        int finalSeed = seed == 0 ? System.Environment.TickCount : seed;
-        rng = new System.Random(finalSeed);
+        rng = new Pcg32();
+
+        int textureSeedBase;
+
+        if (seed == 0)
+        {
+            textureSeedBase = (int)(rng.NextUInt() & 0x7FFFFFFF);
+        }
+        else
+        {
+            rng.Seed((ulong)seed, (ulong)seed * 747796405UL);
+            textureSeedBase = seed;
+        }
 
         cloudMesh = CreateCloudQuadMesh();
 
         for (int i = 0; i < textureVariants; i++)
         {
-            Texture2D tex = GenerateProceduralCloudTexture(finalSeed + i * 9973);
+            Texture2D tex =
+                GenerateProceduralCloudTexture(textureSeedBase + i * 9973);
+
             generatedTextures.Add(tex);
 
             Material mat = CreateCloudMaterial(tex);
@@ -280,7 +293,8 @@ public class CloudManager : MonoBehaviour
 
         Color[] pixels = new Color[size * size];
 
-        System.Random localRng = new System.Random(textureSeed);
+        Pcg32 localRng = new Pcg32();
+        localRng.Seed((ulong)textureSeed, (ulong)textureSeed * 747796405UL);
         float offsetX = RandomRange(localRng, -10000f, 10000f);
         float offsetY = RandomRange(localRng, -10000f, 10000f);
 
@@ -405,32 +419,25 @@ public class CloudManager : MonoBehaviour
     {
         if (max < min)
         {
-            float temp = min;
-            min = max;
-            max = temp;
+            (min, max) = (max, min);
         }
 
-        return Mathf.Lerp(min, max, (float)rng.NextDouble());
+        return min + rng.NextFloat() * (max - min);
     }
 
-    private static float RandomRange(System.Random random, float min, float max)
+    private static float RandomRange(Pcg32 random, float min, float max)
     {
         if (max < min)
         {
-            float temp = min;
-            min = max;
-            max = temp;
+            (min, max) = (max, min);
         }
 
-        return Mathf.Lerp(min, max, (float)random.NextDouble());
+        return min + random.NextFloat() * (max - min);
     }
 
     private int RandomInt(int minInclusive, int maxExclusive)
     {
-        if (maxExclusive <= minInclusive)
-            return minInclusive;
-
-        return rng.Next(minInclusive, maxExclusive);
+        return rng.Range(minInclusive, maxExclusive);
     }
 
     private void ClearClouds()

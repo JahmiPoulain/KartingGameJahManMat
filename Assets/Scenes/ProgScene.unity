@@ -1158,7 +1158,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   followTarget: {fileID: 0}
   areaSize: {x: 20000, y: 20000}
-  cloudCount: 500
+  cloudCount: 200
   textureVariants: 32
   altitudeRange: {x: 450, y: 500}
   altitudeRelativeToTarget: 0
@@ -4461,7 +4461,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9a13d07b0648479ebd909dd83a83c5d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  terrainOrigin: {x: -311, y: -202}
+  terrainOrigin: {x: 0, y: 0}
   terrainSize: {x: 1000, y: 1000}
   mapSize: 150
   items:
