@@ -284,11 +284,12 @@ public class KartScriptV2 : MonoBehaviour
         }
     }
 
-    public void StartWindBlow(Vector3 dir, float force)
+    public void StartWindBlow(Vector3 dir, float force, bool fast)
     {
         currentWindDir = dir;
         currentTargetWindForce = force;
         Debug.Log(dir + " " + force);
+        if (fast) { currentWindForce = force * 0.85f; }
         //if (flightSpeed < 6f) { flightSpeed = 6f; }
         //flightDir.forward = dir;
     }
@@ -304,7 +305,7 @@ public class KartScriptV2 : MonoBehaviour
             nextWindForce -= 100f * Time.fixedDeltaTime;
             if (nextWindForce < currentTargetWindForce)
             {
-                Debug.Log(1);
+                //Debug.Log(1);
                 nextWindForce = currentTargetWindForce;
                 currentTargetWindForce = 0f;
             }
@@ -315,7 +316,7 @@ public class KartScriptV2 : MonoBehaviour
             nextWindForce += 100f * Time.fixedDeltaTime;
             if (nextWindForce > currentTargetWindForce)
             {
-                Debug.Log(2);
+                //Debug.Log(2);
                 nextWindForce = currentTargetWindForce;
                 currentTargetWindForce = 0f;
             }
@@ -412,7 +413,7 @@ public class KartScriptV2 : MonoBehaviour
 
         transform.Rotate(0, currentFlightTurnForce, 0);//(0, (currentTurnSpeed + currentDriftForce) / 1.5f, 0);
         flightDir.localEulerAngles = new Vector3(flightDir.localEulerAngles.x, 0f, currentFlightTurnForce * 10f);
-        rb.linearVelocity = (flightDir.forward * (flightSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + (currentFallSpeed / (1f + flightSpeed / 2.5f)) / 1.2f) + currentWindDir * currentWindForce;
+        rb.linearVelocity = (flightDir.forward * (flightSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + (currentFallSpeed / (1f + flightSpeed / 2.5f)) * 1.2f) + currentWindDir * currentWindForce;
     }
 
     private void LateUpdate()
