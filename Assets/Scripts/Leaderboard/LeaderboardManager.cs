@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using LootLocker.Requests;
 using System;
 using System.Collections;
@@ -20,9 +21,21 @@ public class LeaderboardManager : MonoBehaviour
     [SerializeField] private LeaderboardPage normalPagePrefab;
     [SerializeField] private Transform pagesParent;
 
+    [Header("Navigation")]
+    [SerializeField] private Button previousPageButton;
+    [SerializeField] private Button nextPageButton;
+    [SerializeField] private bool startOnFirstPageAfterRefresh = true;
+
     [Header("Display")]
     [SerializeField] private bool prefixRankInName = true;
 
+    [Header("Debug")]
+    [SerializeField] private bool enableDebugSubmit = true;
+    [SerializeField] private KeyCode debugSubmitKey = KeyCode.T;
+    [SerializeField] private int minRandomTimeMs = 30_000;
+    [SerializeField] private int maxRandomTimeMs = 180_000;
+
+    private readonly List<LeaderboardPage> pages = new();
     private readonly List<LeaderboardPage> spawnedNormalPages = new();
     private readonly List<LeaderboardDisplayEntry> leaderboardEntries = new();
 
@@ -36,6 +49,8 @@ public class LeaderboardManager : MonoBehaviour
 
     private bool hasPendingLocalScore;
     private int pendingLocalScore;
+
+    private int currentPageIndex;
 
     private struct LeaderboardDisplayEntry
     {
@@ -72,9 +87,43 @@ public class LeaderboardManager : MonoBehaviour
         Instance = this;
     }
 
+    private void OnEnable()
+    {
+        if (previousPageButton != null)
+            previousPageButton.onClick.AddListener(ShowPreviousPage);
+
+        if (nextPageButton != null)
+            nextPageButton.onClick.AddListener(ShowNextPage);
+    }
+
+    private void OnDisable()
+    {
+        if (previousPageButton != null)
+            previousPageButton.onClick.RemoveListener(ShowPreviousPage);
+
+        if (nextPageButton != null)
+            nextPageButton.onClick.RemoveListener(ShowNextPage);
+    }
+
     private void Start()
     {
+        HideNavigationButtons();
         StartLootLockerSession();
+    }
+
+    private void Update()
+    {
+        if (!enableDebugSubmit)
+            return;
+
+        if (Input.GetKeyDown(debugSubmitKey))
+        {
+            int randomScore = UnityEngine.Random.Range(minRandomTimeMs, maxRandomTimeMs + 1);
+
+            Debug.Log($"Score debug envoyé : {FormatTime(randomScore)}");
+
+            SubmitScoreAndRefresh(randomScore);
+        }
     }
 
     private void StartLootLockerSession()
@@ -99,13 +148,9 @@ public class LeaderboardManager : MonoBehaviour
                 LootLockerSDKManager.SetPlayerName(uniqueName, nameResponse =>
                 {
                     if (nameResponse.success)
-                    {
                         Debug.Log("Nom unique enregistré : " + uniqueName);
-                    }
                     else
-                    {
                         Debug.LogWarning("Impossible d'enregistrer le nom du joueur.");
-                    }
                 });
             }
             else
@@ -227,7 +272,6 @@ public class LeaderboardManager : MonoBehaviour
         {
             LeaderboardDisplayEntry existingEntry = leaderboardEntries[existingIndex];
 
-            // En contre-la-montre, le meilleur score est le temps le plus bas.
             if (existingEntry.Score <= timeInMilliseconds)
             {
                 existingEntry.IsLocalPlayer = true;
@@ -292,27 +336,44 @@ public class LeaderboardManager : MonoBehaviour
 
         ClearSpawnedNormalPages();
 
+        pages.Clear();
+        pages.Add(firstPage);
+
         int totalEntries = leaderboardEntries.Count;
         int pageCount = Mathf.Max(1, Mathf.CeilToInt(totalEntries / (float)EntriesPerPage));
 
-        firstPage.gameObject.SetActive(true);
-
         for (int pageIndex = 0; pageIndex < pageCount; pageIndex++)
         {
-            LeaderboardPage page = GetPage(pageIndex);
+            LeaderboardPage page;
+
+            if (pageIndex == 0)
+            {
+                page = firstPage;
+            }
+            else
+            {
+                page = CreateNormalPage();
+            }
 
             if (page == null)
                 continue;
 
+            if (pageIndex > 0)
+                pages.Add(page);
+
             FillPage(page, pageIndex);
         }
+
+        if (startOnFirstPageAfterRefresh)
+            currentPageIndex = 0;
+        else
+            currentPageIndex = Mathf.Clamp(currentPageIndex, 0, pages.Count - 1);
+
+        ShowPage(currentPageIndex);
     }
 
-    private LeaderboardPage GetPage(int pageIndex)
+    private LeaderboardPage CreateNormalPage()
     {
-        if (pageIndex == 0)
-            return firstPage;
-
         if (normalPagePrefab == null)
         {
             Debug.LogError("NormalPagePrefab n'est pas assigné dans le LeaderboardManager.");
@@ -322,7 +383,7 @@ public class LeaderboardManager : MonoBehaviour
         Transform parent = pagesParent != null ? pagesParent : transform;
 
         LeaderboardPage page = Instantiate(normalPagePrefab, parent);
-        page.gameObject.SetActive(true);
+        page.gameObject.SetActive(false);
 
         spawnedNormalPages.Add(page);
 
@@ -354,6 +415,64 @@ public class LeaderboardManager : MonoBehaviour
                 entry.Rank
             );
         }
+    }
+
+    private void ShowPreviousPage()
+    {
+        Debug.Log($"Previous clicked. Current page before: {currentPageIndex}, total pages: {pages.Count}");
+        
+        if (currentPageIndex <= 0)
+            return;
+
+        ShowPage(currentPageIndex - 1);
+    }
+
+    private void ShowNextPage()
+    {
+        if (currentPageIndex >= pages.Count - 1)
+            return;
+
+        ShowPage(currentPageIndex + 1);
+    }
+
+    private void ShowPage(int pageIndex)
+    {
+        if (pages.Count == 0)
+        {
+            HideNavigationButtons();
+            return;
+        }
+
+        currentPageIndex = Mathf.Clamp(pageIndex, 0, pages.Count - 1);
+
+        for (int i = 0; i < pages.Count; i++)
+        {
+            if (pages[i] != null)
+                pages[i].gameObject.SetActive(i == currentPageIndex);
+        }
+
+        UpdateNavigationButtons();
+    }
+
+    private void UpdateNavigationButtons()
+    {
+        bool hasPreviousPage = currentPageIndex > 0;
+        bool hasNextPage = currentPageIndex < pages.Count - 1;
+
+        if (previousPageButton != null)
+            previousPageButton.gameObject.SetActive(hasPreviousPage);
+
+        if (nextPageButton != null)
+            nextPageButton.gameObject.SetActive(hasNextPage);
+    }
+
+    private void HideNavigationButtons()
+    {
+        if (previousPageButton != null)
+            previousPageButton.gameObject.SetActive(false);
+
+        if (nextPageButton != null)
+            nextPageButton.gameObject.SetActive(false);
     }
 
     private void ClearSpawnedNormalPages()

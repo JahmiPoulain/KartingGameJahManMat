@@ -17,8 +17,6 @@ public class LeaderboardPage : MonoBehaviour
     [SerializeField] private string emptyName = "--";
     [SerializeField] private string emptyScore = "--:--.---";
 
-    public int SlotCount => SlotsPerPage;
-
     public void SetEntry(
         int slotIndex,
         string playerName,
@@ -71,9 +69,6 @@ public class LeaderboardPage : MonoBehaviour
         if (slotIndex >= nameTexts.Length || slotIndex >= scoreTexts.Length)
             return false;
 
-        if (nameTexts[slotIndex] == null || scoreTexts[slotIndex] == null)
-            return false;
-
-        return true;
+        return nameTexts[slotIndex] != null && scoreTexts[slotIndex] != null;
     }
 }
