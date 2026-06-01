@@ -31,7 +31,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 7926506448043299815}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &7545684174185083360
+--- !u!1 &6265029850919967489
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -39,68 +39,46 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 7926506448043299815}
-  - component: {fileID: 7794256034428843845}
-  - component: {fileID: 2748824298285420522}
-  - component: {fileID: 1425299232775592571}
-  - component: {fileID: 5502685193742765561}
+  - component: {fileID: 2448832915693107856}
+  - component: {fileID: 3339899998720730627}
+  - component: {fileID: 3506660162032937769}
   m_Layer: 0
-  m_Name: Turbo Booster
+  m_Name: Quad
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &7926506448043299815
+--- !u!4 &2448832915693107856
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7545684174185083360}
+  m_GameObject: {fileID: 6265029850919967489}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: -0.7071068, w: 0}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 10, y: 10, z: 10}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 8677680643751666528}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7794256034428843845
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7545684174185083360}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6315c061264351d4091e15de53cad3c6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  boostForce: 25
-  boostTime: 0.1
-  activateFlight: 0
-  deactivatesFlight: 0
-  turnsKart: 0
-  turnDir: {fileID: 8677680643751666528}
-  windBox: {fileID: 0}
---- !u!33 &2748824298285420522
+  m_Children: []
+  m_Father: {fileID: 7926506448043299815}
+  m_LocalEulerAnglesHint: {x: 90, y: 180, z: 0}
+--- !u!33 &3339899998720730627
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7545684174185083360}
-  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
---- !u!23 &1425299232775592571
+  m_GameObject: {fileID: 6265029850919967489}
+  m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &3506660162032937769
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7545684174185083360}
+  m_GameObject: {fileID: 6265029850919967489}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -139,6 +117,60 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &7545684174185083360
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7926506448043299815}
+  - component: {fileID: 7794256034428843845}
+  - component: {fileID: 5502685193742765561}
+  m_Layer: 0
+  m_Name: Turbo Booster
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7926506448043299815
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7545684174185083360}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 8677680643751666528}
+  - {fileID: 2448832915693107856}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7794256034428843845
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7545684174185083360}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6315c061264351d4091e15de53cad3c6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  boostForce: 25
+  boostTime: 0.1
+  activateFlight: 0
+  deactivatesFlight: 0
+  turnsKart: 0
+  turnDir: {fileID: 8677680643751666528}
+  windBox: {fileID: 0}
 --- !u!65 &5502685193742765561
 BoxCollider:
   m_ObjectHideFlags: 0
