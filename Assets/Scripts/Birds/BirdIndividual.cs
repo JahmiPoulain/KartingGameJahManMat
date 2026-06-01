@@ -8,11 +8,9 @@ public class BirdIndividual : MonoBehaviour
     private BirdFlockManager manager;
     private float internalTimer;
     private float currentBanking;
-
-    // Pour éviter l'effet toupie, on stocke la rotation de direction s�par�ment
     private Quaternion lookRotation;
 
-    public void Initialize(BirdFlockManager manager, Pcg32 sharedRng, Vector3 startPos, Vector3 dir, float speed, float scale)
+    public void Initialize(BirdFlockManager manager, Vector3 startPos, Vector3 dir, float speed, float scale)
     {
         this.manager = manager;
         this.direction = dir.normalized;
@@ -20,11 +18,10 @@ public class BirdIndividual : MonoBehaviour
         this.transform.position = startPos;
         this.transform.localScale = Vector3.one * scale;
 
-        this.noiseOffset = sharedRng.NextFloat() * 1000f;
+        this.noiseOffset = Random.value * 1000f; // Utilise le random d'Unity
         this.internalTimer = 0f;
         this.currentBanking = 0f;
 
-        // Initialise la rotation pour �viter un "snap" au d�part
         this.lookRotation = Quaternion.LookRotation(direction);
     }
 
@@ -32,30 +29,30 @@ public class BirdIndividual : MonoBehaviour
     {
         internalTimer += Time.deltaTime;
 
-        // 1. Direction organique (Perlin Noise)
+        // 1. Direction organique
         float nX = Mathf.PerlinNoise(internalTimer * 0.4f, noiseOffset) - 0.5f;
         float nY = Mathf.PerlinNoise(noiseOffset, internalTimer * 0.4f) - 0.5f;
-        Vector3 noiseVec = new(nX, nY, 0);
+        Vector3 noiseVec = new Vector3(nX, nY, 0); // Syntaxe corrigée
         Vector3 finalDir = (direction + transform.TransformDirection(noiseVec)).normalized;
 
-        // 2. Calcul du Banking (Inclinaison)
+        // 2. Calcul du Banking
         float angleDiff = Vector3.SignedAngle(transform.forward, finalDir, Vector3.up);
         currentBanking = Mathf.Lerp(currentBanking, -angleDiff * 3.0f, Time.deltaTime * 3f);
 
-        // 3. Rotation (CORRECTION TOUPIE)
-        // On calcule la rotation vers la cible
-        Quaternion targetLook = Quaternion.LookRotation(finalDir, Vector3.up);
-        // On lisse cette rotation
-        lookRotation = Quaternion.Slerp(lookRotation, targetLook, Time.deltaTime * 2.5f);
+        // 3. Rotation
+        if (finalDir != Vector3.zero)
+        {
+            Quaternion targetLook = Quaternion.LookRotation(finalDir, Vector3.up);
+            lookRotation = Quaternion.Slerp(lookRotation, targetLook, Time.deltaTime * 2.5f);
+        }
 
-        // On applique : Rotation de direction + Rotation d'inclinaison (Banking)
-        // L'utilisation du "=" au lieu du "*=" empêche l'accumulation infinie
         transform.rotation = lookRotation * Quaternion.Euler(0, 0, currentBanking);
 
         // 4. Avancement
         transform.position += speed * Time.deltaTime * transform.forward;
 
-        if (Vector3.Distance(transform.position, manager.transform.position) > manager.MaxDistance)
+        // 5. Désactivation : basé sur la caméra
+        if (Vector3.Distance(transform.position, manager.CameraPosition) > manager.MaxDistance)
         {
             manager.ReturnBirdToPool(this);
         }

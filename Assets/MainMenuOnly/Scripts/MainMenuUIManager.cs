@@ -24,7 +24,7 @@ public class WheelItem
 
 public class MainMenuUIManager : MonoBehaviour
 {
-    public enum MenuState { TitleScreen, MainMenu, PlayBasurd, OptionsMenu, SubWindowOpen, Loading }
+    public enum MenuState { TitleScreen, MainMenu, PlayGameModes, OptionsMenu, SubWindowOpen, Loading }
 
     [Header("--- États & Navigation ---")]
     public MenuState currentState = MenuState.TitleScreen;
@@ -118,7 +118,6 @@ public class MainMenuUIManager : MonoBehaviour
     [Tooltip("Vitesse de glissement de la roue")]
     public float wheelMoveSpeed = 8f;
 
-    // Ces variables vont capturer AUTOMATIQUEMENT la position de ton éditeur Unity !
     private Vector2 mainWheelActivePos;
     private Vector2 settingsWheelActivePos;
     private Vector2 playWheelActivePos;
@@ -246,12 +245,12 @@ public class MainMenuUIManager : MonoBehaviour
             case MenuState.OptionsMenu:
                 targetSettingsPos = settingsWheelActivePos;
                 break;
-            case MenuState.PlayBasurd:
+            case MenuState.PlayGameModes:
                 targetPlayPos = playWheelActivePos;
                 break;
             case MenuState.SubWindowOpen:
                 if (stateBeforeSubWindow == MenuState.OptionsMenu) targetSettingsPos = settingsWheelActivePos;
-                else if (stateBeforeSubWindow == MenuState.PlayBasurd) targetPlayPos = playWheelActivePos;
+                else if (stateBeforeSubWindow == MenuState.PlayGameModes) targetPlayPos = playWheelActivePos;
                 else targetMainPos = mainWheelActivePos;
                 break;
         }
@@ -275,7 +274,7 @@ public class MainMenuUIManager : MonoBehaviour
         {
             case MenuState.TitleScreen: return titleScreenPosition;
             case MenuState.MainMenu: return mainMenuPosition;
-            case MenuState.PlayBasurd: return optionsPosition;
+            case MenuState.PlayGameModes: return optionsPosition;
             case MenuState.OptionsMenu: return optionsPosition;
             case MenuState.SubWindowOpen:
                 return (stateBeforeSubWindow == MenuState.OptionsMenu) ? optionsPosition : mainMenuPosition;
@@ -328,7 +327,7 @@ public class MainMenuUIManager : MonoBehaviour
         {
             ChangeState(MenuState.MainMenu);
         }
-        else if (currentState == MenuState.PlayBasurd)
+        else if (currentState == MenuState.PlayGameModes)
         {
             ChangeState(MenuState.MainMenu);
         }
@@ -344,7 +343,7 @@ public class MainMenuUIManager : MonoBehaviour
             return;
         }
 
-        if (currentState == MenuState.MainMenu || currentState == MenuState.OptionsMenu || currentState == MenuState.PlayBasurd)
+        if (currentState == MenuState.MainMenu || currentState == MenuState.OptionsMenu || currentState == MenuState.PlayGameModes)
         {
             int inputDirection = 0;
             float v = Input.GetAxisRaw("Vertical");
@@ -398,7 +397,7 @@ public class MainMenuUIManager : MonoBehaviour
             currentSettingsIndex = (currentSettingsIndex + direction + settingsOptions.Length) % settingsOptions.Length;
             targetSettingsAngle = initialSettingsAngle - (-currentSettingsIndex * customAnglePerOption * spawnDirection);
         }
-        else if (currentState == MenuState.PlayBasurd)
+        else if (currentState == MenuState.PlayGameModes)
         {
             currentPlayIndex = (currentPlayIndex + direction + playButtons.Length) % playButtons.Length;
             targetPlayAngle = InitialPlayAngle - (-currentPlayIndex * customAnglePerOption * spawnDirection);
@@ -414,10 +413,12 @@ public class MainMenuUIManager : MonoBehaviour
 
             if (selectedName.Contains("play") || selectedName.Contains("jouer"))
             {
-                if (currentItem.windowToOpen != null) ChangeState(MenuState.PlayBasurd);
-                //else LaunchScene("");
+                ChangeState(MenuState.PlayGameModes);
             }
-            else if (selectedName.Contains("setting") || selectedName.Contains("option")) ChangeState(MenuState.OptionsMenu);
+            else if (selectedName.Contains("setting") || selectedName.Contains("option"))
+            {
+                ChangeState(MenuState.OptionsMenu);
+            }
             else if (selectedName.Contains("quit") || selectedName.Contains("quitter"))
             {
 #if UNITY_EDITOR
@@ -426,18 +427,21 @@ public class MainMenuUIManager : MonoBehaviour
                 Application.Quit(); 
 #endif
             }
-            else if (currentItem.windowToOpen != null) OpenWindow(currentItem.windowToOpen);
+            else if (currentItem.windowToOpen != null)
+            {
+                OpenWindow(currentItem.windowToOpen);
+            }
         }
         else if (currentState == MenuState.OptionsMenu)
         {
             WheelItem currentItem = settingsOptions[currentSettingsIndex];
             if (currentItem.windowToOpen != null) OpenWindow(currentItem.windowToOpen);
         }
-        else if (currentState == MenuState.PlayBasurd)
+        else if (currentState == MenuState.PlayGameModes)
         {
             string selectedName = playButtons[currentPlayIndex].itemName.ToLower();
 
-            if (selectedName.Contains("INVERTED") || selectedName.Contains("toggle"))
+            if (selectedName.Contains("inverted") || selectedName.Contains("toggle"))
             {
                 isMapInverted = !isMapInverted;
                 Debug.Log("Map inversée est maintenant sur : " + isMapInverted);
@@ -448,13 +452,13 @@ public class MainMenuUIManager : MonoBehaviour
                     btnText.text = isMapInverted ? "INVERTED Y" : "INVERTED N";
                 }
             }
-            else if (selectedName.Contains("GHOST") || selectedName.Contains("Jouer contre le fantome"))
+            else if (selectedName.Contains("ghost") || selectedName.Contains("fantome"))
+            {
+                LaunchScene("ProgScene"); 
+            }
+            else if (selectedName.Contains("time attack") || selectedName.Contains("time"))
             {
                 LaunchScene("ProgScene");
-            }
-            else if (selectedName.Contains("TIME ATTACK") || selectedName.Contains("Jouer contre la montre"))
-            {
-                LaunchScene("GraphScene");
             }
         }
     }
@@ -512,7 +516,7 @@ public class MainMenuUIManager : MonoBehaviour
 
         for (int i = 0; i < playButtonsGenerated.Count; i++)
         {
-            float targetS = (currentState == MenuState.PlayBasurd && i == currentPlayIndex) ? selectedScale : normalScale;
+            float targetS = (currentState == MenuState.PlayGameModes && i == currentPlayIndex) ? selectedScale : normalScale;
             playButtonsGenerated[i].localScale = Vector3.Lerp(playButtonsGenerated[i].localScale, Vector3.one * targetS, Time.deltaTime * scaleAnimSpeed);
         }
     }

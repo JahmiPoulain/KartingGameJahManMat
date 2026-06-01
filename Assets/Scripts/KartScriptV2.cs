@@ -986,18 +986,19 @@ public class KartScriptV2 : MonoBehaviour
         float targetX = Mathf.Clamp((currentSpeed * -currentTurnSpeed / 110f * forwardDirection) + (turnDirection * driftForce), -10f, 10f);
 
         //  Debug.Log("avant " + playerCamera.transform.localPosition + camXpos);
-        if (playerCamera.transform.localPosition.x > targetX)
-        {
-            float nextXpos = playerCamera.transform.localPosition.x - 1.2f * Time.deltaTime;
+        //if (playerCamera.transform.localPosition.x > targetX)
+        //{
+           // playerCamera.transform.localPosition = Vector3.Lerp(playerCamera.transform.localPosition, firstPersonCamPos, 1f);
+            /*float nextXpos = playerCamera.transform.localPosition.x - 1.2f * Time.deltaTime;
 
             if (nextXpos < targetX)
             {
                 nextXpos = targetX;
             }
 
-            playerCamera.transform.localPosition = currentCamPosCenter + new Vector3(nextXpos, playerCamera.transform.localPosition.y, playerCamera.transform.localPosition.z);
-        }
-        else if (playerCamera.transform.localPosition.x < targetX)
+            playerCamera.transform.localPosition = currentCamPosCenter + new Vector3(nextXpos, playerCamera.transform.localPosition.y, playerCamera.transform.localPosition.z);*/
+       // }
+       /* else if (playerCamera.transform.localPosition.x < targetX)
         {
             float nextXpos = playerCamera.transform.localPosition.x + 1.2f * Time.deltaTime;
 
@@ -1007,7 +1008,7 @@ public class KartScriptV2 : MonoBehaviour
             }
 
             playerCamera.transform.localPosition = currentCamPosCenter + new Vector3(nextXpos, playerCamera.transform.localPosition.y, playerCamera.transform.localPosition.z);
-        }
+        }*/
         // Debug.Log("apres " + playerCamera.transform.localPosition + camXpos);
         // Debug.Log("avant "+playerCamera.transform.localPosition + camXpos);
         // playerCamera.transform.localPosition = new Vector3(IncrementTowardsValue(playerCamera.transform.localPosition.x, camXpos, 0.15f * Time.deltaTime), playerCamera.transform.localPosition.y, playerCamera.transform.localPosition.z);
@@ -1022,41 +1023,55 @@ public class KartScriptV2 : MonoBehaviour
         if (Physics.Raycast(groundRayOrigin.position, camDir.normalized, out RaycastHit hit, camDir.magnitude))
         {
             groundNormal = hit.normal;
-        }/
+        }
         //camPivot.localRotation = Quaternion.Slerp(camPivot.localRotation, Quaternion.Euler(targetDir), 2f * Time.deltaTime);
-        //camPivot.localEulerAngles = Vector3.Lerp(camPivot.localEulerAngles, targetDir, Time.deltaTime);
-        /* if (InputSystemHandler.instance.inputCameraMode)
+        //camPivot.localEulerAngles = Vector3.Lerp(camPivot.localEulerAngles, targetDir, Time.deltaTime);*/
+         if (InputSystemHandler.instance.inputCameraMode)
          {
-             Vector3 nextDir = thirdPersonCamPos - currentCamPosCenter; //playerCamera.transform.localPosition;
-             Vector3 nextDirNorm = nextDir.normalized;
-             Vector3 nextPos = (nextDirNorm + nextDir * 8f) * Time.deltaTime;
-             if (nextDir.sqrMagnitude > 0.0001f)
-             {
-                 //playerCamera.transform.localPosition += nextPos;
-                 currentCamPosCenter += nextPos;
-             }
-             else
-             {
+            /* Vector3 nextDir = thirdPersonCamPos - currentCamPosCenter; //playerCamera.transform.localPosition;
+                                                                        // Vector3 nextDirNorm = nextDir.normalized;
+                                                                        // Vector3 nextPos = (nextDirNorm + nextDir * 8f) * Time.deltaTime;
+            if (nextDir.sqrMagnitude > 0.1f)
+            {
+                
+                Debug.Log("AGDGGDGGDGGGSFDHJFKSRDGHFDHOGHFDOPGJODFJGDO");
+            }*/
+                //playerCamera.transform.localPosition += nextPos;
+                currentCamPosCenter = thirdPersonCamPos;
+             //   Debug.Log("GRO CAX 333333333");
+             //}
+            // else
+             //{
                  //playerCamera.transform.localPosition = thirdPersonCamPos;
-                 currentCamPosCenter = thirdPersonCamPos;
-             }
+                // currentCamPosCenter = thirdPersonCamPos;
+            //    Debug.Log("333333333333333333333333333");
+            // }
          }
          else
          {
-             Vector3 nextDir = firstPersonCamPos - currentCamPosCenter;//playerCamera.transform.localPosition;
-             Vector3 nextDirNorm = nextDir.normalized;
-             Vector3 nextPos = (nextDirNorm + nextDir * 8f) * Time.deltaTime;
+            currentCamPosCenter = firstPersonCamPos;
+            /* Vector3 nextDir = firstPersonCamPos - currentCamPosCenter;//playerCamera.transform.localPosition;
+            //// Vector3 nextDirNorm = nextDir.normalized;
+            // Vector3 nextPos = (nextDirNorm + nextDir * 8f) * Time.deltaTime;
              if (nextDir.sqrMagnitude > 0.0001f)
              {
-                 //playerCamera.transform.localPosition += nextPos;
-                 currentCamPosCenter += nextPos;
-             }
-             else
-             {
+                playerCamera.transform.localPosition = Vector3.Lerp(playerCamera.transform.localPosition, firstPersonCamPos, 0.1f);
+                //playerCamera.transform.localPosition += nextPos;
+                //  currentCamPosCenter = nextPos;
+                // Debug.Log("GRO CAX 111111111");
+            }
+           //  else
+          //   {
                  //playerCamera.transform.localPosition = firstPersonCamPos;
-                 currentCamPosCenter = firstPersonCamPos;
-             }
-         }*/
+                 //currentCamPosCenter = firstPersonCamPos;
+            //    Debug.Log("111111111111111111111111");
+             //}*/
+        }
+        Vector3 nextDir = playerCamera.transform.localPosition - currentCamPosCenter;
+        if (nextDir.sqrMagnitude > 0.01f)
+        {
+            playerCamera.transform.localPosition = Vector3.Lerp(playerCamera.transform.localPosition, currentCamPosCenter, 0.1f);
+        }
     }
 
     public void ReorientKart(Vector3 newDir)

@@ -6,14 +6,14 @@ public class BirdFlockManager : MonoBehaviour
     [Header("--- CONFIGURATION PRÉFAB ---")]
     [Tooltip("Le prefab de l'oiseau avec le script BirdIndividual")]
     [SerializeField] private BirdIndividual birdPrefab;
-    [Tooltip("Nombre max d'oiseaux actifs en m�me temps (Optimisation)")]
+    [Tooltip("Nombre max d'oiseaux actifs en même temps (Optimisation)")]
     [SerializeField] private int poolSize = 150;
 
     [Header("--- RÉFÉRENCES ---")]
     [Tooltip("La caméra principale du joueur. Laisse vide pour utiliser Camera.main")]
     [SerializeField] private Camera playerCamera;
 
-    [Header("--- PARAM�TRES DES GROUPES (FLOCKS) ---")]
+    [Header("--- PARAMÈTRES DES GROUPES (FLOCKS) ---")]
     [Range(1, 20)][SerializeField] private int minBirdsPerFlock = 3;
     [Range(1, 20)][SerializeField] private int maxBirdsPerFlock = 10;
     [Tooltip("Rayon de dispersion des oiseaux au sein d'un groupe")]
@@ -22,7 +22,7 @@ public class BirdFlockManager : MonoBehaviour
     [SerializeField] private float spawnInterval = 3f;
 
     [Header("--- ZONE DE VOL ---")]
-    [Tooltip("Distance de base pour l'apparition par rapport � la cam�ra")]
+    [Tooltip("Distance de base pour l'apparition par rapport à la caméra")]
     [SerializeField] private float spawnDistance = 80f;
     [SerializeField] private float minAltitude = 15f;
     [SerializeField] private float maxAltitude = 40f;
@@ -33,35 +33,29 @@ public class BirdFlockManager : MonoBehaviour
     [SerializeField] private float minSize = 0.5f;
     [SerializeField] private float maxSize = 2.0f;
 
-    // On augmente un peu la distance max pour laisser le temps � l'oiseau de sortir de l'�cran avant de despawn
     public float MaxDistance => spawnDistance * 1.5f;
-
-    // Propri�t� publique pour que les oiseaux connaissent la position de la cam�ra
     public Vector3 CameraPosition => playerCamera != null ? playerCamera.transform.position : Vector3.zero;
 
     private Stack<BirdIndividual> birdPool = new Stack<BirdIndividual>();
-    private Pcg32 rng;
     private float nextSpawnTime;
 
     void Awake()
     {
-        rng = new Pcg32();
-
         if (playerCamera == null)
-        {
-            playerCamera = Camera.main; // R�cup�re la cam�ra si on a oubli� de l'assigner
-        }
+            playerCamera = Camera.main; // Récupère la caméra si on a oublié de l'assigner
 
         if (birdPrefab == null)
         {
-            Debug.LogError("BirdFlockManager: Oublie pas d'assigner le Prefab !");
+            Debug.LogError("BirdFlockManager: N'oublie pas d'assigner le Prefab de l'oiseau !");
             enabled = false;
             return;
         }
 
+        // Création de la réserve (Pool) d'oiseaux au lancement
         for (int i = 0; i < poolSize; i++)
         {
-            BirdIndividual bird = Instantiate(birdPrefab);
+            // Range les clones sous le Manager dans la hiérarchie pour que ça reste propre
+            BirdIndividual bird = Instantiate(birdPrefab, this.transform);
             bird.gameObject.SetActive(false);
             birdPool.Push(bird);
         }
@@ -72,7 +66,7 @@ public class BirdFlockManager : MonoBehaviour
         if (Time.time >= nextSpawnTime)
         {
             SpawnNewFlock();
-            float variation = 0.8f + (rng.NextFloat() * 0.4f);
+            float variation = 0.8f + (Random.value * 0.4f);
             nextSpawnTime = Time.time + (spawnInterval * variation);
         }
     }
@@ -84,33 +78,27 @@ public class BirdFlockManager : MonoBehaviour
         bool validSpawn = false;
         int attempts = 0;
 
-        // On fait plusieurs essais (max 10) pour trouver un point hors du champ de vision de la cam�ra
+        // On fait plusieurs essais (max 10) pour trouver un point hors du champ de vision
         while (!validSpawn && attempts < 10)
         {
-            // Direction de vol al�atoire
-            float angle = rng.NextFloat() * Mathf.PI * 2f;
-            flyDir = new Vector3(Mathf.Cos(angle), (rng.NextFloat() - 0.5f) * 0.1f, Mathf.Sin(angle));
+            float angle = Random.value * Mathf.PI * 2f;
+            flyDir = new Vector3(Mathf.Cos(angle), (Random.value - 0.5f) * 0.1f, Mathf.Sin(angle));
 
-            // On spawn autour de la CAM�RA, et en face de la direction de vol pour qu'ils volent VERS/AU-DESSUS de la zone du joueur
             spawnOrigin = playerCamera.transform.position - (flyDir * spawnDistance);
-            spawnOrigin.y = playerCamera.transform.position.y + minAltitude + (rng.NextFloat() * (maxAltitude - minAltitude));
+            spawnOrigin.y = playerCamera.transform.position.y + minAltitude + (Random.value * (maxAltitude - minAltitude));
 
-            // INTELLIGENCE : V�rifier si le point est dans l'�cran
             Vector3 viewportPoint = playerCamera.WorldToViewportPoint(spawnOrigin);
 
-            // Si x et y sont entre 0 et 1, ET z > 0, c'est que c'est visible � l'�cran.
-            // On �largit un peu (-0.2 � 1.2) pour �tre s�r qu'ils spawnent vraiment bien au-del� des bords.
+            // Vérifie si c'est visible à l'écran
             bool isVisible = viewportPoint.z > 0 && viewportPoint.x > -0.2f && viewportPoint.x < 1.2f && viewportPoint.y > -0.2f && viewportPoint.y < 1.2f;
 
-            if (!isVisible)
-            {
-                validSpawn = true; // C'est bon, le joueur ne le verra pas popper !
-            }
+            if (!isVisible) validSpawn = true;
 
             attempts++;
         }
 
-        int count = rng.Range(minBirdsPerFlock, maxBirdsPerFlock);
+        // +1 car le max est exclusif avec les entiers
+        int count = Random.Range(minBirdsPerFlock, maxBirdsPerFlock + 1);
 
         for (int i = 0; i < count; i++)
         {
@@ -119,16 +107,16 @@ public class BirdFlockManager : MonoBehaviour
                 BirdIndividual bird = birdPool.Pop();
 
                 Vector3 offset = new Vector3(
-                    (rng.NextFloat() - 0.5f) * flockRadius,
-                    (rng.NextFloat() - 0.5f) * flockRadius,
-                    (rng.NextFloat() - 0.5f) * flockRadius
+                    (Random.value - 0.5f) * flockRadius,
+                    (Random.value - 0.5f) * flockRadius,
+                    (Random.value - 0.5f) * flockRadius
                 );
 
-                float s = minSpeed + (rng.NextFloat() * (maxSpeed - minSpeed));
-                float sz = minSize + (rng.NextFloat() * (maxSize - minSize));
+                float s = Mathf.Lerp(minSpeed, maxSpeed, Random.value);
+                float sz = Mathf.Lerp(minSize, maxSize, Random.value);
 
                 bird.gameObject.SetActive(true);
-                bird.Initialize(this, rng, spawnOrigin + offset, flyDir, s, sz);
+                bird.Initialize(this, spawnOrigin + offset, flyDir, s, sz);
             }
         }
     }
@@ -142,7 +130,6 @@ public class BirdFlockManager : MonoBehaviour
     private void OnDrawGizmosSelected()
     {
         Camera cam = playerCamera != null ? playerCamera : Camera.main;
-
         if (cam == null) return;
 
         Vector3 center = cam.transform.position;
@@ -152,11 +139,9 @@ public class BirdFlockManager : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(center, MaxDistance);
 
-
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(center + Vector3.up * minAltitude, 5f);
         Gizmos.DrawWireSphere(center + Vector3.up * maxAltitude, 5f);
-
         Gizmos.DrawLine(center + Vector3.up * minAltitude, center + Vector3.up * maxAltitude);
     }
 }
