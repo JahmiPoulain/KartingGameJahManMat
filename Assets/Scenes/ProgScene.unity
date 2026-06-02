@@ -341,7 +341,7 @@ Transform:
   m_GameObject: {fileID: 49819461}
   serializedVersion: 2
   m_LocalRotation: {x: -0.17128871, y: 0.60584253, z: -0.2113734, w: 0.74762046}
-  m_LocalPosition: {x: 356.28003, y: -32.05, z: 585.68}
+  m_LocalPosition: {x: 356.28003, y: 2.6999998, z: 585.68}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -834,7 +834,7 @@ Transform:
   m_GameObject: {fileID: 123079865}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 355.31995, y: -30.96, z: 594.95996}
+  m_LocalPosition: {x: 355.31995, y: 2.7, z: 594.95996}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -4672,19 +4672,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   birdPrefab: {fileID: -6106673338637625708, guid: 02d719823442be24482c5a968de5466a, type: 3}
-  poolSize: 150
+  poolSize: 2500
   playerCamera: {fileID: 1969114860}
   minBirdsPerFlock: 4
   maxBirdsPerFlock: 10
   flockRadius: 18.4
-  spawnInterval: 5
+  spawnInterval: 0.001
   spawnDistance: 150
-  minAltitude: 24.56
-  maxAltitude: 67.1
-  minSpeed: 9.88
+  minAltitude: -0.5
+  maxAltitude: 48
+  minSpeed: 8
   maxSpeed: 15
-  minSize: 0.44
-  maxSize: 1.09
+  minSize: 0.5
+  maxSize: 1.6
 --- !u!1001 &870157663
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5578,10 +5578,6 @@ PrefabInstance:
     - target: {fileID: 5071198954455071820, guid: 422acb23ed29d364b97f00b61d400643, type: 3}
       propertyPath: m_Name
       value: PNJ_Prefab
-      objectReference: {fileID: 0}
-    - target: {fileID: 8245567771194878533, guid: 422acb23ed29d364b97f00b61d400643, type: 3}
-      propertyPath: m_Constraints
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -7385,7 +7381,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 2147483647
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!154 &1330813582
 TerrainCollider:
   m_ObjectHideFlags: 0
@@ -10717,12 +10713,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   leaderboardKey: main_race
+  contentParent: {fileID: 864707714630149132}
+  entryPrefab: {fileID: 6202324795354704207, guid: 8a7f89c84fb7c4314952569e7677123c, type: 3}
+  scrollRect: {fileID: 6983034975821311569}
+  scrollbar: {fileID: 8674141633659344392}
   maxResults: 100
   serverRefreshDelay: 2
-  firstPage: {fileID: 0}
-  normalPagePrefab: {fileID: 0}
-  pagesParent: {fileID: 0}
-  prefixRankInName: 1
 --- !u!224 &2120857440
 RectTransform:
   m_ObjectHideFlags: 0
