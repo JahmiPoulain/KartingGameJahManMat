@@ -1116,7 +1116,7 @@ MonoBehaviour:
   textureVariants: 32
   altitudeRange: {x: 450, y: 500}
   altitudeRelativeToTarget: 0
-  sizeRange: {x: 135, y: 185}
+  sizeRange: {x: 200, y: 480}
   stretchRange: {x: 0.6, y: 2.3}
   windDirectionXZ: {x: 3, y: 0.75}
   speedRange: {x: 6, y: 21}
@@ -1125,11 +1125,11 @@ MonoBehaviour:
   wobbleFrequencyRange: {x: 0.08, y: 0.18}
   seed: 12345
   textureSize: 780
-  noiseScale: 3.63
+  noiseScale: 3.51
   noiseOctaves: 5
-  cloudDensity: 0.375
+  cloudDensity: 0.415
   edgeSoftness: 0.02
-  cloudTint: {r: 1, g: 0.9009434, b: 0.9834906, a: 0.82}
+  cloudTint: {r: 1, g: 0.9481132, b: 0.99169815, a: 0.82}
 --- !u!1001 &169315836
 PrefabInstance:
   m_ObjectHideFlags: 0
