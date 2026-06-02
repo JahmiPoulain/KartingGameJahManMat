@@ -74,11 +74,9 @@ public class LapManager : MonoBehaviour
     private void UpdateLapUI()
     {
         if (currentMode is TimeAttack) lapUI.text = $"Try {_currentLap}";
-<<<<<<< Updated upstream
+
         else lapUI.text = $"Round {_currentLap}/{currentMode.MaxLaps}";
-=======
-        else lapUI.text = $"Tour {_currentLap}/{currentMode.MaxLaps}";
->>>>>>> Stashed changes
+
         if (currentMode.RaceFinished) lapUI.text = $"Round {currentMode.MaxLaps}/{currentMode.MaxLaps}";
     }
 
