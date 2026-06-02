@@ -80,6 +80,7 @@ public class KartScriptV2 : MonoBehaviour
     private float nonTurningWheelsXRot;
     public float turningWheelsRatioScaling;
     public float nonTurningWheelsRatioScaling;
+    [SerializeField] Transform steeringWheel;
 
     [Header("Bounce Animation")]
     public bool bounce;
@@ -211,6 +212,7 @@ public class KartScriptV2 : MonoBehaviour
         }
         PlayerInputs();
         HandleDrift();
+        HandleSteeringWheel();
     }
 
     private void FixedUpdate()
@@ -919,7 +921,10 @@ public class KartScriptV2 : MonoBehaviour
         Quaternion rotTarget = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);
         visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 40f * Time.deltaTime);
     }
-
+    void HandleSteeringWheel()
+    {
+        steeringWheel.localEulerAngles = new Vector3(visWheelsYRot - 90f, 90, -90f);
+    }
     void HandleVisualKartWheels()
     {
         if (isFlying)
