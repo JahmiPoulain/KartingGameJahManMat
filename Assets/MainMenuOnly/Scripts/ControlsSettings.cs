@@ -3,6 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using System.Collections;
+using System;
+using UnityEditor.Experimental.GraphView;
 
 public class ControlsSettings : MonoBehaviour
 {
@@ -34,7 +36,7 @@ public class ControlsSettings : MonoBehaviour
     [Header("Feedback Visuel")]
     public float selectedScale = 1.15f;
     public Color selectedColor = Color.yellow;
-    private Color normalColor = Color.white;
+    public Color normalColor = Color.white;
 
     [Header("Audio SFX")]
     public AudioSource audioSource;
@@ -44,6 +46,8 @@ public class ControlsSettings : MonoBehaviour
     private bool isVerticalAxisInUse = false;
     private Vector3 applyDefaultScale;
     private bool isInitialized = false;
+    private float floatingSpeed;
+    private float floatingAmount;
 
     void Awake()
     {
@@ -67,6 +71,7 @@ public class ControlsSettings : MonoBehaviour
         ChargerToutesLesTouches();
         UpdateVisualFeedback();
         UpdatePointerPosition();
+        AnimatePointer(true);
     }
 
     void Update()
@@ -79,6 +84,7 @@ public class ControlsSettings : MonoBehaviour
         {
             InteractWithCurrentSelection();
         }
+        AnimatePointer(false);
     }
 
     void HandleNavigation()
@@ -245,6 +251,22 @@ public class ControlsSettings : MonoBehaviour
             .Replace("/", " ")
             .Trim();
     }
+    void AnimatePointer(bool snapImmediately)
+    {
+        if (pointeur == null || actionRows == null || actionRows.Length == 0 || rowIndex >= actionRows.Length)
+            return;
+        Vector3 basePosition = actionRows[rowIndex].label.transform.position + Offset;
+
+        if (snapImmediately)
+        {
+            pointeur.position = basePosition;
+            return;
+        }
+        float waveY = Mathf.Sin(Time.time * floatingSpeed) * floatingAmount;
+
+        pointeur.position = new Vector3(basePosition.x, basePosition.y + waveY, basePosition.z);
+    }
+
 
     void UpdateVisualFeedback()
     {
@@ -253,8 +275,8 @@ public class ControlsSettings : MonoBehaviour
             if (row.rowObject != null)
                 row.rowObject.transform.localScale = row.defaultScale;
 
-            if (row.textKeyboard) row.textKeyboard.color = normalColor;
-            if (row.textGamepad) row.textGamepad.color = normalColor;
+           // if (row.textKeyboard) row.textKeyboard.color = normalColor;
+           // if (row.textGamepad) row.textGamepad.color = normalColor;
             if (row.textKeyboard) row.label.color = normalColor;
         }
 
@@ -270,8 +292,8 @@ public class ControlsSettings : MonoBehaviour
             if (selectedRow.rowObject != null)
                 selectedRow.rowObject.transform.localScale = selectedRow.defaultScale * selectedScale;
 
-            if (selectedRow.textGamepad) selectedRow.textGamepad.color = selectedColor;
-            if (selectedRow.textKeyboard) selectedRow.textKeyboard.color = selectedColor;
+            //if (selectedRow.textGamepad) selectedRow.textGamepad.color = selectedColor;
+            //if (selectedRow.textKeyboard) selectedRow.textKeyboard.color = selectedColor;
             if (selectedRow.textKeyboard) selectedRow.label.color = selectedColor;
         }
         else
