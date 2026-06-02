@@ -934,11 +934,11 @@ public class KartScriptV2 : MonoBehaviour
 
         for (int i = 0; i < turningWheels.Length; i++)
         {
-            turningWheels[i].transform.localRotation = Quaternion.Euler(turningWheelsXRot, visWheelsYRot, 90);
+            turningWheels[i].transform.localRotation = Quaternion.Euler(turningWheelsXRot, visWheelsYRot, 0);
         }
         for (int i = 0; i < nonTurningWheels.Length; i++)
         {
-            nonTurningWheels[i].transform.localRotation = Quaternion.Euler(nonTurningWheelsXRot, 0, 90);
+            nonTurningWheels[i].transform.localRotation = Quaternion.Euler(nonTurningWheelsXRot, 0, 0);
         }
     }
 
