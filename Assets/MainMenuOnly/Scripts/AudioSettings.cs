@@ -15,7 +15,7 @@ public class AudioSettings : MonoBehaviour
     [Header("Feedback Visuel")]
     public float selectedScale = 1.15f;
     public Color selectedColor = Color.yellow;
-    private Color normalColor = Color.white;
+    public Color normalColor = Color.white;
 
     [Header("Audio SFX Menu")]
     public AudioSource audioSource;
@@ -47,6 +47,9 @@ public class AudioSettings : MonoBehaviour
     private Vector3[] defaultScales;
     public static AudioSettings Instance;
 
+    public float floatingSpeed;
+    public float floatingAmount;
+
     private void Awake()
     {
         Instance = this;
@@ -66,6 +69,7 @@ public class AudioSettings : MonoBehaviour
 
     void OnEnable()
     {
+        AnimatePointer(true);
         index = 0;
         UpdateUI();
         UpdatePointerPosition();
@@ -81,6 +85,7 @@ public class AudioSettings : MonoBehaviour
         {
             InteractWithCurrentSelection();
         }
+        AnimatePointer(false);
     }
 
     void SetupSliders()
@@ -88,6 +93,23 @@ public class AudioSettings : MonoBehaviour
         if (masterSlider != null) { masterSlider.minValue = 0; masterSlider.maxValue = 10; masterSlider.interactable = false; }
         if (musicSlider != null) { musicSlider.minValue = 0; musicSlider.maxValue = 10; musicSlider.interactable = false; }
         if (sfxSlider != null) { sfxSlider.minValue = 0; sfxSlider.maxValue = 10; sfxSlider.interactable = false; }
+    }
+
+    void AnimatePointer(bool snapImmediately)
+    {
+        if (pointeur == null || selectables == null || selectables.Length == 0 || index >= selectables.Length)
+            return;
+
+        Vector3 basePosition = selectables[index].transform.position + Offset;
+
+        if (snapImmediately)
+        {
+            pointeur.position = basePosition;
+            return;
+        }
+        float waveY = Mathf.Sin(Time.time * floatingSpeed) * floatingAmount;
+
+        pointeur.position = new Vector3(basePosition.x, basePosition.y + waveY, basePosition.z);
     }
 
     void HandleNavigation()

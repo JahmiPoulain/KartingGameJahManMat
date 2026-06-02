@@ -9,23 +9,41 @@ public class PnjVibes : MonoBehaviour
     public float arrivalDistance = 0.2f;
 
     [Header("Paramètres du Sautillant (Funny)")]
-    public float bounceForce = 0.5f;   // Hauteur du saut
-    public float bounceSpeed = 10f;   // Vitesse du sautillement
-    public float tiltAmount = 15f;     // L'angle du balancement gauche/droite
+    public float bounceForce = 0.5f;
+    public float bounceSpeed = 10f;
+    public float tiltAmount = 15f;
+
+    [Header("Paramètres d'Impact (Ragdoll)")]
+    public float impactForce = 20f;
+    public float explosionRadius = 3f;
+    public float upwardModifier = 1.5f;
 
     private int currentPointIndex = 0;
     private Vector3 meshOffset;
     private float hopTimer;
 
+    private bool isRagdoll = false;
+    private Rigidbody mainRigidbody;
+    private Collider mainCollider;
+    private Rigidbody[] ragdollRigidbodies;
+    private Collider[] ragdollColliders;
+
     void Start()
     {
-        // On mémorise la position de départ locale pour le sautillement
         meshOffset = transform.position;
+
+        mainRigidbody = GetComponent<Rigidbody>();
+        mainCollider = GetComponent<Collider>();
+
+        ragdollRigidbodies = GetComponentsInChildren<Rigidbody>();
+        ragdollColliders = GetComponentsInChildren<Collider>();
+
+        DisableRagdoll();
     }
 
     void Update()
     {
-        if (points.Length == 0) return;
+        if (isRagdoll || points.Length == 0) return;
 
         MoveAndRotate();
         ApplyFunnyAnimation();
@@ -33,11 +51,9 @@ public class PnjVibes : MonoBehaviour
 
     void MoveAndRotate()
     {
-        // 1. Calcul de la cible en ignorant la hauteur (Y)
         Vector3 targetPos = points[currentPointIndex].position;
         Vector3 flatTarget = new Vector3(targetPos.x, transform.position.y, targetPos.z);
 
-        // 2. Rotation fluide vers la cible
         Vector3 direction = (flatTarget - transform.position).normalized;
         if (direction != Vector3.zero)
         {
@@ -45,10 +61,8 @@ public class PnjVibes : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
 
-        // 3. Déplacement vers la cible
         transform.position = Vector3.MoveTowards(transform.position, flatTarget, speed * Time.deltaTime);
 
-        // 4. Changement de point (Distance calculée uniquement sur X et Z)
         if (Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z),
                              new Vector3(flatTarget.x, 0, flatTarget.z)) < arrivalDistance)
         {
@@ -58,18 +72,56 @@ public class PnjVibes : MonoBehaviour
 
     void ApplyFunnyAnimation()
     {
-        // On fait progresser un timer interne
         hopTimer += Time.deltaTime * bounceSpeed;
 
-        // Calcul du saut (Sinus absolu pour toujours rester au-dessus du sol)
         float hopY = Mathf.Abs(Mathf.Sin(hopTimer)) * bounceForce;
-
-        // Calcul du balancement (Sinus simple pour aller de -tilt à +tilt)
         float tiltZ = Mathf.Sin(hopTimer) * tiltAmount;
 
-        // On applique uniquement sur l'apparence visuelle
-        // Astuce : Si tu as un modèle 3D enfant, applique ça à l'enfant pour ne pas casser la physique
         transform.GetChild(0).localPosition = new Vector3(0, hopY, 0);
         transform.GetChild(0).localRotation = Quaternion.Euler(0, 0, tiltZ);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Player") && !isRagdoll)
+        {
+            TriggerRagdoll(collision.transform.position);
+        }
+    }
+
+
+    void DisableRagdoll()
+    {
+        foreach (Rigidbody rb in ragdollRigidbodies)
+        {
+            if (rb != mainRigidbody)
+                rb.isKinematic = true;
+        }
+
+        foreach (Collider col in ragdollColliders)
+        {
+            if (col != mainCollider)
+                col.enabled = false;
+        }
+    }
+
+    void TriggerRagdoll(Vector3 impactPoint)
+    {
+        isRagdoll = true;
+
+        if (mainCollider != null) mainCollider.enabled = false;
+        if (mainRigidbody != null) mainRigidbody.isKinematic = true;
+
+        foreach (Collider col in ragdollColliders)
+        {
+            col.enabled = true;
+        }
+
+        foreach (Rigidbody rb in ragdollRigidbodies)
+        {
+            rb.isKinematic = false;
+
+            rb.AddExplosionForce(impactForce, impactPoint, explosionRadius, upwardModifier, ForceMode.Impulse);
+        }
     }
 }

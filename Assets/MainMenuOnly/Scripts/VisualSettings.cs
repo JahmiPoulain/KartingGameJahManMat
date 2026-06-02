@@ -11,16 +11,25 @@ public class VisualSettings : MonoBehaviour
     public GameObject[] selectables;
     public Vector3 Offset;
 
+    // --- NOUVEAU : Paramètres pour l'animation ---
+    [Header("Animation Curseur (Flottaison)")]
+    [Tooltip("Vitesse du mouvement de haut en bas")]
+    public float floatingSpeed = 5f;
+    [Tooltip("Hauteur du mouvement (en pixels si c'est de l'UI, ou unités monde)")]
+    public float floatingAmount = 15f;
+
     [Header("Feedback Visuel")]
     public float selectedScale = 1.15f; // L'objet grossit de 15%
     public Color selectedColor = Color.yellow;
-    private Color normalColor = Color.white;
+
+    // hexadecimal : #6D86A2
+    private Color normalColor = new Color(109f / 255f, 134f / 255f, 162f / 255f);
 
     [Header("Audio (Optionnel)")]
     public AudioSource audioSource;
-    public AudioClip soundNav;    // Son quand on change de ligne
-    public AudioClip soundChange; // Son quand on change gauche/droite
-    public AudioClip soundSubmit; // Son quand on valide
+    public AudioClip soundNav;
+    public AudioClip soundChange;
+    public AudioClip soundSubmit;
 
     [Header("Références UI")]
     public TMP_Text resText;
@@ -35,26 +44,24 @@ public class VisualSettings : MonoBehaviour
     public GameObject itemVsync;
     public GameObject itemApply;
 
-    public string[] resolutions = { "1920x1080", "1600x900", "1280x720", "800x600" };
-    private int currentResIndex = 0;
-    public int[] fpsValues = { 30, 60, 120, -1 };
-    public string[] fpsLabels = { "30 FPS", "60 FPS", "120 FPS", "Illimité" };
-    private int currentFpsIndex = 1;
-    private bool isFullscreen = true;
-    private bool isVsync = false;
+    [SerializeField] private Sprite checkboxempty;
+    [SerializeField] private Sprite checkboxfull;
 
     private bool isVerticalAxisInUse = false;
     private bool isHorizontalAxisInUse = false;
 
     void Start()
     {
-        UpdateUI();
+        if (MainMenuUIManager.Instance != null)
+        {
+            UpdateUI();
+        }
     }
 
     void OnEnable()
     {
         index = 0;
-        UpdatePointerPosition();
+        AnimatePointer(true);
         UpdateVisualFeedback();
     }
 
@@ -67,8 +74,24 @@ public class VisualSettings : MonoBehaviour
         {
             InteractWithCurrentSelection();
         }
+        AnimatePointer(false);
     }
+    void AnimatePointer(bool snapImmediately)
+    {
+        if (pointeur == null || selectables == null || selectables.Length == 0 || index >= selectables.Length)
+            return;
 
+        Vector3 basePosition = selectables[index].transform.position + Offset;
+
+        if (snapImmediately)
+        {
+            pointeur.position = basePosition;
+            return;
+        }
+        float waveY = Mathf.Sin(Time.time * floatingSpeed) * floatingAmount;
+
+        pointeur.position = new Vector3(basePosition.x, basePosition.y + waveY, basePosition.z);
+    }
 
     void UpdateVisualFeedback()
     {
@@ -78,12 +101,12 @@ public class VisualSettings : MonoBehaviour
 
             if (i == index)
             {
-                selectables[i].transform.localScale = selectables[i].transform.localScale * selectedScale;
+                selectables[i].transform.localScale = Vector3.one * selectedScale;
                 SetColorRecursive(selectables[i], selectedColor);
             }
             else
             {
-                selectables[i].transform.localScale = selectables[i].transform.localScale;
+                selectables[i].transform.localScale = Vector3.one;
                 SetColorRecursive(selectables[i], normalColor);
             }
         }
@@ -102,46 +125,6 @@ public class VisualSettings : MonoBehaviour
             audioSource.PlayOneShot(clip);
         }
     }
-
-
-
-    void SaveSettings()
-    {
-        PlayerPrefs.SetInt("ResIndex", currentResIndex);
-        PlayerPrefs.SetInt("FpsIndex", currentFpsIndex);
-        PlayerPrefs.SetInt("Fullscreen", isFullscreen ? 1 : 0);
-        PlayerPrefs.SetInt("Vsync", isVsync ? 1 : 0);
-
-        PlayerPrefs.Save();
-        Debug.Log("Paramètres sauvegardés !");
-    }
-
-    void LoadSettings()
-    {
-        currentResIndex = PlayerPrefs.GetInt("ResIndex", 0);
-        currentFpsIndex = PlayerPrefs.GetInt("FpsIndex", 1);
-        isFullscreen = PlayerPrefs.GetInt("Fullscreen", 1) == 1;
-        isVsync = PlayerPrefs.GetInt("Vsync", 0) == 1;
-
-        UpdateUI();
-    }
-
-    public void ApplySettings(bool shouldSave)
-    {
-        string[] resParts = resolutions[currentResIndex].Split('x');
-        int width = int.Parse(resParts[0]);
-        int height = int.Parse(resParts[1]);
-        Screen.SetResolution(width, height, isFullscreen);
-
-        QualitySettings.vSyncCount = isVsync ? 1 : 0;
-
-        Application.targetFrameRate = fpsValues[currentFpsIndex];
-
-        if (shouldSave) SaveSettings();
-
-        Debug.Log("Paramètres Appliqués !");
-    }
-
 
     void HandleNavigation()
     {
@@ -163,7 +146,7 @@ public class VisualSettings : MonoBehaviour
     void HandleModification()
     {
         float h = Input.GetAxisRaw("Horizontal");
-        if (Mathf.Abs(h) > 0.5f) 
+        if (Mathf.Abs(h) > 0.5f)
         {
             if (!isHorizontalAxisInUse)
             {
@@ -178,53 +161,21 @@ public class VisualSettings : MonoBehaviour
     void ChangeIndex(int dir)
     {
         int oldIndex = index;
-
         index = Mathf.Clamp(index + dir, 0, selectables.Length - 1);
 
         if (index != oldIndex)
         {
-            UpdatePointerPosition();
             UpdateVisualFeedback();
             PlaySfx(soundNav);
         }
     }
-    /*
-    void ChangeSettingValue(int dir)
-    {
-        bool changed = false;
-        GameObject selectedObject = selectables[index];
-
-        if (selectedObject == itemResolution)
-        {
-            int oldRes = currentResIndex;
-            currentResIndex = Mathf.Clamp(currentResIndex + dir, 0, resolutions.Length - 1);
-
-            if (currentResIndex != oldRes) changed = true;
-        }
-
-
-        else if (selectedObject == itemFps)
-        {
-            int oldFps = currentFpsIndex;
-            currentFpsIndex = Mathf.Clamp(currentFpsIndex + dir, 0, fpsLabels.Length - 1);
-
-            if (currentFpsIndex != oldFps) changed = true;
-        }
-
-        if (changed)
-        {
-            UpdateUI();
-            PlaySfx(soundChange);
-           // StartCoroutine(PulseEffect(selectables[index].transform));
-        }
-    }*/
 
     IEnumerator PulseEffect(Transform t)
     {
-        Vector3 m = t.localScale;
-        t.localScale = m * (selectedScale + 0.1f);
+        /*Vector3 m = Vector3.one * selectedScale;
+        t.localScale = Vector3.one * (selectedScale + 0.1f);*/
         yield return new WaitForSeconds(0.05f);
-        t.localScale = m * selectedScale;
+       // t.localScale = m;
     }
 
     void ChangeSettingValue(int dir)
@@ -232,6 +183,7 @@ public class VisualSettings : MonoBehaviour
         bool changed = false;
         GameObject selectedObject = selectables[index];
         var manager = MainMenuUIManager.Instance;
+        if (manager == null) return;
 
         if (selectedObject == itemResolution)
         {
@@ -250,6 +202,7 @@ public class VisualSettings : MonoBehaviour
         {
             UpdateUI();
             PlaySfx(soundChange);
+           // StartCoroutine(PulseEffect(selectables[index].transform));
         }
     }
 
@@ -257,6 +210,7 @@ public class VisualSettings : MonoBehaviour
     {
         PlaySfx(soundSubmit);
         var manager = MainMenuUIManager.Instance;
+        if (manager == null) return;
 
         if (selectables[index] == itemFullscreen) manager.isFullscreen = !manager.isFullscreen;
         else if (selectables[index] == itemVsync) manager.isVsync = !manager.isVsync;
@@ -272,15 +226,10 @@ public class VisualSettings : MonoBehaviour
     void UpdateUI()
     {
         var m = MainMenuUIManager.Instance;
+        if (m == null) return;
         resText.text = m.resolutions[m.currentResIndex];
         fpsText.text = m.fpsLabels[m.currentFpsIndex];
-        fullscreenToggle.color = m.isFullscreen ? Color.green : Color.gray;
-        VsyncToggle.color = m.isVsync ? Color.green : Color.gray;
-    }
-
-    void UpdatePointerPosition()
-    {
-        if (selectables.Length > 0)
-            pointeur.position = selectables[index].transform.position + Offset;
+        fullscreenToggle.sprite = m.isFullscreen ? checkboxfull : checkboxempty;
+        VsyncToggle.sprite = m.isVsync ? checkboxfull : checkboxempty;
     }
 }
