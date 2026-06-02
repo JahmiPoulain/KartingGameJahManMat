@@ -1149,12 +1149,15 @@ MonoBehaviour:
   fallbackLocalPlayerName: Player
   statusMessageRoot: {fileID: 778436910}
   statusMessageText: {fileID: 296315263}
-  offlineWithoutScoreMessage: "Vous \xEAtes actuellement hors ligne.\nConnectez-vous
-    \xE0 Internet pour voir le classement en ligne."
-  offlineWithScoreMessage: "Vous \xEAtes actuellement hors ligne.\nVotre meilleur
-    temps est enregistr\xE9 localement et sera synchronis\xE9 d\xE8s qu'une connexion
-    sera disponible."
-  syncingMessage: Connexion au classement en ligne...
+  offlineWithoutScoreMessage: 'You are currently offline.
+
+    Connect to the Internet
+    to view the online rankings.'
+  offlineWithScoreMessage: 'You are currently offline.
+
+    Your best time is saved
+    locally and will be synced as soon as a connection is available.'
+  syncingMessage: ' Connecting to the online leaderboard...'
   simulateOfflineMode: 0
   enableDebugSubmit: 1
   debugSubmitKey: 116
