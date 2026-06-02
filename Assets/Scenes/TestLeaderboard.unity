@@ -720,7 +720,7 @@ RectTransform:
   m_GameObject: {fileID: 778436910}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 8.01505, y: 8.01505, z: 8.01505}
+  m_LocalScale: {x: 7.136489, y: 7.136489, z: 7.136489}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 296315265}
@@ -728,7 +728,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 30}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &778436912
@@ -1149,12 +1149,15 @@ MonoBehaviour:
   fallbackLocalPlayerName: Player
   statusMessageRoot: {fileID: 778436910}
   statusMessageText: {fileID: 296315263}
-  offlineWithoutScoreMessage: "Vous \xEAtes actuellement hors ligne.\nConnectez-vous
-    \xE0 Internet pour voir le classement en ligne."
-  offlineWithScoreMessage: "Vous \xEAtes actuellement hors ligne.\nVotre meilleur
-    temps est enregistr\xE9 localement et sera synchronis\xE9 d\xE8s qu'une connexion
-    sera disponible."
-  syncingMessage: Connexion au classement en ligne...
+  offlineWithoutScoreMessage: 'You are currently offline.
+
+    Connect to the Internet
+    to view the online rankings.'
+  offlineWithScoreMessage: 'You are currently offline.
+
+    Your best time is saved
+    locally and will be synced as soon as a connection is available.'
+  syncingMessage: ' Connecting to the online leaderboard...'
   simulateOfflineMode: 0
   enableDebugSubmit: 1
   debugSubmitKey: 116

@@ -197,7 +197,7 @@ public class LeaderboardManager : MonoBehaviour
             if (string.IsNullOrEmpty(response.player_name))
             {
                 string publicUid = response.public_uid ?? response.player_id.ToString();
-                string uniqueName = "Joueur_" + publicUid[..Mathf.Min(4, publicUid.Length)];
+                string uniqueName = "Player_" + publicUid[..Mathf.Min(4, publicUid.Length)];
 
                 localPlayerName = uniqueName;
 
