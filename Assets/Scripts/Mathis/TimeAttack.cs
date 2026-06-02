@@ -98,7 +98,7 @@ public class TimeAttack : GameMode
             PlayerPrefs.Save(); // Optionnel mais sûr
 
             if (bestScoreUI != null)
-                bestScoreUI.text = "NOUVEAU RECORD : " + FormatTime(bestLapTime);
+                bestScoreUI.text = "NEW RECORD : " + FormatTime(bestLapTime);
         }
 
 

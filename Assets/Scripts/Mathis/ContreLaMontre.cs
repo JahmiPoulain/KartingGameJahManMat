@@ -37,13 +37,13 @@ public class ContreLaMontre : GameMode
         kartScript.CanDrive = false;
         kartScript.GhostMode = true;
         float totalTime = 0;
-        string detailScores = "Résultats :\n";
+        string detailScores = "Score :\n";
 
         for (int i = 0; i < lapManager.LapTimes.Count; i++)
         {
             float t = lapManager.LapTimes[i];
             totalTime += t;
-            detailScores += $"Tour {i + 1} : {FormatTime(t)}\n";
+            detailScores += $"Round {i + 1} : {FormatTime(t)}\n";
         }
 
         if (scoreUI != null)

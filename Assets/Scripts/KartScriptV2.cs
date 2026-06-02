@@ -298,7 +298,7 @@ public class KartScriptV2 : MonoBehaviour
     {
         if (!isFlying) { return; }   
         float nextWindForce = currentWindForce;
-        Debug.Log(nextWindForce + " " + currentTargetWindForce);
+        //Debug.Log(nextWindForce + " " + currentTargetWindForce);
         if (flightSpeed < 14f) { flightSpeed += 5f * Time.fixedDeltaTime; }
         if (nextWindForce > currentTargetWindForce)
         {
@@ -595,7 +595,7 @@ public class KartScriptV2 : MonoBehaviour
         if (tryDriftCoyoteTime > 0)
         {
             tryDriftCoyoteTime -= Time.deltaTime;
-            Debug.Log("Coyote" + tryDriftCoyoteTime);
+            //Debug.Log("Coyote" + tryDriftCoyoteTime);
         }
 
         //ca mem
@@ -915,9 +915,9 @@ public class KartScriptV2 : MonoBehaviour
         float nextTotalSpeed = visKartXRot + -currentTurboForce * 0.5f;
         nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -(maxSpeed), maxSpeed + 2f);
         groundNormalT.transform.rotation = Quaternion.LookRotation(Vector3.Cross(transform.right, groundNormal), groundNormal); // oriente le y vers le haut de la normale et le x vers l'avant du kart ( 2 semaines de galère )
-        preOrientation.localRotation = Quaternion.RotateTowards(preOrientation.localRotation, groundNormalT.localRotation, 0.4f);
+        preOrientation.localRotation = Quaternion.RotateTowards(preOrientation.localRotation, groundNormalT.localRotation, 120f * Time.deltaTime);
         Quaternion rotTarget = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);
-        visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 0.8f);
+        visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 40f * Time.deltaTime);
     }
 
     void HandleVisualKartWheels()
