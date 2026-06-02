@@ -8,6 +8,7 @@ public class ContreLaMontre : GameMode
     private TextMeshProUGUI startUI;
 
     bool boostWindow = false;
+    bool playerPressed = false;
 
     public override void Initialize(LapManager lm, KartScriptV2 ks)
     {
@@ -25,7 +26,7 @@ public class ContreLaMontre : GameMode
     {
         if (raceStarted && !raceFinished)
         {
-            // Logique de boost ou autre
+            
         }
     }
 
@@ -66,6 +67,7 @@ public class ContreLaMontre : GameMode
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "2";
         boostWindow = true;
+
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "1";
         yield return new WaitForSeconds(1);
