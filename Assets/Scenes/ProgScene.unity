@@ -4656,19 +4656,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   birdPrefab: {fileID: -6106673338637625708, guid: 02d719823442be24482c5a968de5466a, type: 3}
-  poolSize: 2500
+  poolSize: 150
   playerCamera: {fileID: 1969114860}
-  minBirdsPerFlock: 4
-  maxBirdsPerFlock: 10
-  flockRadius: 18.4
-  spawnInterval: 0.001
-  spawnDistance: 150
-  minAltitude: -0.5
-  maxAltitude: 48
-  minSpeed: 8
-  maxSpeed: 15
-  minSize: 0.5
-  maxSize: 1.6
+  minBirdsPerFlock: 2
+  maxBirdsPerFlock: 6
+  flockRadius: 7
+  spawnInterval: 3
+  spawnDistance: 175
+  minAltitude: 20
+  maxAltitude: 75
+  minSpeed: 10.83
+  maxSpeed: 17.5
+  minSize: 0.4
+  maxSize: 0.9
 --- !u!1001 &870157663
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5487,6 +5487,18 @@ PrefabInstance:
       value: 385.7295
       objectReference: {fileID: 0}
     - target: {fileID: 2217400049381351623, guid: 422acb23ed29d364b97f00b61d400643, type: 3}
+      propertyPath: speed
+      value: 6.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 2217400049381351623, guid: 422acb23ed29d364b97f00b61d400643, type: 3}
+      propertyPath: impactForce
+      value: 35
+      objectReference: {fileID: 0}
+    - target: {fileID: 2217400049381351623, guid: 422acb23ed29d364b97f00b61d400643, type: 3}
+      propertyPath: upwardModifier
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2217400049381351623, guid: 422acb23ed29d364b97f00b61d400643, type: 3}
       propertyPath: points.Array.size
       value: 6
       objectReference: {fileID: 0}
@@ -5561,6 +5573,10 @@ PrefabInstance:
     - target: {fileID: 5071198954455071820, guid: 422acb23ed29d364b97f00b61d400643, type: 3}
       propertyPath: m_Name
       value: PNJ_Prefab
+      objectReference: {fileID: 0}
+    - target: {fileID: 8245567771194878533, guid: 422acb23ed29d364b97f00b61d400643, type: 3}
+      propertyPath: m_Constraints
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -7364,7 +7380,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 2147483647
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!154 &1330813582
 TerrainCollider:
   m_ObjectHideFlags: 0
