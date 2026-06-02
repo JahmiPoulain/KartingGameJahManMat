@@ -4586,19 +4586,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   birdPrefab: {fileID: -6106673338637625708, guid: 02d719823442be24482c5a968de5466a, type: 3}
-  poolSize: 2500
+  poolSize: 150
   playerCamera: {fileID: 1969114860}
-  minBirdsPerFlock: 4
-  maxBirdsPerFlock: 10
+  minBirdsPerFlock: 2
+  maxBirdsPerFlock: 6
   flockRadius: 18.4
-  spawnInterval: 0.001
-  spawnDistance: 150
-  minAltitude: -0.5
-  maxAltitude: 48
-  minSpeed: 8
-  maxSpeed: 15
-  minSize: 0.5
-  maxSize: 1.6
+  spawnInterval: 5
+  spawnDistance: 175
+  minAltitude: 20
+  maxAltitude: 75
+  minSpeed: 10
+  maxSpeed: 15.7
+  minSize: 0.4
+  maxSize: 0.9
 --- !u!1001 &870157663
 PrefabInstance:
   m_ObjectHideFlags: 0
