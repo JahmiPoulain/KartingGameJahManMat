@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 1ce6d8ed9890f6e45807956531e71ca8
+guid: bb53bf7493649aa4abd0517a59f5d5b0
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,8 +7,18 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: oiseau rose2
-    second: {fileID: 2100000, guid: 962b6e701d168d54fb9ae5bfbbbb45c7, type: 2}
+      name: cocofknut
+    second: {fileID: 2100000, guid: 8fd85a02f8a43f54e8992d1e74929927, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: palmtree_leaf-v.01
+    second: {fileID: 2100000, guid: acddbabcb4d3a61449d51ea6f04a272d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: wood
+    second: {fileID: 2100000, guid: d7e2b1bdbb350194d815792a54cfd7a6, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -39,7 +49,7 @@ ModelImporter:
   meshes:
     lODScreenPercentages: []
     globalScale: 1
-    meshCompression: 0
+    meshCompression: 2
     addColliders: 0
     useSRGBMaterialColor: 1
     sortHierarchyByName: 1
@@ -73,13 +83,13 @@ ModelImporter:
     useFileScale: 1
     strictVertexDataChecks: 0
   tangentSpace:
-    normalSmoothAngle: 0
+    normalSmoothAngle: 60
     normalImportMode: 0
     tangentImportMode: 3
     normalCalculationMode: 4
     legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
     blendShapeNormalImportMode: 1
-    normalSmoothingSource: 2
+    normalSmoothingSource: 0
   referencedClips: []
   importAnimation: 1
   humanDescription:
