@@ -16501,6 +16501,26 @@ PrefabInstance:
       propertyPath: checkPointManager
       value: 
       objectReference: {fileID: 1640521823}
+    - target: {fileID: 1114320073194909485, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1122978451640099535, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1122978451640099535, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1122978451640099535, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1122978451640099535, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2211944736484526548, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: m_Name
       value: Kart
@@ -16573,11 +16593,25 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5327019060542326105, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7437617557389310431, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7816840422692505990, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: icon
       value: 
       objectReference: {fileID: 996782331}
-    m_RemovedComponents: []
+    - target: {fileID: 8205729695500867535, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 8665227529156224603, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+    - {fileID: 5397952178145088408, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
