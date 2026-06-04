@@ -454,10 +454,12 @@ public class MainMenuUIManager : MonoBehaviour
             }
             else if (selectedName.Contains("ghost") || selectedName.Contains("fantome"))
             {
+                GameManager.Instance().currentMode = GameManager.GameModeType.TimeTrial;
                 LaunchScene("ProgScene"); 
             }
             else if (selectedName.Contains("time attack") || selectedName.Contains("time"))
             {
+                GameManager.Instance().currentMode = GameManager.GameModeType.TimeAttack;
                 LaunchScene("ProgScene");
             }
         }

@@ -29,6 +29,7 @@ public class TimeAttack : GameMode
     public override void Initialize(LapManager lm, KartScriptV2 ks)
     {
         base.Initialize(lm, ks);
+       // if (kartScript != null) kartScript.CanDrive = false;
         // Récupérez les UI depuis le LapManager qui les possède déjà
         this.currentTimerUI = lm.ChronoUI;
     }
@@ -72,7 +73,7 @@ public class TimeAttack : GameMode
 
     IEnumerator InitialCountdown()
     {
-        kartScript.CanDrive = false;
+        if (kartScript != null) kartScript.CanDrive = false;
         startUI.text = "3";
         yield return new WaitForSeconds(1);
         startUI.text = "2";
