@@ -31,6 +31,8 @@ public class MainMenuUIManager : MonoBehaviour
     [Tooltip("Coche ça si tu trouves que Haut/Bas fait tourner la roue dans le mauvais sens !")]
     public bool invertNavigation = false;
 
+    [SerializeField] private GameObject leaderboardCanvas;
+
     private static bool hasSeenTitleScreen = false;
 
     [Header("--- Configuration Générale des Roues ---")]
@@ -426,6 +428,11 @@ public class MainMenuUIManager : MonoBehaviour
 #else
                 Application.Quit(); 
 #endif
+            }
+            else if (selectedName.Contains("leaderboard") || selectedName.Contains("leaderboard"))
+            {
+                OpenWindow(currentItem.windowToOpen);
+                LeaderboardManager.Instance.ForceFocusOnNextButton();
             }
             else if (currentItem.windowToOpen != null)
             {
