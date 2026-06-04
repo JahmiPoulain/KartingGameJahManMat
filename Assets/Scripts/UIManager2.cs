@@ -44,6 +44,8 @@ public class UIManager2 : MonoBehaviour
 
     private bool isVerticalAxisInUse = false;
     private Canvas parentCanvas;
+    public float floatingSpeed = 12;
+    public float floatingAmount = 0.2f;
 
     #region Initialisation et Inputs
     void Awake()
@@ -74,6 +76,25 @@ public class UIManager2 : MonoBehaviour
             pauseAction.action.performed += OnPausePerformed;
             pauseAction.action.Enable();
         }
+        AnimatePointer(true);
+    }
+    void AnimatePointer(bool snapImmediately)
+    {
+        if (pointeur == null || selectables == null || selectables.Length == 0 || index >= selectables.Length)
+            return;
+
+        float currentScaleFactor = parentCanvas != null ? parentCanvas.scaleFactor : 1f;
+        Vector3 basePosition = selectables[index].transform.position + (Offset * currentScaleFactor);
+
+        if (snapImmediately)
+        {
+            pointeur.position = basePosition;
+            return;
+        }
+
+        float waveY = Mathf.Sin(Time.unscaledTime * floatingSpeed) * floatingAmount;
+
+        pointeur.position = new Vector3(basePosition.x, basePosition.y + (waveY * currentScaleFactor), basePosition.z);
     }
 
     private void OnDisable()
@@ -108,6 +129,7 @@ public class UIManager2 : MonoBehaviour
                 InteractWithCurrentSelection();
             }
         }
+        AnimatePointer(false);
     }
 
     public void Resume()
@@ -197,9 +219,6 @@ public class UIManager2 : MonoBehaviour
 
     public void QuitToMainMenu()
     {
-       // Time.timeScale = 1f;
-       // if (depthOfField != null) depthOfField.active = false;
-
         GameSceneManager.Instance.ReturnToMainMenu();
     }
 

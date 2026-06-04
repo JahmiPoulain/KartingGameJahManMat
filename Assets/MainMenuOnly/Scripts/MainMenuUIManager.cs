@@ -214,7 +214,7 @@ public class MainMenuUIManager : MonoBehaviour
 
     IEnumerator retirRoze()
     {
-        yield return new WaitForSeconds(0.2f);
+        yield return new WaitForSeconds(0.225f);
         roze.SetActive(false);
 
     }
