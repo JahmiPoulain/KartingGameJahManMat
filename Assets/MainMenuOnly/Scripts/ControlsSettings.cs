@@ -46,6 +46,7 @@ public class ControlsSettings : MonoBehaviour
     private bool isVerticalAxisInUse = false;
     private Vector3 applyDefaultScale;
     private bool isInitialized = false;
+
     public float floatingSpeed = 12f;
     public float floatingAmount = 0.1f;
 
