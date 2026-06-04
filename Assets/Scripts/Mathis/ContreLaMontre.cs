@@ -14,6 +14,7 @@ public class ContreLaMontre : GameMode
     {
         base.Initialize(lm, ks);
         this.MaxLaps = 3;
+        //if (kartScript != null) kartScript.CanDrive = false;
 
         // Récupération automatique de l'UI (assure-toi que les noms correspondent dans ta scène)
         startUI = GameObject.Find("CountDownUI")?.GetComponent<TextMeshProUGUI>();

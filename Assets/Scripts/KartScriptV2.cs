@@ -15,7 +15,7 @@ public class KartScriptV2 : MonoBehaviour
 
     [Header("Inputs")]
     private float forwardDirection;
-    private float turnDirection; // la direction de la rotation du volant
+    public float turnDirection; // la direction de la rotation du volant
     private float inputGlideTurn;
     private InputSystem_Actions controls;
 
@@ -37,6 +37,7 @@ public class KartScriptV2 : MonoBehaviour
 
     [Header("Turning")]
     public float maxTurnSpeed;
+    public float currentMaxTurnSpeed;
     public float currentTurnSpeed; // c'est l'equivalent de la rotation du vollant
     public float turnAccelSpeed;
     public float turnDecelSpeed;
@@ -188,6 +189,7 @@ public class KartScriptV2 : MonoBehaviour
 
         startPosition = transform.position;
         startRotation = transform.rotation;
+        currentMaxTurnSpeed = maxTurnSpeed;
     }
 
     void Start()
@@ -445,8 +447,8 @@ public class KartScriptV2 : MonoBehaviour
 
         if (!CanDrive)
         {
-            forwardDirection = 0;
-            turnDirection = 0;
+            forwardDirection = 0f;
+            turnDirection = 0f;
             return;
         }
 
@@ -786,14 +788,15 @@ public class KartScriptV2 : MonoBehaviour
             //Debug.Log(nextTurnSpeed);
         }
 
+        currentMaxTurnSpeed = Mathf.Abs(turnDirection * maxTurnSpeed);
         // on clamp
-        if (nextTurnSpeed > maxTurnSpeed)
+        if (nextTurnSpeed > currentMaxTurnSpeed)
         {
-            nextTurnSpeed = maxTurnSpeed;
+            nextTurnSpeed = currentMaxTurnSpeed;
         }
-        else if (nextTurnSpeed < -maxTurnSpeed)
+        else if (nextTurnSpeed < -currentMaxTurnSpeed)
         {
-            nextTurnSpeed = -maxTurnSpeed;
+            nextTurnSpeed = -currentMaxTurnSpeed;
         }
         
         currentTurnSpeed = nextTurnSpeed;
