@@ -4,7 +4,6 @@ using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using System.Collections;
 using System;
-using UnityEditor.Experimental.GraphView;
 
 public class ControlsSettings : MonoBehaviour
 {
@@ -17,6 +16,11 @@ public class ControlsSettings : MonoBehaviour
         public TMP_Text textGamepad;
         public TMP_Text label;
         public GameObject rowObject;
+
+        [Header("Configuration du Slider (Optionnel)")]
+        public bool isSlider; // Coche cette case dans l'inspecteur pour ton 7ème élément
+        public Slider sliderComponent; // Glisse ton composant UI Slider ici
+        public TMP_Text sliderValueText; // Text pour afficher la valeur actuelle (ex: "1.25")
 
         [HideInInspector]
         public Vector3 defaultScale;
@@ -56,6 +60,17 @@ public class ControlsSettings : MonoBehaviour
         {
             if (row.rowObject != null)
                 row.defaultScale = row.rowObject.transform.localScale;
+
+            // AJOUT : Permet de gérer les changements si le joueur utilise la souris sur le slider
+            if (row.isSlider && row.sliderComponent != null)
+            {
+                row.sliderComponent.minValue = 0.5f;
+                row.sliderComponent.maxValue = 2.0f;
+                row.sliderComponent.onValueChanged.AddListener((val) => {
+                    AppliquerSensibilite(row, val);
+                    SauvegarderLesTouches(row.actionRef);
+                });
+            }
         }
         if (itemApply != null)
             applyDefaultScale = itemApply.transform.localScale;
@@ -80,6 +95,7 @@ public class ControlsSettings : MonoBehaviour
         if (IsRebinding) return;
 
         HandleNavigation();
+        HandleSliderInput(); // AJOUT : Gère les pressions Gauche/Droite pour le slider
 
         if (Input.GetButtonDown("Submit"))
         {
@@ -105,6 +121,24 @@ public class ControlsSettings : MonoBehaviour
         else isVerticalAxisInUse = false;
     }
 
+    // AJOUT : Permet de modifier le slider avec les flèches directionnelles ou le stick gauche
+    void HandleSliderInput()
+    {
+        if (rowIndex >= actionRows.Length) return;
+
+        ActionRow currentRow = actionRows[rowIndex];
+        if (currentRow.isSlider && currentRow.sliderComponent != null)
+        {
+            float h = Input.GetAxisRaw("Horizontal");
+            if (Mathf.Abs(h) > 0.5f)
+            {
+                // Ajuste la vitesse de défilement du slider ici (ici 1.0f par seconde)
+                float direction = h > 0f ? 1f : -1f;
+                currentRow.sliderComponent.value += direction * Time.unscaledDeltaTime * 1.0f;
+            }
+        }
+    }
+
     void ChangeRow(int dir)
     {
         int oldIndex = rowIndex;
@@ -127,6 +161,9 @@ public class ControlsSettings : MonoBehaviour
             if (MainMenuUIManager.Instance != null) MainMenuUIManager.Instance.GoBack();
             return;
         }
+
+        // AJOUT : Si on clique sur un slider, on ne veut pas lancer un Rebinding classique
+        if (actionRows[rowIndex].isSlider) return;
 
         bool isKeyboardSubmit = Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space);
         bool isGamepad = !isKeyboardSubmit;
@@ -203,11 +240,13 @@ public class ControlsSettings : MonoBehaviour
 
     private void SauvegarderLesTouches(InputActionReference actionRef)
     {
+        if (actionRef == null) return;
         var asset = actionRef.action.actionMap.asset;
         string donnees = asset.SaveBindingOverridesAsJson();
         PlayerPrefs.SetString(MainMenuUIManager.Instance.controlsSaveKey, donnees);
         PlayerPrefs.Save();
     }
+
     private void ChargerToutesLesTouches()
     {
         string donneesSauvegardees = PlayerPrefs.GetString(MainMenuUIManager.Instance.controlsSaveKey);
@@ -218,13 +257,56 @@ public class ControlsSettings : MonoBehaviour
             {
                 row.actionRef.action.actionMap.asset.LoadBindingOverridesFromJson(donneesSauvegardees);
             }
-            ActualiserAffichageAction(row);
+
+            // AJOUT : Si c'est un slider, on récupère sa valeur et on l'applique au processeur
+            if (row.isSlider)
+            {
+                float sensiSauvegardee = PlayerPrefs.GetFloat("StickSensitivity_" + row.actionRef.action.name, 1.0f);
+                if (row.sliderComponent != null)
+                {
+                    row.sliderComponent.value = sensiSauvegardee;
+                }
+                AppliquerSensibilite(row, sensiSauvegardee);
+            }
+            else
+            {
+                ActualiserAffichageAction(row);
+            }
         }
+    }
+
+    // AJOUT : Calcule et applique le processeur "scale" sur l'action ciblée
+    private void AppliquerSensibilite(ActionRow row, float valeur)
+    {
+        if (row.actionRef == null) return;
+
+        int indexManette = ObtenirIndexDeBinding(row.actionRef.action, true);
+        if (indexManette == -1) return;
+
+        // On récupère le chemin actuel (modifié ou par défaut) pour ne pas écraser une touche rebondie
+        string pathActuel = row.actionRef.action.bindings[indexManette].overridePath;
+        if (string.IsNullOrEmpty(pathActuel))
+            pathActuel = row.actionRef.action.bindings[indexManette].path;
+
+        // IMPORTANT : Utilisation de InvariantCulture pour forcer le '.' au lieu de la ',' (sinon le input system bug en français)
+        string valeurFormatee = valeur.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+
+        row.actionRef.action.ApplyBindingOverride(indexManette, new InputBinding
+        {
+            path = pathActuel,
+            overrideProcessors = $"scale(factor={valeurFormatee})"
+        });
+
+        if (row.sliderValueText != null)
+            row.sliderValueText.text = valeur.ToString("F2");
+
+        // Sauvegarde de secours de la valeur brute pour l'initialisation du Slider UI au démarrage
+        PlayerPrefs.SetFloat("StickSensitivity_" + row.actionRef.action.name, valeur);
     }
 
     private void ActualiserAffichageAction(ActionRow row)
     {
-        if (row.actionRef != null)
+        if (row.actionRef != null && !row.isSlider)
         {
             int indexClavier = ObtenirIndexDeBinding(row.actionRef.action, false);
             int indexManette = ObtenirIndexDeBinding(row.actionRef.action, true);
@@ -236,6 +318,7 @@ public class ControlsSettings : MonoBehaviour
                 row.textGamepad.text = NettoyerNomTouche(row.actionRef.action.GetBindingDisplayString(indexManette));
         }
     }
+
     private string NettoyerNomTouche(string nomBrut)
     {
         if (string.IsNullOrEmpty(nomBrut)) return "";
@@ -252,10 +335,14 @@ public class ControlsSettings : MonoBehaviour
             .Replace("/", " ")
             .Trim();
     }
+
     void AnimatePointer(bool snapImmediately)
     {
         if (pointeur == null || actionRows == null || actionRows.Length == 0 || rowIndex >= actionRows.Length)
             return;
+
+        if (actionRows[rowIndex].label == null) return;
+
         Vector3 basePosition = actionRows[rowIndex].label.transform.position + Offset;
 
         if (snapImmediately)
@@ -268,7 +355,6 @@ public class ControlsSettings : MonoBehaviour
         pointeur.position = new Vector3(basePosition.x, basePosition.y + waveY, basePosition.z);
     }
 
-
     void UpdateVisualFeedback()
     {
         foreach (var row in actionRows)
@@ -276,9 +362,8 @@ public class ControlsSettings : MonoBehaviour
             if (row.rowObject != null)
                 row.rowObject.transform.localScale = row.defaultScale;
 
-           // if (row.textKeyboard) row.textKeyboard.color = normalColor;
-           // if (row.textGamepad) row.textGamepad.color = normalColor;
-            if (row.textKeyboard) row.label.color = normalColor;
+            if (row.label) row.label.color = normalColor;
+            if (row.sliderValueText) row.sliderValueText.color = normalColor;
         }
 
         if (itemApply != null)
@@ -293,9 +378,8 @@ public class ControlsSettings : MonoBehaviour
             if (selectedRow.rowObject != null)
                 selectedRow.rowObject.transform.localScale = selectedRow.defaultScale * selectedScale;
 
-            //if (selectedRow.textGamepad) selectedRow.textGamepad.color = selectedColor;
-            //if (selectedRow.textKeyboard) selectedRow.textKeyboard.color = selectedColor;
-            if (selectedRow.textKeyboard) selectedRow.label.color = selectedColor;
+            if (selectedRow.label) selectedRow.label.color = selectedColor;
+            if (selectedRow.sliderValueText) selectedRow.sliderValueText.color = selectedColor;
         }
         else
         {
