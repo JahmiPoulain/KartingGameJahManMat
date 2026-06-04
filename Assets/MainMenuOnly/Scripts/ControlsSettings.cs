@@ -18,9 +18,9 @@ public class ControlsSettings : MonoBehaviour
         public GameObject rowObject;
 
         [Header("Configuration du Slider (Optionnel)")]
-        public bool isSlider; // Coche cette case dans l'inspecteur pour ton 7ème élément
-        public Slider sliderComponent; // Glisse ton composant UI Slider ici
-        public TMP_Text sliderValueText; // Text pour afficher la valeur actuelle (ex: "1.25")
+        public bool isSlider;
+        public Slider sliderComponent;
+        public TMP_Text sliderValueText; // pas besoin
 
         [HideInInspector]
         public Vector3 defaultScale;
@@ -63,8 +63,8 @@ public class ControlsSettings : MonoBehaviour
 
             if (row.isSlider && row.sliderComponent != null)
             {
-                row.sliderComponent.minValue = 0.1f;
-                row.sliderComponent.maxValue = 10f;
+                row.sliderComponent.minValue = 0.6f;
+                row.sliderComponent.maxValue = 1.75f;
                 row.sliderComponent.onValueChanged.AddListener((val) => {
                     AppliquerSensibilite(row, val);
                     SauvegarderLesTouches(row.actionRef);
@@ -94,7 +94,7 @@ public class ControlsSettings : MonoBehaviour
         if (IsRebinding) return;
 
         HandleNavigation();
-        HandleSliderInput(); // AJOUT : Gère les pressions Gauche/Droite pour le slider
+        HandleSliderInput();
 
         if (Input.GetButtonDown("Submit"))
         {
@@ -120,7 +120,6 @@ public class ControlsSettings : MonoBehaviour
         else isVerticalAxisInUse = false;
     }
 
-    // AJOUT : Permet de modifier le slider avec les flèches directionnelles ou le stick gauche
     void HandleSliderInput()
     {
         if (rowIndex >= actionRows.Length) return;
@@ -131,7 +130,6 @@ public class ControlsSettings : MonoBehaviour
             float h = Input.GetAxisRaw("Horizontal");
             if (Mathf.Abs(h) > 0.5f)
             {
-                // Ajuste la vitesse de défilement du slider ici (ici 1.0f par seconde)
                 float direction = h > 0f ? 1f : -1f;
                 currentRow.sliderComponent.value += direction * Time.unscaledDeltaTime * 1.0f;
             }
@@ -161,7 +159,6 @@ public class ControlsSettings : MonoBehaviour
             return;
         }
 
-        // AJOUT : Si on clique sur un slider, on ne veut pas lancer un Rebinding classique
         if (actionRows[rowIndex].isSlider) return;
 
         bool isKeyboardSubmit = Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space);
