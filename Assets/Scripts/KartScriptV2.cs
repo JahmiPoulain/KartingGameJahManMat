@@ -453,7 +453,7 @@ public class KartScriptV2 : MonoBehaviour
         }
 
         forwardDirection = InputSystemHandler.instance.inputForwardDir;
-        turnDirection = InputSystemHandler.instance.inputTurnDir;
+        turnDirection = Mathf.Clamp( InputSystemHandler.instance.inputTurnDir, -1, 1);
         tryToDrift = InputSystemHandler.instance.inputTryDrift;
         keepDrifting = InputSystemHandler.instance.inputDrift;
 
@@ -1000,6 +1000,7 @@ public class KartScriptV2 : MonoBehaviour
          {
             currentCamPosCenter = firstPersonCamPos;           
          }
+
         Vector3 nextDir = playerCamera.transform.localPosition - currentCamPosCenter;
         if (nextDir.sqrMagnitude > 0.01f)
         {
