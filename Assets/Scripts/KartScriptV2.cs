@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Splines;
 
@@ -1001,10 +1002,23 @@ public class KartScriptV2 : MonoBehaviour
             currentCamPosCenter = firstPersonCamPos;           
          }
 
-        Vector3 nextDir = playerCamera.transform.localPosition - currentCamPosCenter;
+        Vector3 rayOrigin = transform.position + transform.forward * 5f + new Vector3 (currentCamPosCenter.z, currentCamPosCenter.y, 0);// + playerCamera.transform.forward * 5f;
+        Debug.Log("ORIGIN" + rayOrigin);
+        Vector3 rayDirToCam = playerCamera.transform.position - rayOrigin;
+        Debug.Log("DIRETION" + rayDirToCam);
+        Vector3 camCollisionCompensation = Vector3.zero;
+        if (Physics.Raycast(rayOrigin, rayDirToCam, out RaycastHit hit, 5f, wallLayer))
+        {
+            camCollisionCompensation = new Vector3(0, 0, rayDirToCam.x).normalized * (hit.distance - 5f);// - (transform.right).normalized * 5f;
+            Debug.Log("camCollisionCompensation +  + nextDir");
+            //Debug.Log(camCollisionCompensation);
+        }
+
+        Vector3 nextDir = playerCamera.transform.localPosition - (currentCamPosCenter + camCollisionCompensation);
         if (nextDir.sqrMagnitude > 0.01f)
         {
-            playerCamera.transform.localPosition = Vector3.Lerp(playerCamera.transform.localPosition, currentCamPosCenter, 8f * Time.deltaTime);
+            Debug.Log(camCollisionCompensation + " " + nextDir);
+            playerCamera.transform.localPosition = Vector3.Lerp(playerCamera.transform.localPosition, currentCamPosCenter + camCollisionCompensation, 8f * Time.deltaTime);
         }
     }
 
@@ -1185,6 +1199,7 @@ public class KartScriptV2 : MonoBehaviour
     {
         Gizmos.color = Color.red;
         Gizmos.DrawRay(groundRayOrigin.position, Vector3.down * 0.5f);
+        Gizmos.DrawRay(transform.position + transform.forward * 5f + new Vector3(currentCamPosCenter.z, currentCamPosCenter.y, 0), playerCamera.transform.position - transform.position + transform.forward * 5f + new Vector3(currentCamPosCenter.z, currentCamPosCenter.y, 0));
     }
 
     void GhostDrive()
