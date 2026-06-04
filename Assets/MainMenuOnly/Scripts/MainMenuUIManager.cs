@@ -31,6 +31,8 @@ public class MainMenuUIManager : MonoBehaviour
     [Tooltip("Coche ça si tu trouves que Haut/Bas fait tourner la roue dans le mauvais sens !")]
     public bool invertNavigation = false;
 
+    [SerializeField] private GameObject leaderboardCanvas;
+
     private static bool hasSeenTitleScreen = false;
 
     [Header("--- Configuration Générale des Roues ---")]
@@ -79,6 +81,7 @@ public class MainMenuUIManager : MonoBehaviour
 
     [Header("--- UI Panels ---")]
     public GameObject titleScreenPanel;
+    public GameObject roze;
 
     [Header("--- Effets Visuels (Hover) ---")]
     public float selectedScale = 1.3f;
@@ -151,7 +154,7 @@ public class MainMenuUIManager : MonoBehaviour
     void Start()
     {
         Time.timeScale = 1f;
-
+        roze.SetActive(true);
         if (mainWheelRect != null) mainWheelActivePos = mainWheelRect.anchoredPosition;
         if (settingsWheelRect != null) settingsWheelActivePos = settingsWheelRect.anchoredPosition;
         if (playWheelRect != null) playWheelActivePos = playWheelRect.anchoredPosition;
@@ -195,6 +198,7 @@ public class MainMenuUIManager : MonoBehaviour
 
         LoadSettings();
         ApplySettings(false);
+        StartCoroutine(retirRoze());
     }
 
     void Update()
@@ -208,6 +212,12 @@ public class MainMenuUIManager : MonoBehaviour
         UpdateHoverEffects();
     }
 
+    IEnumerator retirRoze()
+    {
+        yield return new WaitForSeconds(0.2f);
+        roze.SetActive(false);
+
+    }
 
     public void ChangeState(MenuState newState)
     {
@@ -426,6 +436,11 @@ public class MainMenuUIManager : MonoBehaviour
 #else
                 Application.Quit(); 
 #endif
+            }
+            else if (selectedName.Contains("leaderboard") || selectedName.Contains("leaderboard"))
+            {
+                OpenWindow(currentItem.windowToOpen);
+                LeaderboardManager.Instance.ForceFocusOnNextButton();
             }
             else if (currentItem.windowToOpen != null)
             {

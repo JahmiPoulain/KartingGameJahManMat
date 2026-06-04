@@ -5,6 +5,7 @@ using LootLocker.Requests;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
 
 public class LeaderboardManager : MonoBehaviour
 {
@@ -78,6 +79,7 @@ public class LeaderboardManager : MonoBehaviour
     private Coroutine reconnectCoroutine;
 
     private int currentPageIndex;
+    private bool canFocus;
 
     private struct LeaderboardDisplayEntry
     {
@@ -105,12 +107,7 @@ public class LeaderboardManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
+        // Force l'assignation immédiate de l'instance
         Instance = this;
         localPlayerName = fallbackLocalPlayerName;
     }
@@ -122,6 +119,8 @@ public class LeaderboardManager : MonoBehaviour
 
         if (nextPageButton != null)
             nextPageButton.onClick.AddListener(ShowNextPage);
+
+        canFocus = false;
     }
 
     private void OnDisable()
@@ -131,15 +130,15 @@ public class LeaderboardManager : MonoBehaviour
 
         if (nextPageButton != null)
             nextPageButton.onClick.RemoveListener(ShowNextPage);
+
+        canFocus = false;
     }
 
     private void Start()
     {
         HideNavigationButtons();
-
         BuildOfflineViewFromLocalSave();
         ShowStatus(syncingMessage);
-
         StartLootLockerSession();
         StartReconnectLoop();
     }
@@ -152,10 +151,26 @@ public class LeaderboardManager : MonoBehaviour
         if (Input.GetKeyDown(debugSubmitKey))
         {
             int randomScore = UnityEngine.Random.Range(minRandomTimeMs, maxRandomTimeMs + 1);
-
             Debug.Log($"Score debug envoyé : {FormatTime(randomScore)}");
-
             SubmitScoreAndRefresh(randomScore);
+        }
+    }
+
+    // UNIQUE FONCTION DE FOCUS : Accessible partout et sécurisée
+    public void ForceFocusOnNextButton()
+    {
+        if (EventSystem.current == null) return;
+
+        canFocus = true;
+        EventSystem.current.SetSelectedGameObject(null);
+
+        if (nextPageButton != null && nextPageButton.gameObject.activeInHierarchy)
+        {
+            EventSystem.current.SetSelectedGameObject(nextPageButton.gameObject);
+        }
+        else if (previousPageButton != null && previousPageButton.gameObject.activeInHierarchy)
+        {
+            EventSystem.current.SetSelectedGameObject(previousPageButton.gameObject);
         }
     }
 
@@ -165,9 +180,6 @@ public class LeaderboardManager : MonoBehaviour
         {
             isConnected = false;
             isStartingSession = false;
-
-            Debug.LogWarning("Mode hors ligne simulé actif.");
-
             BuildOfflineViewFromLocalSave();
             return;
         }
@@ -183,11 +195,8 @@ public class LeaderboardManager : MonoBehaviour
 
             if (!response.success)
             {
-                Debug.LogWarning("Impossible de démarrer la session LootLocker.");
-
                 isConnected = false;
                 BuildOfflineViewFromLocalSave();
-
                 return;
             }
 
@@ -198,16 +207,9 @@ public class LeaderboardManager : MonoBehaviour
             {
                 string publicUid = response.public_uid ?? response.player_id.ToString();
                 string uniqueName = "Player_" + publicUid[..Mathf.Min(4, publicUid.Length)];
-
                 localPlayerName = uniqueName;
 
-                LootLockerSDKManager.SetPlayerName(uniqueName, nameResponse =>
-                {
-                    if (nameResponse.success)
-                        Debug.Log("Nom unique enregistré : " + uniqueName);
-                    else
-                        Debug.LogWarning("Impossible d'enregistrer le nom du joueur.");
-                });
+                LootLockerSDKManager.SetPlayerName(uniqueName, nameResponse => { });
             }
             else
             {
@@ -215,7 +217,6 @@ public class LeaderboardManager : MonoBehaviour
             }
 
             HideStatus();
-
             TryUploadPendingLocalScore();
             RefreshLeaderboard();
         });
@@ -237,9 +238,7 @@ public class LeaderboardManager : MonoBehaviour
 
             if (simulateOfflineMode)
             {
-                if (isConnected)
-                    isConnected = false;
-
+                if (isConnected) isConnected = false;
                 BuildOfflineViewFromLocalSave();
                 continue;
             }
@@ -261,32 +260,24 @@ public class LeaderboardManager : MonoBehaviour
 
         if (!improvedLocalBest)
         {
-            Debug.Log($"Score ignoré : {FormatTime(timeInMilliseconds)} n'est pas meilleur que le score local.");
             RenderLeaderboard();
             return;
         }
 
         MarkPendingUpload(GetLocalBestScore());
-
         ApplyLocalScore(GetLocalBestScore());
 
         if (simulateOfflineMode)
         {
-            Debug.LogWarning("Score sauvegardé localement. Mode hors ligne simulé actif.");
-
             isConnected = false;
             BuildOfflineViewFromLocalSave();
-
             return;
         }
 
         if (!isConnected)
         {
-            Debug.LogWarning("Score sauvegardé localement, mais pas envoyé : pas de connexion LootLocker.");
-
             BuildOfflineViewFromLocalSave();
             StartLootLockerSession();
-
             return;
         }
 
@@ -311,13 +302,9 @@ public class LeaderboardManager : MonoBehaviour
         {
             if (!response.success)
             {
-                Debug.LogWarning("Impossible de récupérer le leaderboard LootLocker.");
-
                 isConnected = false;
                 isLoading = false;
-
                 BuildOfflineViewFromLocalSave();
-
                 return;
             }
 
@@ -328,38 +315,21 @@ public class LeaderboardManager : MonoBehaviour
 
             SortAndRankEntries();
             RenderLeaderboard();
-
             HideStatus();
-
             isLoading = false;
         });
     }
 
     private void TryUploadPendingLocalScore()
     {
-        if (simulateOfflineMode)
-        {
-            Debug.LogWarning("Upload ignoré : mode hors ligne simulé actif.");
-            return;
-        }
-
-        if (!isConnected)
-            return;
-
-        if (!HasPendingUpload())
+        if (simulateOfflineMode || !isConnected || !HasPendingUpload())
             return;
 
         int scoreToUpload = GetPendingUploadScore();
 
         LootLockerSDKManager.SubmitScore("", scoreToUpload, leaderboardKey, scoreResponse =>
         {
-            if (!scoreResponse.success)
-            {
-                Debug.LogWarning("Impossible d'envoyer le score au leaderboard LootLocker. Il reste sauvegardé localement.");
-                return;
-            }
-
-            Debug.Log($"Score synchronisé avec LootLocker : {FormatTime(scoreToUpload)}");
+            if (!scoreResponse.success) return;
 
             ClearPendingUpload();
 
@@ -373,7 +343,6 @@ public class LeaderboardManager : MonoBehaviour
     private IEnumerator RefreshLeaderboardAfterDelay()
     {
         yield return new WaitForSeconds(serverRefreshDelay);
-
         pendingServerRefresh = null;
         RefreshLeaderboard();
     }
@@ -385,15 +354,7 @@ public class LeaderboardManager : MonoBehaviour
         if (HasLocalBestScore())
         {
             int localBestScore = GetLocalBestScore();
-
-            leaderboardEntries.Add(new LeaderboardDisplayEntry(
-                localPlayerId,
-                localPlayerName,
-                localBestScore,
-                1,
-                true
-            ));
-
+            leaderboardEntries.Add(new LeaderboardDisplayEntry(localPlayerId, localPlayerName, localBestScore, 1, true));
             ShowStatus(offlineWithScoreMessage);
         }
         else
@@ -415,22 +376,13 @@ public class LeaderboardManager : MonoBehaviour
             string displayName = GetDisplayName(item);
             bool isLocalPlayerEntry = playerId == localPlayerId;
 
-            leaderboardEntries.Add(new LeaderboardDisplayEntry(
-                playerId,
-                displayName,
-                item.score,
-                item.rank,
-                isLocalPlayerEntry
-            ));
+            leaderboardEntries.Add(new LeaderboardDisplayEntry(playerId, displayName, item.score, item.rank, isLocalPlayerEntry));
         }
     }
 
     private void ApplyLocalScore(int timeInMilliseconds, bool renderAfterApply = true)
     {
-        int existingIndex = leaderboardEntries.FindIndex(entry =>
-            entry.PlayerId == localPlayerId ||
-            entry.IsLocalPlayer
-        );
+        int existingIndex = leaderboardEntries.FindIndex(entry => entry.PlayerId == localPlayerId || entry.IsLocalPlayer);
 
         if (existingIndex >= 0)
         {
@@ -441,12 +393,9 @@ public class LeaderboardManager : MonoBehaviour
                 existingEntry.PlayerId = localPlayerId;
                 existingEntry.PlayerName = localPlayerName;
                 existingEntry.IsLocalPlayer = true;
-
                 leaderboardEntries[existingIndex] = existingEntry;
 
-                if (renderAfterApply)
-                    RenderLeaderboard();
-
+                if (renderAfterApply) RenderLeaderboard();
                 return;
             }
 
@@ -454,18 +403,11 @@ public class LeaderboardManager : MonoBehaviour
             existingEntry.Score = timeInMilliseconds;
             existingEntry.PlayerName = localPlayerName;
             existingEntry.IsLocalPlayer = true;
-
             leaderboardEntries[existingIndex] = existingEntry;
         }
         else
         {
-            leaderboardEntries.Add(new LeaderboardDisplayEntry(
-                localPlayerId,
-                localPlayerName,
-                timeInMilliseconds,
-                0,
-                true
-            ));
+            leaderboardEntries.Add(new LeaderboardDisplayEntry(localPlayerId, localPlayerName, timeInMilliseconds, 0, true));
         }
 
         SortAndRankEntries();
@@ -483,9 +425,7 @@ public class LeaderboardManager : MonoBehaviour
         }
 
         int currentBest = GetLocalBestScore();
-
-        if (timeInMilliseconds >= currentBest)
-            return false;
+        if (timeInMilliseconds >= currentBest) return false;
 
         SaveLocalBestScore(timeInMilliseconds);
         return true;
@@ -496,39 +436,19 @@ public class LeaderboardManager : MonoBehaviour
         PlayerPrefs.SetInt(HasLocalBestScoreKey, 1);
         PlayerPrefs.SetInt(LocalBestScoreKey, timeInMilliseconds);
         PlayerPrefs.Save();
-
-        Debug.Log($"Meilleur score local sauvegardé : {FormatTime(timeInMilliseconds)}");
     }
 
-    private bool HasLocalBestScore()
-    {
-        return PlayerPrefs.GetInt(HasLocalBestScoreKey, 0) == 1;
-    }
-
-    private int GetLocalBestScore()
-    {
-        return PlayerPrefs.GetInt(LocalBestScoreKey, int.MaxValue);
-    }
-
+    private bool HasLocalBestScore() => PlayerPrefs.GetInt(HasLocalBestScoreKey, 0) == 1;
+    private int GetLocalBestScore() => PlayerPrefs.GetInt(LocalBestScoreKey, int.MaxValue);
     private void MarkPendingUpload(int timeInMilliseconds)
     {
         PlayerPrefs.SetInt(HasPendingUploadKey, 1);
         PlayerPrefs.SetInt(PendingUploadScoreKey, timeInMilliseconds);
         PlayerPrefs.Save();
-
-        Debug.Log($"Score marqué comme en attente de synchronisation : {FormatTime(timeInMilliseconds)}");
     }
 
-    private bool HasPendingUpload()
-    {
-        return PlayerPrefs.GetInt(HasPendingUploadKey, 0) == 1;
-    }
-
-    private int GetPendingUploadScore()
-    {
-        return PlayerPrefs.GetInt(PendingUploadScoreKey, int.MaxValue);
-    }
-
+    private bool HasPendingUpload() => PlayerPrefs.GetInt(HasPendingUploadKey, 0) == 1;
+    private int GetPendingUploadScore() => PlayerPrefs.GetInt(PendingUploadScoreKey, int.MaxValue);
     private void ClearPendingUpload()
     {
         PlayerPrefs.DeleteKey(HasPendingUploadKey);
@@ -541,10 +461,7 @@ public class LeaderboardManager : MonoBehaviour
         leaderboardEntries.Sort((a, b) =>
         {
             int scoreComparison = a.Score.CompareTo(b.Score);
-
-            if (scoreComparison != 0)
-                return scoreComparison;
-
+            if (scoreComparison != 0) return scoreComparison;
             return string.Compare(a.PlayerName, b.PlayerName, StringComparison.Ordinal);
         });
 
@@ -558,14 +475,9 @@ public class LeaderboardManager : MonoBehaviour
 
     private void RenderLeaderboard()
     {
-        if (firstPage == null)
-        {
-            Debug.LogError("FirstPage n'est pas assignée dans le LeaderboardManager.");
-            return;
-        }
+        if (firstPage == null) return;
 
         ClearSpawnedNormalPages();
-
         pages.Clear();
         pages.Add(firstPage);
 
@@ -574,47 +486,24 @@ public class LeaderboardManager : MonoBehaviour
 
         for (int pageIndex = 0; pageIndex < pageCount; pageIndex++)
         {
-            LeaderboardPage page;
+            LeaderboardPage page = (pageIndex == 0) ? firstPage : CreateNormalPage();
+            if (page == null) continue;
 
-            if (pageIndex == 0)
-            {
-                page = firstPage;
-            }
-            else
-            {
-                page = CreateNormalPage();
-            }
-
-            if (page == null)
-                continue;
-
-            if (pageIndex > 0)
-                pages.Add(page);
-
+            if (pageIndex > 0) pages.Add(page);
             FillPage(page, pageIndex);
         }
 
-        if (startOnFirstPageAfterRefresh)
-            currentPageIndex = 0;
-        else
-            currentPageIndex = Mathf.Clamp(currentPageIndex, 0, pages.Count - 1);
-
+        currentPageIndex = startOnFirstPageAfterRefresh ? 0 : Mathf.Clamp(currentPageIndex, 0, pages.Count - 1);
         ShowPage(currentPageIndex);
     }
 
     private LeaderboardPage CreateNormalPage()
     {
-        if (normalPagePrefab == null)
-        {
-            Debug.LogError("NormalPagePrefab n'est pas assigné dans le LeaderboardManager.");
-            return null;
-        }
+        if (normalPagePrefab == null) return null;
 
         Transform parent = pagesParent != null ? pagesParent : transform;
-
         LeaderboardPage page = Instantiate(normalPagePrefab, parent);
         page.gameObject.SetActive(false);
-
         spawnedNormalPages.Add(page);
 
         return page;
@@ -630,38 +519,15 @@ public class LeaderboardManager : MonoBehaviour
         for (int slotIndex = 0; slotIndex < EntriesPerPage; slotIndex++)
         {
             int entryIndex = startEntryIndex + slotIndex;
-
-            if (entryIndex >= leaderboardEntries.Count)
-                continue;
+            if (entryIndex >= leaderboardEntries.Count) continue;
 
             LeaderboardDisplayEntry entry = leaderboardEntries[entryIndex];
-
-            page.SetEntry(
-                slotIndex,
-                entry.PlayerName,
-                FormatTime(entry.Score),
-                entry.IsLocalPlayer,
-                prefixRankInName,
-                entry.Rank
-            );
+            page.SetEntry(slotIndex, entry.PlayerName, FormatTime(entry.Score), entry.IsLocalPlayer, prefixRankInName, entry.Rank);
         }
     }
 
-    private void ShowPreviousPage()
-    {
-        if (currentPageIndex <= 0)
-            return;
-
-        ShowPage(currentPageIndex - 1);
-    }
-
-    private void ShowNextPage()
-    {
-        if (currentPageIndex >= pages.Count - 1)
-            return;
-
-        ShowPage(currentPageIndex + 1);
-    }
+    private void ShowPreviousPage() => ShowPage(currentPageIndex - 1);
+    private void ShowNextPage() => ShowPage(currentPageIndex + 1);
 
     private void ShowPage(int pageIndex)
     {
@@ -680,67 +546,54 @@ public class LeaderboardManager : MonoBehaviour
         }
 
         UpdateNavigationButtons();
+
+        if (canFocus)
+        {
+            GameObject currentSelected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+            if (currentSelected == null || !currentSelected.activeInHierarchy)
+            {
+                ForceFocusOnNextButton();
+            }
+        }
     }
 
     private void UpdateNavigationButtons()
     {
-        bool hasPreviousPage = currentPageIndex > 0;
-        bool hasNextPage = currentPageIndex < pages.Count - 1;
-
-        if (previousPageButton != null)
-            previousPageButton.gameObject.SetActive(hasPreviousPage);
-
-        if (nextPageButton != null)
-            nextPageButton.gameObject.SetActive(hasNextPage);
+        if (previousPageButton != null) previousPageButton.gameObject.SetActive(currentPageIndex > 0);
+        if (nextPageButton != null) nextPageButton.gameObject.SetActive(currentPageIndex < pages.Count - 1);
     }
 
     private void HideNavigationButtons()
     {
-        if (previousPageButton != null)
-            previousPageButton.gameObject.SetActive(false);
-
-        if (nextPageButton != null)
-            nextPageButton.gameObject.SetActive(false);
+        if (previousPageButton != null) previousPageButton.gameObject.SetActive(false);
+        if (nextPageButton != null) nextPageButton.gameObject.SetActive(false);
     }
 
     private void ClearSpawnedNormalPages()
     {
         foreach (LeaderboardPage page in spawnedNormalPages)
         {
-            if (page != null)
-                Destroy(page.gameObject);
+            if (page != null) Destroy(page.gameObject);
         }
-
         spawnedNormalPages.Clear();
     }
 
     private string GetDisplayName(LootLockerLeaderboardMember item)
     {
-        if (item.player == null)
-            return "Unknown";
-
-        if (!string.IsNullOrEmpty(item.player.name))
-            return item.player.name;
-
-        return "Player " + item.player.id;
+        if (item.player == null) return "Unknown";
+        return !string.IsNullOrEmpty(item.player.name) ? item.player.name : "Player " + item.player.id;
     }
 
     private void ShowStatus(string message)
     {
-        if (statusMessageRoot != null)
-            statusMessageRoot.SetActive(true);
-
-        if (statusMessageText != null)
-            statusMessageText.text = message;
+        if (statusMessageRoot != null) statusMessageRoot.SetActive(true);
+        if (statusMessageText != null) statusMessageText.text = message;
     }
 
     private void HideStatus()
     {
-        if (statusMessageRoot != null)
-            statusMessageRoot.SetActive(false);
-
-        if (statusMessageText != null)
-            statusMessageText.text = string.Empty;
+        if (statusMessageRoot != null) statusMessageRoot.SetActive(false);
+        if (statusMessageText != null) statusMessageText.text = string.Empty;
     }
 
     private string FormatTime(int milliseconds)
@@ -748,7 +601,6 @@ public class LeaderboardManager : MonoBehaviour
         int min = milliseconds / 60000;
         int sec = milliseconds / 1000 % 60;
         int ms = milliseconds % 1000;
-
         return $"{min:00}:{sec:00}.{ms:000}";
     }
 
@@ -761,9 +613,6 @@ public class LeaderboardManager : MonoBehaviour
         PlayerPrefs.DeleteKey(PendingUploadScoreKey);
         PlayerPrefs.DeleteKey(HasPendingUploadKey);
         PlayerPrefs.Save();
-
-        Debug.Log("Sauvegarde locale du leaderboard supprimée.");
-
         BuildOfflineViewFromLocalSave();
     }
 #endif

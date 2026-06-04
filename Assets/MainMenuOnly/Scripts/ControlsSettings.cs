@@ -61,11 +61,10 @@ public class ControlsSettings : MonoBehaviour
             if (row.rowObject != null)
                 row.defaultScale = row.rowObject.transform.localScale;
 
-            // AJOUT : Permet de gérer les changements si le joueur utilise la souris sur le slider
             if (row.isSlider && row.sliderComponent != null)
             {
-                row.sliderComponent.minValue = 0.5f;
-                row.sliderComponent.maxValue = 2.0f;
+                row.sliderComponent.minValue = 0.1f;
+                row.sliderComponent.maxValue = 10f;
                 row.sliderComponent.onValueChanged.AddListener((val) => {
                     AppliquerSensibilite(row, val);
                     SauvegarderLesTouches(row.actionRef);
@@ -258,7 +257,6 @@ public class ControlsSettings : MonoBehaviour
                 row.actionRef.action.actionMap.asset.LoadBindingOverridesFromJson(donneesSauvegardees);
             }
 
-            // AJOUT : Si c'est un slider, on récupère sa valeur et on l'applique au processeur
             if (row.isSlider)
             {
                 float sensiSauvegardee = PlayerPrefs.GetFloat("StickSensitivity_" + row.actionRef.action.name, 1.0f);
@@ -275,7 +273,6 @@ public class ControlsSettings : MonoBehaviour
         }
     }
 
-    // AJOUT : Calcule et applique le processeur "scale" sur l'action ciblée
     private void AppliquerSensibilite(ActionRow row, float valeur)
     {
         if (row.actionRef == null) return;
@@ -283,12 +280,10 @@ public class ControlsSettings : MonoBehaviour
         int indexManette = ObtenirIndexDeBinding(row.actionRef.action, true);
         if (indexManette == -1) return;
 
-        // On récupère le chemin actuel (modifié ou par défaut) pour ne pas écraser une touche rebondie
         string pathActuel = row.actionRef.action.bindings[indexManette].overridePath;
         if (string.IsNullOrEmpty(pathActuel))
             pathActuel = row.actionRef.action.bindings[indexManette].path;
 
-        // IMPORTANT : Utilisation de InvariantCulture pour forcer le '.' au lieu de la ',' (sinon le input system bug en français)
         string valeurFormatee = valeur.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
 
         row.actionRef.action.ApplyBindingOverride(indexManette, new InputBinding
@@ -300,7 +295,6 @@ public class ControlsSettings : MonoBehaviour
         if (row.sliderValueText != null)
             row.sliderValueText.text = valeur.ToString("F2");
 
-        // Sauvegarde de secours de la valeur brute pour l'initialisation du Slider UI au démarrage
         PlayerPrefs.SetFloat("StickSensitivity_" + row.actionRef.action.name, valeur);
     }
 
