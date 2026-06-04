@@ -83,6 +83,10 @@ public class KartScriptV2 : MonoBehaviour
     public float turningWheelsRatioScaling;
     public float nonTurningWheelsRatioScaling;
     [SerializeField] Transform steeringWheel;
+    [SerializeField] Transform cocot;
+    [SerializeField] Transform[] cretes;
+    float creteAccelZ;
+    float creteAccelX;
 
     [Header("Bounce Animation")]
     public bool bounce;
@@ -424,7 +428,6 @@ public class KartScriptV2 : MonoBehaviour
     private void LateUpdate()
     {
         // on gère les visuels du kart
-        HandleWholeKartRotationXZ();
         HandleVisualKartBody();
         HandleVisualKartWheels();
 
@@ -852,11 +855,6 @@ public class KartScriptV2 : MonoBehaviour
         }
     }
 
-    void HandleWholeKartRotationXZ()
-    {
-        //transform.up = new Vector3(goundNormal.x, goundNormal.y, goundNormal.z);
-    }
-
     void HandleVisualKartBody()
     {
 
@@ -924,7 +922,18 @@ public class KartScriptV2 : MonoBehaviour
         preOrientation.localRotation = Quaternion.RotateTowards(preOrientation.localRotation, groundNormalT.localRotation, 120f * Time.deltaTime);
         Quaternion rotTarget = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);
         visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 40f * Time.deltaTime);
+
+        cocot.localRotation = Quaternion.RotateTowards(cocot.localRotation, Quaternion.Euler(nextTotalSpeed * 0.6f - 90, visKartZRot * 1.2f, 0), 120f * Time.deltaTime);
+        creteAccelZ += Mathf.Abs(visKartZRot);
+        creteAccelZ = Mathf.Clamp(creteAccelZ, 0, 3f);
+        creteAccelX += Mathf.Abs(nextTotalSpeed);
+        creteAccelX = Mathf.Clamp(creteAccelX, 0, 3f);
+        for (int i = 0; i < cretes.Length; i++)
+        {
+            cretes[i].localRotation = Quaternion.RotateTowards(cretes[i].localRotation, Quaternion.Euler((-currentSpeed * 0.75f + nextTotalSpeed  / 2f) * creteAccelX, -visKartZRot * creteAccelZ * 0.2f, 0f ), 500f * Time.deltaTime);
+        }
     }
+
     void HandleSteeringWheel()
     {
         steeringWheel.localEulerAngles = new Vector3(visWheelsYRot - 90f, 90, -90f);

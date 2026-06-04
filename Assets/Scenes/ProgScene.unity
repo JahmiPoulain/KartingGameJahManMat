@@ -3814,6 +3814,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 499645897}
   m_CullTransparentMesh: 1
+--- !u!4 &540121075 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3662353073275384674, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+  m_PrefabInstance: {fileID: 7863942287254133310}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &550378350
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6781,7 +6786,7 @@ Transform:
   m_GameObject: {fileID: 933581826}
   serializedVersion: 2
   m_LocalRotation: {x: 0.6935859, y: -0.6935851, z: 0.13762033, w: -0.1376193}
-  m_LocalPosition: {x: -0.426, y: -0.031, z: 1.684}
+  m_LocalPosition: {x: -0.359, y: -0.031, z: 1.696}
   m_LocalScale: {x: 2.4886, y: 2.162, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -16455,6 +16460,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: cocot
+      value: 
+      objectReference: {fileID: 540121075}
+    - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: raceSpline
       value: 
       objectReference: {fileID: 1228641091}
@@ -16466,10 +16475,6 @@ PrefabInstance:
       propertyPath: checkPointManager
       value: 
       objectReference: {fileID: 1640521823}
-    - target: {fileID: 1114320073194909485, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 1122978451640099535, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.002
@@ -16499,10 +16504,6 @@ PrefabInstance:
       value: -0.70710677
       objectReference: {fileID: 0}
     - target: {fileID: 2248676125650783582, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2248676125650783582, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
@@ -16516,6 +16517,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2248676125650783582, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: 3662353073275384674, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 3662353073275384674, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3662353073275384674, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
       value: -90
       objectReference: {fileID: 0}
     - target: {fileID: 5154237314693840931, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
@@ -16558,10 +16571,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5327019060542326105, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 7437617557389310431, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: m_Enabled
       value: 0
@@ -16570,13 +16579,7 @@ PrefabInstance:
       propertyPath: icon
       value: 
       objectReference: {fileID: 996782331}
-    - target: {fileID: 8205729695500867535, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 8665227529156224603, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
-    - {fileID: 5397952178145088408, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+    m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
