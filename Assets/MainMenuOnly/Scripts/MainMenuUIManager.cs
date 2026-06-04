@@ -81,6 +81,7 @@ public class MainMenuUIManager : MonoBehaviour
 
     [Header("--- UI Panels ---")]
     public GameObject titleScreenPanel;
+    public GameObject roze;
 
     [Header("--- Effets Visuels (Hover) ---")]
     public float selectedScale = 1.3f;
@@ -153,7 +154,7 @@ public class MainMenuUIManager : MonoBehaviour
     void Start()
     {
         Time.timeScale = 1f;
-
+        roze.SetActive(true);
         if (mainWheelRect != null) mainWheelActivePos = mainWheelRect.anchoredPosition;
         if (settingsWheelRect != null) settingsWheelActivePos = settingsWheelRect.anchoredPosition;
         if (playWheelRect != null) playWheelActivePos = playWheelRect.anchoredPosition;
@@ -197,6 +198,7 @@ public class MainMenuUIManager : MonoBehaviour
 
         LoadSettings();
         ApplySettings(false);
+        StartCoroutine(retirRoze());
     }
 
     void Update()
@@ -210,6 +212,12 @@ public class MainMenuUIManager : MonoBehaviour
         UpdateHoverEffects();
     }
 
+    IEnumerator retirRoze()
+    {
+        yield return new WaitForSeconds(0.2f);
+        roze.SetActive(false);
+
+    }
 
     public void ChangeState(MenuState newState)
     {

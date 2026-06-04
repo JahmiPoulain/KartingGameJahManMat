@@ -197,8 +197,8 @@ public class UIManager2 : MonoBehaviour
 
     public void QuitToMainMenu()
     {
-        Time.timeScale = 1f;
-        if (depthOfField != null) depthOfField.active = false;
+       // Time.timeScale = 1f;
+       // if (depthOfField != null) depthOfField.active = false;
 
         GameSceneManager.Instance.ReturnToMainMenu();
     }

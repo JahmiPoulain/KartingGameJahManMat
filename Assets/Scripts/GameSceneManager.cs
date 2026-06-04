@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Video;
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -11,15 +13,22 @@ public class GameSceneManager : MonoBehaviour
     public string mainMenuSceneName = "MainMenu2_0";
     public string graphSceneName = "GraphScene";
 
-    [Header("Transition UI")]
-    public CanvasGroup transitionScreen;
-    public float transitionDuration = 1f;
+    [Header("Ressources de Transition")]
+    [SerializeField] private VideoClip transitionClip;
+    [SerializeField] private Sprite loadingIconSprite;
 
-    [Header("Loading UI")]
-    public RectTransform loadingIcon;
-    public float rotationSpeed = -360f;
+    [Tooltip("La couleur qui cache le jeu pendant les 5 frames de chargement de la vidéo (souvent noir)")]
+    public Color loadingBackgroundColor = Color.black;
 
+    private Canvas transitionCanvas;
+    private RawImage videoRenderImage;
+    private VideoPlayer videoPlayer;
+    private RectTransform loadingIcon;
+    private Image backgroundBlocker;
+
+    private float rotationSpeed = -360f;
     private List<string> loadedGameplayScenes = new List<string>();
+    private bool isTransitioning = false;
 
     private void Awake()
     {
@@ -27,14 +36,12 @@ public class GameSceneManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-
-            if (transitionScreen != null)
-            {
-                transitionScreen.alpha = 1f;
-                transitionScreen.blocksRaycasts = true;
-            }
+            CreateTransitionUI();
         }
-        else Destroy(gameObject);
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
     private void Start()
@@ -44,25 +51,91 @@ public class GameSceneManager : MonoBehaviour
             SceneManager.LoadScene(mainMenuSceneName);
         }
 
-        StartCoroutine(Fade(0f));
+        StartCoroutine(PlayVideoFromMiddleOnStart());
+    }
+
+    private void CreateTransitionUI()
+    {
+        GameObject canvasGo = new GameObject("TransitionCanvas");
+        canvasGo.transform.SetParent(this.transform);
+        transitionCanvas = canvasGo.AddComponent<Canvas>();
+        transitionCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+
+        transitionCanvas.sortingOrder = 32767;
+
+        CanvasScaler scaler = canvasGo.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920, 1080);
+        canvasGo.AddComponent<GraphicRaycaster>();
+
+        GameObject bgGo = new GameObject("BackgroundBlocker");
+        bgGo.transform.SetParent(canvasGo.transform, false);
+        backgroundBlocker = bgGo.AddComponent<Image>();
+        backgroundBlocker.color = loadingBackgroundColor;
+
+        RectTransform bgRect = backgroundBlocker.GetComponent<RectTransform>();
+        bgRect.anchorMin = Vector2.zero;
+        bgRect.anchorMax = Vector2.one;
+        bgRect.sizeDelta = Vector2.zero;
+
+        RenderTexture memoryRenderTexture = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
+        memoryRenderTexture.Create();
+
+        GameObject rawImageGo = new GameObject("VideoRenderImage");
+        rawImageGo.transform.SetParent(canvasGo.transform, false);
+        videoRenderImage = rawImageGo.AddComponent<RawImage>();
+
+        RectTransform rect = videoRenderImage.GetComponent<RectTransform>();
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.sizeDelta = Vector2.zero;
+
+        videoRenderImage.texture = memoryRenderTexture;
+        videoRenderImage.color = Color.white;
+
+        videoPlayer = canvasGo.AddComponent<VideoPlayer>();
+        videoPlayer.playOnAwake = false;
+        videoPlayer.isLooping = false;
+        videoPlayer.renderMode = VideoRenderMode.RenderTexture;
+        videoPlayer.targetTexture = memoryRenderTexture;
+        videoPlayer.clip = transitionClip;
+
+        if (loadingIconSprite != null)
+        {
+            GameObject iconGo = new GameObject("LoadingIcon");
+            iconGo.transform.SetParent(canvasGo.transform, false);
+            Image img = iconGo.AddComponent<Image>();
+            img.sprite = loadingIconSprite;
+            loadingIcon = iconGo.GetComponent<RectTransform>();
+            loadingIcon.sizeDelta = new Vector2(120, 120);
+            iconGo.SetActive(false);
+        }
+
+        transitionCanvas.gameObject.SetActive(false);
     }
 
     public void LoadGame(string gameplaySceneName)
     {
+        if (isTransitioning) return;
         StartCoroutine(TransitionRoutine(gameplaySceneName, true));
     }
 
     public void ReturnToMainMenu()
     {
+        if (isTransitioning) return;
         StartCoroutine(TransitionRoutine(mainMenuSceneName, false));
     }
 
     private IEnumerator TransitionRoutine(string targetScene, bool isLoadingGame)
     {
-        // 1. On affiche le fade
-        yield return StartCoroutine(Fade(1f));
+        isTransitioning = true;
+        Application.backgroundLoadingPriority = ThreadPriority.Low;
 
-        // 2. On lance l'icône de chargement
+        transitionCanvas.gameObject.SetActive(true);
+        backgroundBlocker.enabled = false;
+
+        yield return StartCoroutine(PlayVideoUntilMiddle());
+
         Coroutine spinCoroutine = null;
         if (loadingIcon != null)
         {
@@ -70,13 +143,10 @@ public class GameSceneManager : MonoBehaviour
             spinCoroutine = StartCoroutine(SpinIconRoutine());
         }
 
-        // ASTUCE ANTI-FREEZE : On dit à Unity de ralentir le chargement pour laisser l'UI respirer
-        Application.backgroundLoadingPriority = ThreadPriority.Low;
-
         if (isLoadingGame)
         {
-            yield return LoadAdditiveScene(targetScene);
-            yield return LoadAdditiveScene(graphSceneName);
+            yield return StartCoroutine(LoadAdditiveScene(targetScene));
+            yield return StartCoroutine(LoadAdditiveScene(graphSceneName));
 
             Scene sceneToActivate = SceneManager.GetSceneByName(targetScene);
             if (sceneToActivate.IsValid() && sceneToActivate.isLoaded)
@@ -92,35 +162,73 @@ public class GameSceneManager : MonoBehaviour
         else
         {
             AsyncOperation op = SceneManager.LoadSceneAsync(mainMenuSceneName, LoadSceneMode.Single);
-
-            if (op != null)
-            {
-                // ASTUCE : On empêche la scène de s'activer tout de suite (c'est ça qui freeze !)
-                op.allowSceneActivation = false;
-
-                // Unity bloque le progrès à 0.9f tant que allowSceneActivation est false
-                while (op.progress < 0.9f)
-                {
-                    yield return null;
-                }
-
-                // La scène est prête en arrière-plan, on autorise le gros "hit" final
-                op.allowSceneActivation = true;
-                while (!op.isDone) yield return null;
-            }
-
+            while (!op.isDone) yield return null;
             loadedGameplayScenes.Clear();
         }
 
-        // On remet la priorité normale pour le jeu
-        Application.backgroundLoadingPriority = ThreadPriority.Normal;
-
-        // 3. On arrête l'icône et on la cache
         if (spinCoroutine != null) StopCoroutine(spinCoroutine);
         if (loadingIcon != null) loadingIcon.gameObject.SetActive(false);
 
-        // 4. On enlève le fade
-        yield return StartCoroutine(Fade(0f));
+        yield return StartCoroutine(FinishVideoRoutine());
+
+        transitionCanvas.gameObject.SetActive(false);
+        Application.backgroundLoadingPriority = ThreadPriority.Normal;
+        isTransitioning = false;
+    }
+
+    private IEnumerator PlayVideoFromMiddleOnStart()
+    {
+        isTransitioning = true;
+        transitionCanvas.gameObject.SetActive(true);
+
+        backgroundBlocker.enabled = true;
+
+        if (videoPlayer != null && videoPlayer.clip != null)
+        {
+            videoPlayer.Prepare();
+            while (!videoPlayer.isPrepared) yield return null;
+
+            videoPlayer.time = videoPlayer.length / 2.0;
+            videoPlayer.Play();
+
+            while (!videoPlayer.isPlaying) yield return null;
+
+            backgroundBlocker.enabled = false;
+
+            while (videoPlayer.isPlaying) yield return null;
+        }
+
+        transitionCanvas.gameObject.SetActive(false);
+        isTransitioning = false;
+    }
+
+    private IEnumerator PlayVideoUntilMiddle()
+    {
+        if (videoPlayer == null || videoPlayer.clip == null) yield break;
+
+        videoPlayer.Prepare();
+        while (!videoPlayer.isPrepared) yield return null;
+
+        videoPlayer.time = 0;
+        videoPlayer.Play();
+
+        double halfDuration = videoPlayer.length / 2.0;
+        while (videoPlayer.time < halfDuration && videoPlayer.isPlaying)
+        {
+            yield return null;
+        }
+
+        videoPlayer.Pause();
+    }
+
+    private IEnumerator FinishVideoRoutine()
+    {
+        if (videoPlayer == null || videoPlayer.clip == null) yield break;
+
+        videoPlayer.Play();
+        yield return new WaitForSecondsRealtime(0.1f);
+
+        while (videoPlayer.isPlaying) yield return null;
     }
 
     private IEnumerator LoadAdditiveScene(string sceneName)
@@ -128,58 +236,24 @@ public class GameSceneManager : MonoBehaviour
         if (!IsSceneLoaded(sceneName))
         {
             AsyncOperation op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
-
-            if (op == null) yield break;
-
-            // Même technique ici pour les scènes additives
-            op.allowSceneActivation = false;
-            while (op.progress < 0.9f)
-            {
-                yield return null;
-            }
-            op.allowSceneActivation = true;
-
             while (!op.isDone) yield return null;
             if (!loadedGameplayScenes.Contains(sceneName)) loadedGameplayScenes.Add(sceneName);
+        }
+    }
+
+    private IEnumerator SpinIconRoutine()
+    {
+        if (loadingIcon == null) yield break;
+        while (true)
+        {
+            loadingIcon.Rotate(0f, 0f, rotationSpeed * Time.unscaledDeltaTime);
+            yield return null;
         }
     }
 
     private bool IsSceneLoaded(string name)
     {
         Scene s = SceneManager.GetSceneByName(name);
-        // CORRECTIF 4 : Toujours vérifier si la scène est "Valid" avant de demander son état.
         return s.IsValid() && s.isLoaded;
-    }
-
-    private IEnumerator Fade(float targetAlpha)
-    {
-        if (transitionScreen == null) yield break;
-
-        transitionScreen.blocksRaycasts = true;
-        float startAlpha = transitionScreen.alpha;
-        float time = 0;
-
-        while (time < transitionDuration)
-        {
-            transitionScreen.alpha = Mathf.Lerp(startAlpha, targetAlpha, time / transitionDuration);
-            // CORRECTIF 2 : unscaledDeltaTime permet à la transition de fonctionner même si Time.timeScale = 0 (jeu en pause)
-            time += Time.unscaledDeltaTime;
-            yield return null;
-        }
-
-        transitionScreen.alpha = targetAlpha;
-        if (targetAlpha <= 0) transitionScreen.blocksRaycasts = false;
-    }
-
-    private IEnumerator SpinIconRoutine()
-    {
-        if (loadingIcon == null) yield break;
-
-        while (true)
-        {
-            // On fait tourner l'icône sur l'axe Z en utilisant unscaledDeltaTime
-            loadingIcon.Rotate(0f, 0f, rotationSpeed * Time.unscaledDeltaTime);
-            yield return null;
-        }
     }
 }
