@@ -162,8 +162,10 @@ public class MainMenuUIManager : MonoBehaviour
         if (mainWheelRect != null) initialMainAngle = mainWheelRect.localEulerAngles.z;
         if (settingsWheelRect != null) initialSettingsAngle = settingsWheelRect.localEulerAngles.z;
         if (playWheelRect != null) InitialPlayAngle = playWheelRect.localEulerAngles.z;
+
         targetMainAngle = initialMainAngle;
         targetSettingsAngle = initialSettingsAngle;
+        targetPlayAngle = InitialPlayAngle;
 
         GenerateWheel(mainMenuOptions, mainWheelRect, mainButtonsGenerated, true);
         GenerateWheel(settingsOptions, settingsWheelRect, settingsButtonsGenerated, false);
