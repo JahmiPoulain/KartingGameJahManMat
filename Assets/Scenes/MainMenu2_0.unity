@@ -1767,7 +1767,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 244389484}
-  m_LocalRotation: {x: 0.7071073, y: -0, z: -0.000000029802319, w: 0.7071063}
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 10, y: 0.25, z: 10}
   m_ConstrainProportionsScale: 0
@@ -1777,7 +1777,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.183, y: 0.011}
+  m_AnchoredPosition: {x: 0.02, y: 0.48}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!23 &244389486
@@ -3197,7 +3197,7 @@ MonoBehaviour:
   invertNavigation: 0
   leaderboardCanvas: {fileID: 1191235603}
   buttonPrefab: {fileID: 8387537317075167882, guid: 5ec7680a76616504bb44751871f58db6, type: 3}
-  customAnglePerOption: 75
+  customAnglePerOption: 67.5
   startAngleOffset: 0
   reverseSpawnDirection: 0
   wheelRadius: 13
@@ -8491,7 +8491,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1127668998}
   m_LocalRotation: {x: 0.5, y: -0.5, z: 0.5, w: 0.5}
-  m_LocalPosition: {x: 0, y: 0, z: -0}
+  m_LocalPosition: {x: 0, y: 0, z: 0.032}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8499,7 +8499,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 90}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0, y: -0.2}
+  m_AnchoredPosition: {x: -0.046, y: -0.2}
   m_SizeDelta: {x: 10, y: 10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!212 &1127669000
@@ -14016,7 +14016,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1992469684}
-  m_LocalRotation: {x: -0, y: -0, z: -0.7071074, w: 0.7071062}
+  m_LocalRotation: {x: 0, y: 0, z: -0.7071068, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -14026,7 +14026,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -90}
   m_AnchorMin: {x: -0.14201412, y: 0.2406218}
   m_AnchorMax: {x: 0.1411415, y: 0.72202766}
-  m_AnchoredPosition: {x: 0.35000038, y: 0.51}
+  m_AnchoredPosition: {x: 0.22999954, y: 0}
   m_SizeDelta: {x: 0.40999973, y: 0.13}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1992469686
@@ -14787,10 +14787,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8eaadaaf92fe84a478dfb2bcee32f09d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  leaderboardKey: 33908
+  timeAttackNormalKey: 
+  timeAttackReverseKey: 
+  contreLaMontreNormalKey: 
+  contreLaMontreReverseKey: 
   maxResults: 100
   serverRefreshDelay: 2
   reconnectInterval: 5
+  currentGameMode: 0
+  currentCircuitMode: 0
+  gameModeToggleButton: {fileID: 0}
+  circuitModeToggleButton: {fileID: 0}
+  gameModeToggleButtonText: {fileID: 0}
+  circuitModeToggleButtonText: {fileID: 0}
+  managePlayersButton: {fileID: 0}
+  managePlayersButtonText: {fileID: 0}
+  playerManagementPage: {fileID: 0}
+  hideModeButtonsWhileManagingPlayers: 1
+  managePlayersButtonLabel: "G\xE9rer les joueurs"
+  backToLeaderboardButtonLabel: Retour classement
+  leaderboardTitleText: {fileID: 0}
+  circuitModeText: {fileID: 0}
   firstPage: {fileID: 812288704}
   normalPagePrefab: {fileID: 4659702368245273470, guid: 8ad59b7157505473e8c8453dbbe1f15d, type: 3}
   pagesParent: {fileID: 2030678243}
