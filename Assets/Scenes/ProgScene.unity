@@ -666,10 +666,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 0
+  m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 0fb7f6fc1e8038746bf4d77af8e2a082, type: 2}
+  m_sharedMaterial: {fileID: -8915343699546993789, guid: 0fb7f6fc1e8038746bf4d77af8e2a082, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2543,7 +2543,7 @@ ParticleSystem:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-  moveWithTransform: 0
+  moveWithTransform: 1
   moveWithCustomTransform: {fileID: 0}
   scalingMode: 1
   randomSeed: 0
@@ -3968,7 +3968,7 @@ ParticleSystem:
     x:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0
+      scalar: 1
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -4021,7 +4021,7 @@ ParticleSystem:
     y:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0
+      scalar: 1
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -4074,7 +4074,7 @@ ParticleSystem:
     z:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0
+      scalar: 1
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -4082,6 +4082,15 @@ ParticleSystem:
         - serializedVersion: 3
           time: 0
           value: 0
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0.33333334
+          outWeight: 0.33333334
+        - serializedVersion: 3
+          time: 0.06695094
+          value: -0.040599823
           inSlope: 0
           outSlope: 0
           tangentMode: 0
@@ -7601,6 +7610,11 @@ RectTransform:
 Transform:
   m_CorrespondingSourceObject: {fileID: 7926506448043299815, guid: 97be06b2881f28b4a91a1d31361894d3, type: 3}
   m_PrefabInstance: {fileID: 1622583202}
+  m_PrefabAsset: {fileID: 0}
+--- !u!198 &335581838 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 7536948044965198818, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+  m_PrefabInstance: {fileID: 7863942287254133310}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &340953002
 GameObject:
@@ -16523,6 +16537,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7926506448043299815, guid: 97be06b2881f28b4a91a1d31361894d3, type: 3}
   m_PrefabInstance: {fileID: 623669003}
   m_PrefabAsset: {fileID: 0}
+--- !u!198 &1439346655 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 8744859678298931828, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+  m_PrefabInstance: {fileID: 7863942287254133310}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1451020939 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7926506448043299815, guid: 97be06b2881f28b4a91a1d31361894d3, type: 3}
@@ -20144,8 +20163,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 3
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 0fb7f6fc1e8038746bf4d77af8e2a082, type: 2}
+  m_sharedMaterial: {fileID: -8915343699546993789, guid: 0fb7f6fc1e8038746bf4d77af8e2a082, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -20253,8 +20272,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 0fb7f6fc1e8038746bf4d77af8e2a082, type: 2}
+  m_sharedMaterial: {fileID: -8915343699546993789, guid: 0fb7f6fc1e8038746bf4d77af8e2a082, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -20399,8 +20418,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 0fb7f6fc1e8038746bf4d77af8e2a082, type: 2}
+  m_sharedMaterial: {fileID: -8915343699546993789, guid: 0fb7f6fc1e8038746bf4d77af8e2a082, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -20602,7 +20621,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 339, y: 204}
+  m_AnchoredPosition: {x: 327, y: 204}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &2778462123638937356
@@ -20728,8 +20747,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 00:00.000
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 0fb7f6fc1e8038746bf4d77af8e2a082, type: 2}
+  m_sharedMaterial: {fileID: -8915343699546993789, guid: 0fb7f6fc1e8038746bf4d77af8e2a082, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -20753,8 +20772,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 25
+  m_fontSizeBase: 25
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -21141,8 +21160,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 0fb7f6fc1e8038746bf4d77af8e2a082, type: 2}
+  m_sharedMaterial: {fileID: -8915343699546993789, guid: 0fb7f6fc1e8038746bf4d77af8e2a082, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -21358,12 +21377,24 @@ PrefabInstance:
       objectReference: {fileID: 1640521823}
     - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: fireParticlesGenerator.Array.size
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: smokeParticlesGenerator.Array.size
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: 'fireParticlesGenerator.Array.data[0]'
+      value: 
+      objectReference: {fileID: 335581838}
+    - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: 'smokeParticlesGenerator.Array.data[0]'
+      value: 
+      objectReference: {fileID: 263429529}
+    - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: 'smokeParticlesGenerator.Array.data[1]'
+      value: 
+      objectReference: {fileID: 1439346655}
     - target: {fileID: 1122978451640099535, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.002
@@ -21510,7 +21541,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8744859678298931828, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: moveWithTransform
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8744859678298931828, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: SizeModule.enabled

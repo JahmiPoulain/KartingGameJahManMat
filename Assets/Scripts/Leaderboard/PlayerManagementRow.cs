@@ -10,17 +10,17 @@ public class PlayerManagementRow : MonoBehaviour
     [SerializeField] private TextMeshProUGUI chooseButtonText;
 
     [Header("Buttons")]
+    [SerializeField] private Button chooseButton;
     [SerializeField] private Button renameButton;
     [SerializeField] private Button deleteButton;
-    [SerializeField] private Button chooseButton;
 
     [Header("Colors")]
-    [SerializeField] private Color activePlayerColor = new Color(1f, 0.25f, 0.75f);
-    [SerializeField] private Color inactivePlayerColor = new Color(0.25f, 0.55f, 1f);
+    [SerializeField] private Color activePlayerColor = new Color(0.9490196f, 0.654902f, 0.7098039f);
+    [SerializeField] private Color inactivePlayerColor = new Color(0.4313726f, 0.5176471f, 0.6156863f);
 
     [Header("Labels")]
-    [SerializeField] private string activeChooseLabel = "Actif";
-    [SerializeField] private string inactiveChooseLabel = "Choisir";
+    [SerializeField] private string activeChooseLabel = "Active";
+    [SerializeField] private string inactiveChooseLabel = "Choose";
 
     private string playerId;
     private string playerName;

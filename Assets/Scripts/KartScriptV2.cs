@@ -1131,9 +1131,18 @@ public class KartScriptV2 : MonoBehaviour
 
     void HandleSmoke()
     {
+        for (int i = 0; i < smokeParticlesGenerator.Length; i++)
+        {
+            smokeParticlesGenerator[i].startSpeed = (-(currentSpeed - maxSpeed) - maxSpeed * 0.5f) / 3f -2f; //(currentSpeed - (currentSpeed / 2f));
+            var FPemission =  smokeParticlesGenerator[i].emission;
+            FPemission.rateOverTime = 1.5f + currentSpeed / 4f;
+            //smokeParticlesGenerator[i].velocityOverLifetime. //= new Vector3(0, 0, currentSpeed);
+            //smokeParticlesGenerator[i].emission.rateOverDistance = currentSpeed;
+        }
+
         if (turbo)
         {
-            for (int i = 0; fireParticlesGenerator.Length > 0; i++)
+            for (int i = 0; i < fireParticlesGenerator.Length; i++)
             {
                 var FPemission = fireParticlesGenerator[i].emission;
                 FPemission.rateOverDistance = 3;
@@ -1141,7 +1150,7 @@ public class KartScriptV2 : MonoBehaviour
         }
         else
         {
-            for (int i = 0; fireParticlesGenerator.Length > 0; i++)
+            for (int i = 0; i < fireParticlesGenerator.Length ; i++)
             {
                 var FPemission = fireParticlesGenerator[i].emission;
                 FPemission.rateOverDistance = 0;
