@@ -1,6 +1,6 @@
 ﻿
 using UnityEngine;
-
+using System.Collections;
 public class Respawner : MonoBehaviour
 {
     [SerializeField] private Transform kartTransform;
@@ -13,6 +13,7 @@ public class Respawner : MonoBehaviour
 
     public bool IsOffTrack { get => isOffTrack; set => isOffTrack = value; }
 
+    [SerializeField] private Transform respawnBubble;
     // Update is called once per frame
     void Update()
     {
@@ -51,7 +52,7 @@ public class Respawner : MonoBehaviour
 
         kartScriptV2.CanDrive = false;
 
-        // ✅ si aucun checkpoint → on utilise la position de départ
+        // si aucun checkpoint → on utilise la position de départ
         if (checkPointManager.HasCheckpoint)
         {
             dir = checkPointManager.NewPos - kartTransform.position;
@@ -63,7 +64,7 @@ public class Respawner : MonoBehaviour
         }
         else
         {
-            // ✅ reset physique propre
+            // reset physique propre
             dir = kartScriptV2.StartPosition - kartTransform.position;
             float upForce = Mathf.Clamp(dir.magnitude, 0f, 2f);
             kartTransform.rotation = Quaternion.RotateTowards(kartTransform.rotation, kartScriptV2.StartRotation, Mathf.Clamp(upForce / 8f, 1f, 5f));
@@ -72,15 +73,37 @@ public class Respawner : MonoBehaviour
 
         }
 
-        Debug.Log(dir.sqrMagnitude);
+
+        respawnBubble.position = kartTransform.position;
+        if (respawnBubble.localScale.x < 1f)
+        {
+            respawnBubble.localScale += Vector3.one * 3f * Time.deltaTime;
+        }
 
         if (dir.sqrMagnitude < 0.1f)
         {
             Debug.Log("retour effectué");
             kartScriptV2.GetComponent<SphereCollider>().enabled = true;
+            //respawnBubble.localScale += Vector3.one;
             kartScriptV2.CanDrive = true;
             isOffTrack = false;
             kartScriptV2.outOfBounds = false;
+            StartCoroutine(BlowUpBubble());
+        }
+
+        IEnumerator BlowUpBubble()
+        {        
+            yield return null;
+            if (respawnBubble.localScale.x < 2f)
+            {
+                respawnBubble.position = kartTransform.position;
+                respawnBubble.localScale += Vector3.one * 15f * Time.deltaTime;
+                StartCoroutine(BlowUpBubble());
+            }
+            else
+            {
+                respawnBubble.localScale = Vector3.zero;
+            }
         }
     }
 }

@@ -45,7 +45,7 @@ public class ContreLaMontre : GameMode
         {
             float t = lapManager.LapTimes[i];
             totalTime += t;
-            detailScores += $"Round {i + 1} : {FormatTime(t)}\n";
+            detailScores += $"Lap {i + 1} : {FormatTime(t)}\n";
         }
 
         if (scoreUI != null)
@@ -64,6 +64,7 @@ public class ContreLaMontre : GameMode
     {
         if (kartScript != null) kartScript.CanDrive = false;
 
+        yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "3";
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "2";

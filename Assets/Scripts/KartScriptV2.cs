@@ -174,6 +174,12 @@ public class KartScriptV2 : MonoBehaviour
     [SerializeField] private float lookAheadDistance = 0.05f; // Distance d'anticipation (0.01 à 0.1)
 
 
+    [Header("SFX")]
+    [SerializeField] private AudioClip bubbleSound; // Ton son de bulle actuel
+    private AudioSource audioSource; //
+    private float bubbleSoundTimer; // Pour gérer la cadence des bruitages
+
+
     public Vector3 StartPosition { get => startPosition; set => startPosition = value; }
     public Quaternion StartRotation { get => startRotation; set => startRotation = value; }
     public bool GhostMode { get => ghostMode; set => ghostMode = value; }
@@ -191,6 +197,10 @@ public class KartScriptV2 : MonoBehaviour
         }
 
         controls = new InputSystem_Actions(); // initialiser input    
+        audioSource = GetComponent<AudioSource>();
+        audioSource.clip = bubbleSound;
+        audioSource.loop = false; // Important : on veut entendre chaque bulle éclater individuellement
+        audioSource.playOnAwake = false;
 
         startPosition = transform.position;
         startRotation = transform.rotation;
@@ -473,6 +483,15 @@ public class KartScriptV2 : MonoBehaviour
         visualKartBody.transform.localEulerAngles = Vector3.zero;
         visualKartWheelsParent.transform.localEulerAngles = Vector3.zero;
         preOrientation.transform.localEulerAngles = Vector3.zero;
+        cocot.localEulerAngles = new Vector3(-90,0,0);
+        for (int i = 0; i < cretes.Length; i++)
+        {
+            cretes[i].localEulerAngles = Vector3.zero;
+        }
+        for (int i = 0; i < turningWheels.Length; i++)
+        {
+            turningWheels[i].transform.localEulerAngles = new Vector3(90,0,0);
+        }
     }
 
     public void StopFlight()
@@ -638,9 +657,9 @@ public class KartScriptV2 : MonoBehaviour
                  driftCoyoteTime -= Time.deltaTime;
                  return;
              }                   
-            /*if (nextYDriftRot < 0)
+            if (nextYDriftRot < 0)
             {
-                nextYDriftRot += 12f * Time.fixedDeltaTime;
+                nextYDriftRot += 12f  * Time.fixedDeltaTime;
                 if (nextYDriftRot > 0)
                 {
                     nextYDriftRot = 0;
@@ -648,23 +667,23 @@ public class KartScriptV2 : MonoBehaviour
             }
             else if (nextYDriftRot > 0)
             {
-                nextYDriftRot += -12f * Time.fixedDeltaTime;
+                nextYDriftRot += -12f  * Time.fixedDeltaTime;
                 if (nextYDriftRot < 0)
                 {
                     nextYDriftRot = 0;
                 }
             }
 
-            driftPivot.localRotation = Quaternion.Euler(0, nextYDriftRot, 0);*/
-            nextYDriftRot = IncrementTowardsValue(nextYDriftRot, 0, 12f * Time.fixedDeltaTime);
             driftPivot.localRotation = Quaternion.Euler(0, nextYDriftRot, 0);
+            //nextYDriftRot = IncrementTowardsValue(nextYDriftRot, 0, 12f * Time.fixedDeltaTime);
+            //driftPivot.localRotation = Quaternion.Euler(0, nextYDriftRot, 0);
 
             currentDriftForce = 0;
             driftCatchUp = 0;
 
             if (driftTurboGauge > gaugeToActivateTurbo)
             {
-                StartTurbo(driftTurboGauge * 2.2f, driftTurboGauge / 2.6f);
+                StartTurbo(driftTurboGauge * 2.3f, driftTurboGauge / 2.6f);
                 driftTurboGauge = 0;
                 Vector3 oldCamForward = camPivot.forward;
                 transform.forward = new Vector3(driftPivot.forward.x, 0, driftPivot.forward.z);
@@ -722,24 +741,24 @@ public class KartScriptV2 : MonoBehaviour
             if (driftDir > 0 && turnDirection < 0)
             {
                 nextDriftForceTarget = 2.5f;
-                driftTurboGauge += 0.2f * Time.deltaTime;
+                driftTurboGauge += 0.25f * Time.deltaTime;
             }
             else if (driftDir < 0 && turnDirection > 0)
             {
                 nextDriftForceTarget = 2.5f;
-                driftTurboGauge += 0.2f * Time.deltaTime;
+                driftTurboGauge += 0.25f * Time.deltaTime;
             }
             else if (driftDir > 0 && turnDirection > 0)
             {
-                driftTurboGauge += 2f * Time.deltaTime;
+                driftTurboGauge += 2.5f * Time.deltaTime;
             }
             else if (driftDir < 0 && turnDirection < 0)
             {
-                driftTurboGauge += 2f * Time.deltaTime;
+                driftTurboGauge += 2.5f * Time.deltaTime;
             }
             else
             {
-                driftTurboGauge += 0.8f * Time.deltaTime;
+                driftTurboGauge += 1f * Time.deltaTime;
             }
 
             if (driftCatchUp < nextDriftForceTarget)
@@ -758,7 +777,7 @@ public class KartScriptV2 : MonoBehaviour
     void HandleTurning()
     {
         float nextTurnSpeed = currentTurnSpeed;
-        Debug.Log("1      " + nextTurnSpeed);
+       // Debug.Log("1      " + nextTurnSpeed);
         if (currentSpeed > 0) // si on avance
         {
             nextTurnSpeed += turnDirection * turnAccelSpeed * Time.fixedDeltaTime;
@@ -790,7 +809,7 @@ public class KartScriptV2 : MonoBehaviour
             }*/
             
             //nextTurnSpeed = //IncrementTowardsValue(nextTurnSpeed, 0, turnDecelSpeed * Time.fixedDeltaTime);
-            Debug.Log("2      " + nextTurnSpeed);
+           // Debug.Log("2      " + nextTurnSpeed);
             //Debug.Log(nextTurnSpeed);
         }
 
@@ -822,6 +841,9 @@ public class KartScriptV2 : MonoBehaviour
 
     public void StartTurbo(float force, float time)
     {
+        //Debug.Log(force);
+        force = Mathf.Clamp(force, 0f, 25f);
+        time = Mathf.Clamp(time, 0f, 3f);
         turbo = true;
         if (time > turboTimer)
         {
@@ -922,10 +944,10 @@ public class KartScriptV2 : MonoBehaviour
         nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -(maxSpeed), maxSpeed + 2f);
         groundNormalT.transform.rotation = Quaternion.LookRotation(Vector3.Cross(transform.right, groundNormal), groundNormal); // oriente le y vers le haut de la normale et le x vers l'avant du kart ( 2 semaines de galère )
         preOrientation.localRotation = Quaternion.RotateTowards(preOrientation.localRotation, groundNormalT.localRotation, 120f * Time.deltaTime);
-        Quaternion rotTarget = Quaternion.Euler(nextTotalSpeed, 0, visKartZRot);
+        Quaternion rotTarget = Quaternion.Euler(nextTotalSpeed * 0.8f, 0, visKartZRot);
         visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 40f * Time.deltaTime);
 
-        cocot.localRotation = Quaternion.RotateTowards(cocot.localRotation, Quaternion.Euler(nextTotalSpeed * 0.6f - 90, visKartZRot * 1.2f, 0), 120f * Time.deltaTime);
+        cocot.localRotation = Quaternion.Slerp(cocot.localRotation, Quaternion.Euler(nextTotalSpeed * 0.3f - 90, visKartZRot * 1.2f, 0), 0.5f);
         creteAccelZ += Mathf.Abs(visKartZRot);
         creteAccelZ = Mathf.Clamp(creteAccelZ, 0, 3f);
         creteAccelX += Mathf.Abs(nextTotalSpeed);
@@ -1138,6 +1160,31 @@ public class KartScriptV2 : MonoBehaviour
             FPemission.rateOverTime = 1.5f + currentSpeed / 4f;
             //smokeParticlesGenerator[i].velocityOverLifetime. //= new Vector3(0, 0, currentSpeed);
             //smokeParticlesGenerator[i].emission.rateOverDistance = currentSpeed;
+        }
+
+        if (bubbleSound != null && !outOfBounds)
+        {
+  
+            float speedRatio = Mathf.Clamp01(Mathf.Abs(currentSpeed) / maxSpeed);
+
+
+            float bubbleDelay = Mathf.Lerp(0.4f, 0.05f, speedRatio);
+
+            bubbleSoundTimer -= Time.deltaTime;
+
+            if (bubbleSoundTimer <= 0f)
+            {
+
+                audioSource.pitch = Random.Range(0.60f, 0.70f);
+
+
+                audioSource.volume = Mathf.Lerp(0.03f, 0.05f, speedRatio);
+
+
+                audioSource.PlayOneShot(bubbleSound);
+
+                bubbleSoundTimer = bubbleDelay;
+            }
         }
 
         if (turbo)

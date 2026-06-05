@@ -23,6 +23,7 @@ public class TimeAttack : GameMode
 
         maxLaps = 99999;
         LoadBestScore();
+        if (kartScript != null) kartScript.CanDrive = false;
         StartCoroutine(InitialCountdown());
     }
 
@@ -73,7 +74,11 @@ public class TimeAttack : GameMode
 
     IEnumerator InitialCountdown()
     {
+     
         if (kartScript != null) kartScript.CanDrive = false;
+
+        yield return new WaitForSeconds(1);
+
         startUI.text = "3";
         yield return new WaitForSeconds(1);
         startUI.text = "2";

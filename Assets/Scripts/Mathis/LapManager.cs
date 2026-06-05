@@ -75,7 +75,7 @@ public class LapManager : MonoBehaviour
     {
         if (currentMode is TimeAttack) lapUI.text = $"Try {_currentLap}";
 
-        else lapUI.text = $"Round {_currentLap}/{currentMode.MaxLaps}";
+        else lapUI.text = $"Lap {_currentLap}/{currentMode.MaxLaps}";
 
         if (currentMode.RaceFinished) lapUI.text = $"Round {currentMode.MaxLaps}/{currentMode.MaxLaps}";
     }
