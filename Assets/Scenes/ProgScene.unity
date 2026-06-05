@@ -11371,8 +11371,8 @@ MonoBehaviour:
         y: 0
         z: 0
       TangentIn:
-        x: -0
-        y: -0
+        x: 0
+        y: 0
         z: -7.1486893
       TangentOut:
         x: 0
@@ -11380,7 +11380,7 @@ MonoBehaviour:
         z: 9.114432
       Rotation:
         value:
-          x: 0.00082932477
+          x: 0.0008293245
           y: 0.80744225
           z: 0.01083613
           w: 0.5898465
@@ -12208,7 +12208,7 @@ MonoBehaviour:
         z: 5.69337
       Rotation:
         value:
-          x: -0.0041918135
+          x: -0.004191812
           y: 0.9864963
           z: 0.025572283
           w: 0.1617206
@@ -12327,7 +12327,7 @@ Transform:
   m_GameObject: {fileID: 855718230}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 188.7997, y: 1.9916916, z: 524.48645}
+  m_LocalPosition: {x: 188.7997, y: 0.5, z: 524.48645}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -17556,6 +17556,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74fc50378e879dc40b84cbbd3d4e7f11, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ghostKartPrefab: {fileID: 800632082475448381, guid: 522181ca5ac85574bba6e72bf41a228d, type: 3}
 --- !u!4 &1546263595
 Transform:
   m_ObjectHideFlags: 0
@@ -21691,6 +21692,10 @@ PrefabInstance:
       propertyPath: checkPointManager
       value: 
       objectReference: {fileID: 1640521823}
+    - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: lookAheadDistance
+      value: 0.01
+      objectReference: {fileID: 0}
     - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: fireParticlesGenerator.Array.size
       value: 1

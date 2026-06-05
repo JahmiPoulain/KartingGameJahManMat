@@ -166,12 +166,12 @@ public class KartScriptV2 : MonoBehaviour
     private Vector3 startPosition;
     private Quaternion startRotation;
 
-    [Header("Ghost")]
+    [Header("Ghost & Spline Settings")]
     [SerializeField] private bool ghostMode = false;
     [SerializeField] private SplineContainer raceSpline;
-    [Range(0, 1)] private float splineProgress = 0f;
-    [SerializeField] private float ghostSpeed = 15f; // Vitesse cible du ghost
-    [SerializeField] private float lookAheadDistance = 0.05f; // Distance d'anticipation (0.01 à 0.1)
+    [SerializeField] [Range(0, 1)] private float splineProgress = 0f;
+    [SerializeField] private float ghostSpeed = 15f;
+    [SerializeField] [Range(0.005f, 0.05f)] private float lookAheadDistance = 0.01f; // Commence à 0.01 (1% de la piste)
 
 
     [Header("SFX")]
@@ -184,6 +184,7 @@ public class KartScriptV2 : MonoBehaviour
     public Quaternion StartRotation { get => startRotation; set => startRotation = value; }
     public bool GhostMode { get => ghostMode; set => ghostMode = value; }
     public bool CanDrive { get => canDrive; set => canDrive = value; }
+    public float SplineProgress { get => splineProgress; set => splineProgress = value; }
 
     private void Awake()
     {
@@ -195,6 +196,8 @@ public class KartScriptV2 : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        CanDrive = false;
 
         controls = new InputSystem_Actions(); // initialiser input    
         audioSource = GetComponent<AudioSource>();
@@ -1283,39 +1286,85 @@ public class KartScriptV2 : MonoBehaviour
             return;
         }
 
-        // 1. GESTION DU PROGRÈS (Avancement sur la ligne)
-        // La vitesse est divisée par la longueur de la spline pour rester cohérent
         float splineLength = raceSpline.CalculateLength();
-        float progressStep = (ghostSpeed / splineLength) * Time.deltaTime;
+        if (splineLength <= 0) return;
 
-        if (GameModes.isMapInverted)
-            splineProgress -= progressStep;
-        else
-            splineProgress += progressStep;
+        // 1. RECOLLER LE KART À LA SPLINE (Évite les désynchronisations)
+        // On trouve le point le plus proche de la spline par rapport à la position actuelle du kart
+        var nativeSpline = raceSpline.Spline;
 
-        // Boucle le progrès pour que le ghost continue après un tour
-        splineProgress = Mathf.Repeat(splineProgress, 1f);
+        // Convertit la position du Kart dans l'espace local de la Spline
+        Vector3 localKartPos = raceSpline.transform.InverseTransformPoint(transform.position);
 
-        // 2. CALCUL DE LA CIBLE
-        // On cherche un point un peu plus loin sur la spline pour "anticiper" le virage
+        // Trouve le progrès exact (t entre 0 et 1) correspondant à cette position
+        Unity.Mathematics.float3 nearestPoint;
+        float currentSplineTime;
+        SplineUtility.GetNearestPoint(nativeSpline, localKartPos, out nearestPoint, out currentSplineTime);
+
+        // On met à jour notre progression globale sur la base de la réalité physique
+        SplineProgress = currentSplineTime;
+
+        // 2. CALCULER LA CIBLE DEVANT LE KART (Look Ahead adaptatif)
         float targetProgress;
-        if (GameModes.isMapInverted)
-            targetProgress = Mathf.Repeat(splineProgress - lookAheadDistance, 1f);
+
+        // On utilise MainMenuUIManager.Instance.isMapInverted au lieu de l'ancien script de mode
+        bool isInverted = (MainMenuUIManager.Instance != null && MainMenuUIManager.Instance.isMapInverted);
+
+        if (isInverted)
+        {
+            // En inversé, la cible est DERRIÈRE dans le sens de la spline (donc on soustrait)
+            targetProgress = Mathf.Repeat(SplineProgress - lookAheadDistance, 1f);
+        }
         else
-            targetProgress = Mathf.Repeat(splineProgress + lookAheadDistance, 1f);
+        {
+            // En normal, la cible est DEVANT dans le sens de la spline (donc on ajoute)
+            targetProgress = Mathf.Repeat(SplineProgress + lookAheadDistance, 1f);
+        }
 
+        // Récupère la position de cette cible dans l'espace global (World)
         Vector3 targetPosition = (Vector3)raceSpline.EvaluatePosition(targetProgress);
-        Vector3 directionToTarget = targetPosition - transform.position;
 
-        // 3. LOGIQUE DE DIRECTION (Basée sur ton système actuel)
+        // Calcul du vecteur direction vers cette cible
+        Vector3 directionToTarget = targetPosition - transform.position;
+        directionToTarget.y = 0; // On ignore l'axe Y pour éviter les calculs d'angles faussés en pente
+
+
+        // 3. LOGIQUE DE DIRECTION ET DE CONDUITE
         float angle = Vector3.SignedAngle(transform.forward, directionToTarget, Vector3.up);
 
-        // On adoucit la rotation pour éviter les coups de volant secs
-        turnDirection = Mathf.Clamp(angle / 20f, -1f, 1f);
+        // Si la cible est presque alignée avec l'avant du kart (-2 à +2 degrés), on reste droit
+        if (Mathf.Abs(angle) < 2f)
+        {
+            turnDirection = 0f;
+        }
+        else
+        {
+            // On divise l'angle par un facteur plus grand (ex: 25f ou 30f au lieu de 15f) 
+            // pour que le volant tourne de manière progressive et fluide.
+            turnDirection = Mathf.Clamp(angle / 25f, -1f, 1f);
+        }
 
-        // Gaz à fond !
+        inputGlideTurn = turnDirection;
+
+        // Sécurité anti-demi-tour : Si par accident l'angle demandé est supérieur à 90 degrés,
+        // cela signifie que la cible est passée derrière ou s'est décalée brutalement.
+        // Dans ce cas, on calme la direction pour lui laisser le temps de se réaxer proprement.
+        if (Mathf.Abs(angle) > 90f)
+        {
+            turnDirection = Mathf.Sign(angle) * 0.3f; // Braquage très léger pour ne pas partir en tête-à-queue
+        }
+
+        // Commandes de gaz pour avancer
         accelerate = true;
         forwardDirection = 1f;
+
+        // Optionnel : Si le kart est trop loin de sa cible (par exemple bloqué contre un mur),
+        // on le force à accélérer pour se dégager.
+        if (directionToTarget.sqrMagnitude < 0.5f)
+        {
+            // Si on est pile sur la cible, on calme légèrement la direction pour éviter les vibrations
+            turnDirection = 0f;
+        }
     }
 }
 
