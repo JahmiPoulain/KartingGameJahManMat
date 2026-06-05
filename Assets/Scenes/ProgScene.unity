@@ -21356,6 +21356,14 @@ PrefabInstance:
       propertyPath: checkPointManager
       value: 
       objectReference: {fileID: 1640521823}
+    - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: fireParticlesGenerator.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: smokeParticlesGenerator.Array.size
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 1122978451640099535, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.002

@@ -97,8 +97,8 @@ public class KartScriptV2 : MonoBehaviour
     public Transform smokeOrigin;
     public Material baseSmokeMat;
     public Material fireSmokeMat;
-    public ParticleSystem smokeParticlesGenerator;
-    public ParticleSystem fireParticlesGenerator;
+    public ParticleSystem[] smokeParticlesGenerator;
+    public ParticleSystem[] fireParticlesGenerator;
     public ParticleSystem[] driftParticlesGenerators;
 
     [Header("Gravity")]
@@ -758,7 +758,7 @@ public class KartScriptV2 : MonoBehaviour
     void HandleTurning()
     {
         float nextTurnSpeed = currentTurnSpeed;
-
+        Debug.Log("1      " + nextTurnSpeed);
         if (currentSpeed > 0) // si on avance
         {
             nextTurnSpeed += turnDirection * turnAccelSpeed * Time.fixedDeltaTime;
@@ -788,7 +788,9 @@ public class KartScriptV2 : MonoBehaviour
                     nextTurnSpeed = 0;
                 }
             }*/
-            nextTurnSpeed = IncrementTowardsValue(nextTurnSpeed, 0, turnDecelSpeed * Time.fixedDeltaTime);
+            
+            //nextTurnSpeed = //IncrementTowardsValue(nextTurnSpeed, 0, turnDecelSpeed * Time.fixedDeltaTime);
+            Debug.Log("2      " + nextTurnSpeed);
             //Debug.Log(nextTurnSpeed);
         }
 
@@ -1012,21 +1014,21 @@ public class KartScriptV2 : MonoBehaviour
          }
 
         Vector3 rayOrigin = transform.position + transform.forward * 5f + new Vector3 (currentCamPosCenter.z, currentCamPosCenter.y, 0);// + playerCamera.transform.forward * 5f;
-        Debug.Log("ORIGIN" + rayOrigin);
+        //Debug.Log("ORIGIN" + rayOrigin);
         Vector3 rayDirToCam = playerCamera.transform.position - rayOrigin;
-        Debug.Log("DIRETION" + rayDirToCam);
+       // Debug.Log("DIRETION" + rayDirToCam);
         Vector3 camCollisionCompensation = Vector3.zero;
         if (Physics.Raycast(rayOrigin, rayDirToCam, out RaycastHit hit, 5f, wallLayer))
         {
             camCollisionCompensation = new Vector3(0, 0, rayDirToCam.x).normalized * (hit.distance - 5f);// - (transform.right).normalized * 5f;
-            Debug.Log("camCollisionCompensation +  + nextDir");
+          //  Debug.Log("camCollisionCompensation +  + nextDir");
             //Debug.Log(camCollisionCompensation);
         }
 
         Vector3 nextDir = playerCamera.transform.localPosition - (currentCamPosCenter + camCollisionCompensation);
         if (nextDir.sqrMagnitude > 0.01f)
         {
-            Debug.Log(camCollisionCompensation + " " + nextDir);
+          //  Debug.Log(camCollisionCompensation + " " + nextDir);
             playerCamera.transform.localPosition = Vector3.Lerp(playerCamera.transform.localPosition, currentCamPosCenter + camCollisionCompensation, 8f * Time.deltaTime);
         }
     }
@@ -1131,13 +1133,19 @@ public class KartScriptV2 : MonoBehaviour
     {
         if (turbo)
         {
-            var FPemission = fireParticlesGenerator.emission;
-            FPemission.rateOverDistance = 3;
+            for (int i = 0; fireParticlesGenerator.Length > 0; i++)
+            {
+                var FPemission = fireParticlesGenerator[i].emission;
+                FPemission.rateOverDistance = 3;
+            }
         }
         else
         {
-            var FPemission = fireParticlesGenerator.emission;
-            FPemission.rateOverDistance = 0;
+            for (int i = 0; fireParticlesGenerator.Length > 0; i++)
+            {
+                var FPemission = fireParticlesGenerator[i].emission;
+                FPemission.rateOverDistance = 0;
+            }
 
         }
     }
