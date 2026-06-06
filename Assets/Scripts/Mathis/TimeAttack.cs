@@ -10,16 +10,16 @@ public class TimeAttack : GameMode
     [SerializeField] private TextMeshProUGUI bestScoreUI; // Pour afficher le record
 
     private float bestLapTime = float.MaxValue;
-    private const string BEST_TIME_KEY = "BestTimeAttackScore";
+    private const string BASE_BEST_TIME_KEY = "BestTimeAttackScore";
 
     private void Start()
     {
         lapManager = FindFirstObjectByType<LapManager>();
         Initialize(lapManager, FindFirstObjectByType<KartScriptV2>());
-        // Pour l'UI, cherchez par tag ou via un script UI centralisé
-        startUI = GameObject.Find("CountDownUI").GetComponent<TextMeshProUGUI>();
-        currentTimerUI = GameObject.Find("ChronoUI").GetComponent<TextMeshProUGUI>();
-        bestScoreUI = GameObject.Find("BestScoreUI").GetComponent<TextMeshProUGUI>();
+
+        startUI = GameObject.Find("CountDownUI")?.GetComponent<TextMeshProUGUI>();
+        currentTimerUI = GameObject.Find("ChronoUI")?.GetComponent<TextMeshProUGUI>();
+        bestScoreUI = GameObject.Find("BestScoreUI")?.GetComponent<TextMeshProUGUI>();
 
         maxLaps = 99999;
         LoadBestScore();
@@ -30,102 +30,103 @@ public class TimeAttack : GameMode
     public override void Initialize(LapManager lm, KartScriptV2 ks)
     {
         base.Initialize(lm, ks);
-        if (kartScript != null) kartScript.CanDrive = false;
-        // Récupérez les UI depuis le LapManager qui les possède déjà
         this.currentTimerUI = lm.ChronoUI;
     }
-
 
     private void Update()
     {
         if (raceStarted && !raceFinished)
         {
-            UpdateUI();
+            // Logique de mise à jour si nécessaire
         }
     }
 
-    private void UpdateUI()
+    // Génère dynamiquement la clé selon l'état d'inversion de la map
+    private string GetSavedKey()
     {
-        // Affichage du chrono actuel 
-        //currentTimerUI.text = FormatTime(lapManager.CurrentLapTime);
+        string suffix = (MainMenuUIManager.Instance != null && MainMenuUIManager.Instance.isMapInverted) ? "_Inverted" : "_Normal";
+        return BASE_BEST_TIME_KEY + suffix;
+    }
+
+    private void LoadBestScore()
+    {
+        string key = GetSavedKey();
+        if (PlayerPrefs.HasKey(key))
+        {
+            bestLapTime = PlayerPrefs.GetFloat(key);
+            if (bestScoreUI != null)
+                bestScoreUI.text = "MEILLEUR TEMPS : " + FormatTime(bestLapTime);
+        }
+        else
+        {
+            bestLapTime = float.MaxValue;
+            if (bestScoreUI != null)
+                bestScoreUI.text = "MEILLEUR TEMPS : --:--.--";
+        }
+    }
+
+    IEnumerator InitialCountdown()
+    {
+        if (kartScript != null) kartScript.CanDrive = false;
+
+        yield return new WaitForSeconds(1);
+
+        if (startUI != null) startUI.text = "3";
+        yield return new WaitForSeconds(1);
+        if (startUI != null) startUI.text = "2";
+        yield return new WaitForSeconds(1);
+        if (startUI != null) startUI.text = "1";
+        yield return new WaitForSeconds(1);
+        if (startUI != null) startUI.text = "GO!";
+
+        if (kartScript != null) kartScript.CanDrive = true;
+        raceStarted = true;
+
+        yield return new WaitForSeconds(1);
+        if (startUI != null) startUI.text = "";
+    }
+
+    public override void OnLapCompleted(float lapTime)
+    {
+        // Si le joueur bat son record sur le type de piste actuel
+        if (lapTime < bestLapTime)
+        {
+            bestLapTime = lapTime;
+            PlayerPrefs.SetFloat(GetSavedKey(), bestLapTime);
+            PlayerPrefs.Save();
+
+            if (bestScoreUI != null)
+                bestScoreUI.text = "NOUVEAU RECORD : " + FormatTime(bestLapTime);
+
+            // --- ENVOI ADAPTÉ AU LEADERBOARD EN LIGNE (LOOTLOCKER) ---
+            if (LeaderboardManager.Instance != null)
+            {
+                int lapTimeInMs = Mathf.RoundToInt(lapTime * 1000f);
+                bool isReverse = (MainMenuUIManager.Instance != null && MainMenuUIManager.Instance.isMapInverted);
+
+                if (isReverse)
+                {
+                    LeaderboardManager.Instance.SubmitTimeAttackReverse(lapTimeInMs);
+                }
+                else
+                {
+                    LeaderboardManager.Instance.SubmitTimeAttackNormal(lapTimeInMs);
+                }
+
+                Debug.Log($"Score TimeAttack envoyé au manager (Reverse: {isReverse}) : {lapTimeInMs} ms");
+            }
+        }
+    }
+
+    public override void CompleteRace()
+    {
+        // Le mode Time Attack est infini, pas de fin de course automatique requise ici
     }
 
     private string FormatTime(float time)
     {
         int minutes = (int)(time / 60);
         float seconds = time % 60;
-
-
         return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:00}:{1:00.000}", minutes, seconds);
-    }
-
-    private void LoadBestScore()
-    {
-        if (PlayerPrefs.HasKey(BEST_TIME_KEY))
-        {
-            bestLapTime = PlayerPrefs.GetFloat(BEST_TIME_KEY);
-            bestScoreUI.text = "Record : " + FormatTime(bestLapTime);
-        }
-        else
-        {
-            bestScoreUI.text = "Record : --:--.---";
-        }
-    }
-
-    IEnumerator InitialCountdown()
-    {
-     
-        if (kartScript != null) kartScript.CanDrive = false;
-
-        yield return new WaitForSeconds(1);
-
-        startUI.text = "3";
-        yield return new WaitForSeconds(1);
-        startUI.text = "2";
-        yield return new WaitForSeconds(1);
-        startUI.text = "1";
-        yield return new WaitForSeconds(1);
-        startUI.text = "GO!";
-
-        kartScript.CanDrive = true;
-        raceStarted = true;
-
-        yield return new WaitForSeconds(1);
-        startUI.text = "";
-    }
-
-
-    public override void OnLapCompleted(float lapTime)
-    {
-        if (lapTime < bestLapTime)
-        {
-            bestLapTime = lapTime;
-            PlayerPrefs.SetFloat(BEST_TIME_KEY, bestLapTime);
-            PlayerPrefs.Save(); // Optionnel mais sûr
-
-            if (bestScoreUI != null)
-                bestScoreUI.text = "NEW RECORD : " + FormatTime(bestLapTime);
-        }
-
-
-    }
-
-    // Appelé par LapManager à chaque franchissement de ligne 
-    public override void CompleteRace()
-    {
-        /*// Récupère le temps du tour venant d'être complété
-        float lastLapTime = lapManager.LapTimes[lapManager.CurrentLap - 2];
-
-        // Vérifie si c'est un nouveau record 
-        if (lastLapTime < bestLapTime)
-        {
-            bestLapTime = lastLapTime;
-            PlayerPrefs.SetFloat(BEST_TIME_KEY, bestLapTime);
-            PlayerPrefs.Save();
-            bestScoreUI.text = "NOUVEAU RECORD : " + FormatTime(bestLapTime);
-        }*/
-        Debug.Log("Fin TimeAttack");
-
-
     }
 }
