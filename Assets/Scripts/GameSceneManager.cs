@@ -145,8 +145,8 @@ public class GameSceneManager : MonoBehaviour
 
         if (isLoadingGame)
         {
-            yield return StartCoroutine(LoadAdditiveScene(targetScene));
             yield return StartCoroutine(LoadAdditiveScene(graphSceneName));
+            yield return StartCoroutine(LoadAdditiveScene(targetScene));
 
             Scene sceneToActivate = SceneManager.GetSceneByName(targetScene);
             if (sceneToActivate.IsValid() && sceneToActivate.isLoaded)

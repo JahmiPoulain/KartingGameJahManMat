@@ -197,7 +197,7 @@ public class KartScriptV2 : MonoBehaviour
             Destroy(gameObject);
         }
 
-        CanDrive = false;
+
 
         controls = new InputSystem_Actions(); // initialiser input    
         audioSource = GetComponent<AudioSource>();
@@ -215,8 +215,9 @@ public class KartScriptV2 : MonoBehaviour
         //Application.targetFrameRate = 20;
         rb = GetComponent<Rigidbody>();
         groundNormal = new Vector3(0, 1, 0);
+        CanDrive = false;
         activeRespawnPoints = respawnPoints;
-        if (GameModes.isMapInverted)
+        if (MainMenuUIManager.Instance.isMapInverted)
         {
             // On fait faire demi-tour au kart immédiatement
             transform.rotation *= Quaternion.Euler(0, 180, 0);
@@ -225,6 +226,15 @@ public class KartScriptV2 : MonoBehaviour
 
     void Update()
     {
+        Debug.Log(CanDrive);
+        if (CanDrive == false)
+        {
+            accelerate = false;
+            forwardDirection = 0f;
+            turnDirection = 0f;
+            inputGlideTurn = 0f;
+            return; // On quitte l'Update immédiatement, le joueur ne peut rien faire !
+        }
         if(GhostMode)
         {
             GhostDrive();
