@@ -65,6 +65,7 @@ public class KartScriptV2 : MonoBehaviour
     private Vector3 currentCamPosCenter;
     private float turboTimer;
     float cameraZoneUp;
+    float camPivotZ;
 
     [Header("Visual Kart")]
     public GameObject visualKartBody;
@@ -226,7 +227,7 @@ public class KartScriptV2 : MonoBehaviour
 
     void Update()
     {
-        Debug.Log(CanDrive);
+        //Debug.Log(CanDrive);
         if (CanDrive == false)
         {
             accelerate = false;
@@ -1037,7 +1038,16 @@ public class KartScriptV2 : MonoBehaviour
         Vector3 targetDir = Vector3.down * cameraZoneUp + (transform.forward + (transform.right * currentTurnSpeed * Mathf.Clamp(currentDriftForce, -1f, 1f) * 0.05f)).normalized;
         float rotSpeed = 0.1f + (camPivot.forward - targetDir).magnitude * 2f; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+        // faire tanguer le pivot avec les virages
         camPivot.forward = Vector3.RotateTowards(camPivot.forward, targetDir, Time.deltaTime, 0.0f);
+        if (camPivotZ < currentTurnSpeed && driftDir == 0) camPivotZ += (2f + (3f - currentTurnSpeed)) * Time.deltaTime;
+        else if (camPivotZ > currentTurnSpeed && driftDir == 0) camPivotZ -= (2f + (3f - currentTurnSpeed)) * Time.deltaTime;
+        else if (driftDir < 0) { camPivotZ -= (2f + (3f - camPivotZ)) * Time.deltaTime; }
+        else if (driftDir > 0) { camPivotZ += (2f + (3f - camPivotZ)) * Time.deltaTime; }
+
+        camPivotZ = Mathf.Clamp(camPivotZ, -3f, 3f);
+
+        camPivot.localEulerAngles = new Vector3(camPivot.localEulerAngles.x, camPivot.localEulerAngles.y, camPivotZ);
 
          if (InputSystemHandler.instance.inputCameraMode)
          {
@@ -1048,22 +1058,19 @@ public class KartScriptV2 : MonoBehaviour
             currentCamPosCenter = firstPersonCamPos;           
          }
 
-        Vector3 rayOrigin = transform.position + transform.forward * 5f + new Vector3 (currentCamPosCenter.z, currentCamPosCenter.y, 0);// + playerCamera.transform.forward * 5f;
-        //Debug.Log("ORIGIN" + rayOrigin);
+        Vector3 rayOrigin = transform.position + transform.forward * 5f + new Vector3 (currentCamPosCenter.z, currentCamPosCenter.y, 0);
+
         Vector3 rayDirToCam = playerCamera.transform.position - rayOrigin;
-       // Debug.Log("DIRETION" + rayDirToCam);
+
         Vector3 camCollisionCompensation = Vector3.zero;
         if (Physics.Raycast(rayOrigin, rayDirToCam, out RaycastHit hit, 5f, wallLayer))
         {
-            camCollisionCompensation = new Vector3(0, 0, rayDirToCam.x).normalized * (hit.distance - 5f);// - (transform.right).normalized * 5f;
-          //  Debug.Log("camCollisionCompensation +  + nextDir");
-            //Debug.Log(camCollisionCompensation);
+            camCollisionCompensation = new Vector3(0, 0, rayDirToCam.x).normalized * (hit.distance - 5f);
         }
 
         Vector3 nextDir = playerCamera.transform.localPosition - (currentCamPosCenter + camCollisionCompensation);
         if (nextDir.sqrMagnitude > 0.01f)
         {
-          //  Debug.Log(camCollisionCompensation + " " + nextDir);
             playerCamera.transform.localPosition = Vector3.Lerp(playerCamera.transform.localPosition, currentCamPosCenter + camCollisionCompensation, 8f * Time.deltaTime);
         }
     }
