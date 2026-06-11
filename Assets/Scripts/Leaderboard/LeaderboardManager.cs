@@ -25,6 +25,7 @@ public class LeaderboardManager : MonoBehaviour
     private const int EntriesPerPage = 10;
     private const int MaxPlayerProfiles = 10;
     private const int MaxPlayerNameLength = 12;
+    private const int RemoteNameCheckBatchSize = 100;
 
     private const string PlayerProfilesJsonKey = "Leaderboard_PlayerProfilesJson";
     private const string CurrentPlayerProfileIdKey = "Leaderboard_CurrentPlayerProfileId";
@@ -134,6 +135,7 @@ public class LeaderboardManager : MonoBehaviour
     private struct LeaderboardDisplayEntry
     {
         public int PlayerId;
+        public string MemberId;
         public string PlayerName;
         public int Score;
         public int Rank;
@@ -141,6 +143,7 @@ public class LeaderboardManager : MonoBehaviour
 
         public LeaderboardDisplayEntry(
             int playerId,
+            string memberId,
             string playerName,
             int score,
             int rank,
@@ -148,6 +151,7 @@ public class LeaderboardManager : MonoBehaviour
         )
         {
             PlayerId = playerId;
+            MemberId = memberId;
             PlayerName = playerName;
             Score = score;
             Rank = rank;
@@ -172,11 +176,13 @@ public class LeaderboardManager : MonoBehaviour
     {
         public string Id;
         public string Name;
+        public List<string> PreviousMemberIds = new();
 
         public PlayerProfile(string id, string name)
         {
             Id = id;
             Name = name;
+            PreviousMemberIds = new List<string>();
         }
     }
 
@@ -185,6 +191,19 @@ public class LeaderboardManager : MonoBehaviour
     {
         public List<PlayerProfile> Players = new();
         public string CurrentPlayerId;
+    }
+
+    [Serializable]
+    private class ScoreMetadata
+    {
+        public string ProfileId;
+        public string ProfileName;
+
+        public ScoreMetadata(string profileId, string profileName)
+        {
+            ProfileId = profileId;
+            ProfileName = profileName;
+        }
     }
 
     private void Awake()
@@ -431,8 +450,7 @@ public class LeaderboardManager : MonoBehaviour
 
             SyncEntriesFromServer(response.items ?? Array.Empty<LootLockerLeaderboardMember>());
 
-            if (HasLocalBestScore(currentGameMode, currentCircuitMode))
-                ApplyLocalScore(GetLocalBestScore(currentGameMode, currentCircuitMode), false);
+            ApplyAllLocalScores(currentGameMode, currentCircuitMode, false);
 
             SortAndRankEntries();
             RenderLeaderboard();
@@ -696,7 +714,10 @@ public class LeaderboardManager : MonoBehaviour
     {
         foreach (LeaderboardTarget target in GetAllLeaderboardTargets())
         {
-            TryUploadPendingLocalScore(target.GameMode, target.CircuitMode);
+            foreach (PlayerProfile profile in playerProfiles)
+            {
+                TryUploadPendingLocalScore(profile, target.GameMode, target.CircuitMode);
+            }
         }
     }
 
@@ -714,7 +735,28 @@ public class LeaderboardManager : MonoBehaviour
         if (!isConnected)
             return;
 
-        if (!HasPendingUpload(gameMode, circuitMode))
+        TryUploadPendingLocalScore(GetPlayerProfile(GetCurrentPlayerProfileId()), gameMode, circuitMode);
+    }
+
+    private void TryUploadPendingLocalScore(
+        PlayerProfile profile,
+        LeaderboardGameMode gameMode,
+        LeaderboardCircuitMode circuitMode
+    )
+    {
+        if (profile == null)
+            return;
+
+        if (simulateOfflineMode)
+        {
+            Debug.LogWarning("Upload ignoré : mode hors ligne simulé actif.");
+            return;
+        }
+
+        if (!isConnected)
+            return;
+
+        if (!HasPendingUpload(gameMode, circuitMode, profile.Id))
             return;
 
         string leaderboardKey = GetLeaderboardKey(gameMode, circuitMode);
@@ -725,9 +767,10 @@ public class LeaderboardManager : MonoBehaviour
             return;
         }
 
-        int scoreToUpload = GetPendingUploadScore(gameMode, circuitMode);
+        int scoreToUpload = GetPendingUploadScore(gameMode, circuitMode, profile.Id);
+        string metadata = JsonUtility.ToJson(new ScoreMetadata(profile.Id, profile.Name));
 
-        LootLockerSDKManager.SubmitScore(GetServerMemberIdForCurrentProfile(), scoreToUpload, leaderboardKey, scoreResponse =>
+        LootLockerSDKManager.SubmitScore(GetServerMemberIdForProfile(profile), scoreToUpload, leaderboardKey, metadata, scoreResponse =>
         {
             if (!scoreResponse.success)
             {
@@ -740,11 +783,11 @@ public class LeaderboardManager : MonoBehaviour
             }
 
             Debug.Log(
-                $"Score synchronisé avec LootLocker pour {gameMode} / {circuitMode} : " +
+                $"Score synchronisé avec LootLocker pour {profile.Name} / {gameMode} / {circuitMode} : " +
                 FormatTime(scoreToUpload)
             );
 
-            ClearPendingUpload(gameMode, circuitMode);
+            ClearPendingUpload(gameMode, circuitMode, profile.Id);
 
             if (gameMode == currentGameMode && circuitMode == currentCircuitMode)
             {
@@ -772,20 +815,8 @@ public class LeaderboardManager : MonoBehaviour
     {
         leaderboardEntries.Clear();
 
-        bool hasLocalBestScore = HasLocalBestScore(currentGameMode, currentCircuitMode);
-
-        if (hasLocalBestScore)
-        {
-            int localBestScore = GetLocalBestScore(currentGameMode, currentCircuitMode);
-
-            leaderboardEntries.Add(new LeaderboardDisplayEntry(
-                localPlayerId,
-                localPlayerName,
-                localBestScore,
-                1,
-                true
-            ));
-        }
+        bool hasLocalBestScore = HasAnyLocalBestScore(currentGameMode, currentCircuitMode);
+        ApplyAllLocalScores(currentGameMode, currentCircuitMode, false);
 
         if (showOfflineStatus)
         {
@@ -807,11 +838,30 @@ public class LeaderboardManager : MonoBehaviour
         foreach (LootLockerLeaderboardMember item in items)
         {
             int playerId = item.player != null ? item.player.id : 0;
+            string memberId = GetLeaderboardEntryIdentity(item);
             string displayName = GetDisplayName(item);
-            bool isLocalPlayerEntry = playerId == localPlayerId;
+            bool isLocalPlayerEntry = IsCurrentProfileLeaderboardEntry(item);
+            int existingIndex = leaderboardEntries.FindIndex(entry => entry.MemberId == memberId);
+
+            if (existingIndex >= 0)
+            {
+                LeaderboardDisplayEntry existingEntry = leaderboardEntries[existingIndex];
+
+                if (item.score < existingEntry.Score)
+                {
+                    existingEntry.PlayerId = playerId;
+                    existingEntry.PlayerName = displayName;
+                    existingEntry.Score = item.score;
+                }
+
+                existingEntry.IsLocalPlayer = existingEntry.IsLocalPlayer || isLocalPlayerEntry;
+                leaderboardEntries[existingIndex] = existingEntry;
+                continue;
+            }
 
             leaderboardEntries.Add(new LeaderboardDisplayEntry(
                 playerId,
+                memberId,
                 displayName,
                 item.score,
                 item.rank,
@@ -822,10 +872,42 @@ public class LeaderboardManager : MonoBehaviour
 
     private void ApplyLocalScore(int timeInMilliseconds, bool renderAfterApply = true)
     {
+        ApplyLocalProfileScore(GetPlayerProfile(GetCurrentPlayerProfileId()), timeInMilliseconds, renderAfterApply);
+    }
+
+    private void ApplyAllLocalScores(
+        LeaderboardGameMode gameMode,
+        LeaderboardCircuitMode circuitMode,
+        bool renderAfterApply = true
+    )
+    {
+        foreach (PlayerProfile profile in playerProfiles)
+        {
+            if (profile == null || !HasLocalBestScore(gameMode, circuitMode, profile.Id))
+                continue;
+
+            ApplyLocalProfileScore(profile, GetLocalBestScore(gameMode, circuitMode, profile.Id), false);
+        }
+
+        SortAndRankEntries();
+
+        if (renderAfterApply)
+            RenderLeaderboard();
+    }
+
+    private void ApplyLocalProfileScore(PlayerProfile profile, int timeInMilliseconds, bool renderAfterApply = true)
+    {
+        if (profile == null)
+            return;
+
+        string currentMemberId = GetServerMemberIdForProfile(profile);
         int existingIndex = leaderboardEntries.FindIndex(entry =>
-            entry.PlayerId == localPlayerId ||
-            entry.IsLocalPlayer
+            entry.MemberId == profile.Id ||
+            ArePlayerNamesEquivalent(entry.MemberId, currentMemberId) ||
+            (string.IsNullOrWhiteSpace(entry.MemberId) && entry.IsLocalPlayer && profile.Id == GetCurrentPlayerProfileId())
         );
+
+        bool isCurrentProfile = profile.Id == GetCurrentPlayerProfileId();
 
         if (existingIndex >= 0)
         {
@@ -834,8 +916,9 @@ public class LeaderboardManager : MonoBehaviour
             if (existingEntry.Score <= timeInMilliseconds)
             {
                 existingEntry.PlayerId = localPlayerId;
-                existingEntry.PlayerName = localPlayerName;
-                existingEntry.IsLocalPlayer = true;
+                existingEntry.MemberId = currentMemberId;
+                existingEntry.PlayerName = profile.Name;
+                existingEntry.IsLocalPlayer = isCurrentProfile;
 
                 leaderboardEntries[existingIndex] = existingEntry;
 
@@ -846,9 +929,10 @@ public class LeaderboardManager : MonoBehaviour
             }
 
             existingEntry.PlayerId = localPlayerId;
+            existingEntry.MemberId = currentMemberId;
             existingEntry.Score = timeInMilliseconds;
-            existingEntry.PlayerName = localPlayerName;
-            existingEntry.IsLocalPlayer = true;
+            existingEntry.PlayerName = profile.Name;
+            existingEntry.IsLocalPlayer = isCurrentProfile;
 
             leaderboardEntries[existingIndex] = existingEntry;
         }
@@ -856,10 +940,11 @@ public class LeaderboardManager : MonoBehaviour
         {
             leaderboardEntries.Add(new LeaderboardDisplayEntry(
                 localPlayerId,
-                localPlayerName,
+                currentMemberId,
+                profile.Name,
                 timeInMilliseconds,
                 0,
-                true
+                isCurrentProfile
             ));
         }
 
@@ -915,7 +1000,30 @@ public class LeaderboardManager : MonoBehaviour
         LeaderboardCircuitMode circuitMode
     )
     {
-        return PlayerPrefs.GetInt(GetHasLocalBestScoreKey(gameMode, circuitMode), 0) == 1;
+        return HasLocalBestScore(gameMode, circuitMode, GetCurrentPlayerProfileId());
+    }
+
+    private bool HasLocalBestScore(
+        LeaderboardGameMode gameMode,
+        LeaderboardCircuitMode circuitMode,
+        string playerProfileId
+    )
+    {
+        return PlayerPrefs.GetInt(GetHasLocalBestScoreKey(gameMode, circuitMode, playerProfileId), 0) == 1;
+    }
+
+    private bool HasAnyLocalBestScore(
+        LeaderboardGameMode gameMode,
+        LeaderboardCircuitMode circuitMode
+    )
+    {
+        foreach (PlayerProfile profile in playerProfiles)
+        {
+            if (profile != null && HasLocalBestScore(gameMode, circuitMode, profile.Id))
+                return true;
+        }
+
+        return false;
     }
 
     private int GetLocalBestScore(
@@ -923,7 +1031,16 @@ public class LeaderboardManager : MonoBehaviour
         LeaderboardCircuitMode circuitMode
     )
     {
-        return PlayerPrefs.GetInt(GetLocalBestScoreKey(gameMode, circuitMode), int.MaxValue);
+        return GetLocalBestScore(gameMode, circuitMode, GetCurrentPlayerProfileId());
+    }
+
+    private int GetLocalBestScore(
+        LeaderboardGameMode gameMode,
+        LeaderboardCircuitMode circuitMode,
+        string playerProfileId
+    )
+    {
+        return PlayerPrefs.GetInt(GetLocalBestScoreKey(gameMode, circuitMode, playerProfileId), int.MaxValue);
     }
 
     private void MarkPendingUpload(
@@ -932,14 +1049,43 @@ public class LeaderboardManager : MonoBehaviour
         LeaderboardCircuitMode circuitMode
     )
     {
-        PlayerPrefs.SetInt(GetHasPendingUploadKey(gameMode, circuitMode), 1);
-        PlayerPrefs.SetInt(GetPendingUploadScoreKey(gameMode, circuitMode), timeInMilliseconds);
+        MarkPendingUpload(timeInMilliseconds, gameMode, circuitMode, GetCurrentPlayerProfileId());
+    }
+
+    private void MarkPendingUpload(
+        int timeInMilliseconds,
+        LeaderboardGameMode gameMode,
+        LeaderboardCircuitMode circuitMode,
+        string playerProfileId
+    )
+    {
+        PlayerPrefs.SetInt(GetHasPendingUploadKey(gameMode, circuitMode, playerProfileId), 1);
+        PlayerPrefs.SetInt(GetPendingUploadScoreKey(gameMode, circuitMode, playerProfileId), timeInMilliseconds);
         PlayerPrefs.Save();
 
         Debug.Log(
             $"Score marqué comme en attente pour {gameMode} / {circuitMode} : " +
             FormatTime(timeInMilliseconds)
         );
+    }
+
+    private void MarkAllLocalScoresPendingUpload(PlayerProfile profile)
+    {
+        if (profile == null)
+            return;
+
+        foreach (LeaderboardTarget target in GetAllLeaderboardTargets())
+        {
+            if (!HasLocalBestScore(target.GameMode, target.CircuitMode, profile.Id))
+                continue;
+
+            MarkPendingUpload(
+                GetLocalBestScore(target.GameMode, target.CircuitMode, profile.Id),
+                target.GameMode,
+                target.CircuitMode,
+                profile.Id
+            );
+        }
     }
 
     private bool HasAnyPendingUpload()
@@ -958,7 +1104,16 @@ public class LeaderboardManager : MonoBehaviour
         LeaderboardCircuitMode circuitMode
     )
     {
-        return PlayerPrefs.GetInt(GetHasPendingUploadKey(gameMode, circuitMode), 0) == 1;
+        return HasPendingUpload(gameMode, circuitMode, GetCurrentPlayerProfileId());
+    }
+
+    private bool HasPendingUpload(
+        LeaderboardGameMode gameMode,
+        LeaderboardCircuitMode circuitMode,
+        string playerProfileId
+    )
+    {
+        return PlayerPrefs.GetInt(GetHasPendingUploadKey(gameMode, circuitMode, playerProfileId), 0) == 1;
     }
 
     private int GetPendingUploadScore(
@@ -966,7 +1121,16 @@ public class LeaderboardManager : MonoBehaviour
         LeaderboardCircuitMode circuitMode
     )
     {
-        return PlayerPrefs.GetInt(GetPendingUploadScoreKey(gameMode, circuitMode), int.MaxValue);
+        return GetPendingUploadScore(gameMode, circuitMode, GetCurrentPlayerProfileId());
+    }
+
+    private int GetPendingUploadScore(
+        LeaderboardGameMode gameMode,
+        LeaderboardCircuitMode circuitMode,
+        string playerProfileId
+    )
+    {
+        return PlayerPrefs.GetInt(GetPendingUploadScoreKey(gameMode, circuitMode, playerProfileId), int.MaxValue);
     }
 
     private void ClearPendingUpload(
@@ -974,8 +1138,17 @@ public class LeaderboardManager : MonoBehaviour
         LeaderboardCircuitMode circuitMode
     )
     {
-        PlayerPrefs.DeleteKey(GetHasPendingUploadKey(gameMode, circuitMode));
-        PlayerPrefs.DeleteKey(GetPendingUploadScoreKey(gameMode, circuitMode));
+        ClearPendingUpload(gameMode, circuitMode, GetCurrentPlayerProfileId());
+    }
+
+    private void ClearPendingUpload(
+        LeaderboardGameMode gameMode,
+        LeaderboardCircuitMode circuitMode,
+        string playerProfileId
+    )
+    {
+        PlayerPrefs.DeleteKey(GetHasPendingUploadKey(gameMode, circuitMode, playerProfileId));
+        PlayerPrefs.DeleteKey(GetPendingUploadScoreKey(gameMode, circuitMode, playerProfileId));
         PlayerPrefs.Save();
     }
 
@@ -1080,6 +1253,7 @@ public class LeaderboardManager : MonoBehaviour
 
                         profile.Id = string.IsNullOrWhiteSpace(profile.Id) ? GeneratePlayerProfileId() : profile.Id;
                         profile.Name = SanitizePlayerName(profile.Name);
+                        profile.PreviousMemberIds ??= new List<string>();
 
                         if (!string.IsNullOrWhiteSpace(profile.Name) && playerProfiles.Count < MaxPlayerProfiles)
                             playerProfiles.Add(profile);
@@ -1215,7 +1389,8 @@ public class LeaderboardManager : MonoBehaviour
             AddPlayerFromPlayerPage,
             RenamePlayerFromPlayerPage,
             DeletePlayerFromPlayerPage,
-            SelectPlayerProfile
+            SelectPlayerProfile,
+            ValidatePlayerNameFromPlayerPage
         );
     }
 
@@ -1278,6 +1453,9 @@ public class LeaderboardManager : MonoBehaviour
             return;
         }
 
+        string previousMemberId = GetServerMemberIdForProfile(profile);
+        AddPreviousMemberId(profile, previousMemberId);
+
         profile.Name = playerName;
 
         if (profile.Id == currentPlayerProfileId)
@@ -1286,10 +1464,99 @@ public class LeaderboardManager : MonoBehaviour
         selectedPlayerProfileId = profile.Id;
         isWaitingDeleteConfirmation = false;
 
+        MarkAllLocalScoresPendingUpload(profile);
+
         SavePlayerProfiles();
         RenderPlayerManagement();
+        TryUploadAllPendingLocalScores();
         UpdatePlayerManagementControls();
         SetPlayerManagementStatus("Nom modifié.");
+    }
+
+    private void ValidatePlayerNameFromPlayerPage(string rawPlayerName, string ignoredProfileId, Action<bool> onValidated)
+    {
+        string playerName = SanitizePlayerName(rawPlayerName);
+
+        if (string.IsNullOrWhiteSpace(playerName) || IsPlayerNameAlreadyUsed(playerName, ignoredProfileId))
+        {
+            onValidated?.Invoke(false);
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(ignoredProfileId) &&
+            ArePlayerNamesEquivalent(playerName, GetPlayerProfileName(ignoredProfileId)))
+        {
+            onValidated?.Invoke(true);
+            return;
+        }
+
+        StartCoroutine(ValidatePlayerNameRemotely(playerName, onValidated));
+    }
+
+    private IEnumerator ValidatePlayerNameRemotely(string playerName, Action<bool> onValidated)
+    {
+        if (simulateOfflineMode || !isConnected)
+        {
+            onValidated?.Invoke(true);
+            yield break;
+        }
+
+        foreach (LeaderboardTarget target in GetAllLeaderboardTargets())
+        {
+            string leaderboardKey = GetLeaderboardKey(target.GameMode, target.CircuitMode);
+
+            if (string.IsNullOrWhiteSpace(leaderboardKey))
+                continue;
+
+            int offset = 0;
+            bool shouldContinue = true;
+
+            while (shouldContinue)
+            {
+                bool requestDone = false;
+                bool requestSucceeded = false;
+                bool nameExists = false;
+                int itemCount = 0;
+
+                LootLockerSDKManager.GetScoreList(leaderboardKey, RemoteNameCheckBatchSize, offset, response =>
+                {
+                    requestDone = true;
+                    requestSucceeded = response.success;
+
+                    LootLockerLeaderboardMember[] items = response.items ?? Array.Empty<LootLockerLeaderboardMember>();
+                    itemCount = items.Length;
+
+                    foreach (LootLockerLeaderboardMember item in items)
+                    {
+                        if (IsRemotePlayerNameMatch(item, playerName))
+                        {
+                            nameExists = true;
+                            break;
+                        }
+                    }
+                });
+
+                yield return new WaitUntil(() => requestDone);
+
+                if (!requestSucceeded)
+                {
+                    Debug.LogWarning("Impossible de vérifier les profils distants LootLocker.");
+                    onValidated?.Invoke(true);
+                    yield break;
+                }
+
+                if (nameExists)
+                {
+                    onValidated?.Invoke(false);
+                    yield break;
+                }
+
+                shouldContinue = itemCount == RemoteNameCheckBatchSize;
+                offset += itemCount;
+            }
+        }
+
+        onValidated?.Invoke(true);
     }
 
     private void DeletePlayerFromPlayerPage(string profileId)
@@ -1458,8 +1725,35 @@ public class LeaderboardManager : MonoBehaviour
 
     private string GetServerMemberIdForCurrentProfile()
     {
-        string playerName = SanitizePlayerName(GetCurrentPlayerProfileName()).Replace(" ", "_");
-        return string.IsNullOrWhiteSpace(playerName) ? GetCurrentPlayerProfileId() : playerName;
+        return GetServerMemberIdForProfile(GetPlayerProfile(GetCurrentPlayerProfileId()));
+    }
+
+    private string GetServerMemberIdForProfile(PlayerProfile profile)
+    {
+        if (profile == null)
+            return GetCurrentPlayerProfileId();
+
+        string playerName = SanitizePlayerName(profile.Name).Replace(" ", "_");
+        return string.IsNullOrWhiteSpace(playerName) ? profile.Id : playerName;
+    }
+
+    private void AddPreviousMemberId(PlayerProfile profile, string memberId)
+    {
+        if (profile == null || string.IsNullOrWhiteSpace(memberId))
+            return;
+
+        profile.PreviousMemberIds ??= new List<string>();
+
+        if (ArePlayerNamesEquivalent(memberId, GetServerMemberIdForProfile(profile)))
+        {
+            foreach (string previousMemberId in profile.PreviousMemberIds)
+            {
+                if (ArePlayerNamesEquivalent(previousMemberId, memberId))
+                    return;
+            }
+
+            profile.PreviousMemberIds.Add(memberId);
+        }
     }
 
     private string GeneratePlayerProfileId()
@@ -1743,6 +2037,21 @@ public class LeaderboardManager : MonoBehaviour
 
     private string GetDisplayName(LootLockerLeaderboardMember item)
     {
+        ScoreMetadata metadata = GetScoreMetadata(item);
+
+        if (!string.IsNullOrWhiteSpace(metadata?.ProfileName))
+            return metadata.ProfileName;
+
+        PlayerProfile localProfile = GetPlayerProfileForLeaderboardEntry(item);
+
+        if (localProfile != null)
+            return localProfile.Name;
+
+        string memberId = GetLeaderboardMemberId(item);
+
+        if (!string.IsNullOrWhiteSpace(memberId) && !IsLikelyLootLockerNumericId(memberId))
+            return memberId.Replace("_", " ");
+
         if (item.player == null)
             return "Unknown";
 
@@ -1754,12 +2063,138 @@ public class LeaderboardManager : MonoBehaviour
         if (!string.IsNullOrWhiteSpace(publicUid))
             return GeneratePlayerName(publicUid, item.player.id);
 
-        string memberId = TryGetStringMember(item, "member_id");
-
-        if (!string.IsNullOrWhiteSpace(memberId))
-            return memberId.Replace("_", " ");
-
         return GeneratePlayerName(null, item.player.id);
+    }
+
+    private bool IsRemotePlayerNameMatch(LootLockerLeaderboardMember item, string playerName)
+    {
+        ScoreMetadata metadata = GetScoreMetadata(item);
+
+        if (ArePlayerNamesEquivalent(metadata?.ProfileName, playerName))
+            return true;
+
+        if (item.player != null && ArePlayerNamesEquivalent(item.player.name, playerName))
+            return true;
+
+        string memberId = GetLeaderboardMemberId(item);
+        return ArePlayerNamesEquivalent(memberId, playerName);
+    }
+
+    private string GetLeaderboardMemberId(LootLockerLeaderboardMember item)
+    {
+        return TryGetStringMember(item, "member_id");
+    }
+
+    private string GetLeaderboardEntryIdentity(LootLockerLeaderboardMember item)
+    {
+        ScoreMetadata metadata = GetScoreMetadata(item);
+
+        if (!string.IsNullOrWhiteSpace(metadata?.ProfileId))
+            return metadata.ProfileId;
+
+        PlayerProfile localProfile = GetPlayerProfileForLeaderboardEntry(item);
+
+        if (localProfile != null)
+            return localProfile.Id;
+
+        return GetLeaderboardMemberId(item);
+    }
+
+    private bool IsCurrentProfileLeaderboardEntry(LootLockerLeaderboardMember item)
+    {
+        ScoreMetadata metadata = GetScoreMetadata(item);
+
+        if (!string.IsNullOrWhiteSpace(metadata?.ProfileId))
+            return metadata.ProfileId == GetCurrentPlayerProfileId();
+
+        PlayerProfile localProfile = GetPlayerProfileForLeaderboardEntry(item);
+
+        if (localProfile != null)
+            return localProfile.Id == GetCurrentPlayerProfileId();
+
+        return ArePlayerNamesEquivalent(GetLeaderboardMemberId(item), GetServerMemberIdForCurrentProfile());
+    }
+
+    private PlayerProfile GetPlayerProfileForLeaderboardEntry(LootLockerLeaderboardMember item)
+    {
+        if (item == null)
+            return null;
+
+        ScoreMetadata metadata = GetScoreMetadata(item);
+
+        if (!string.IsNullOrWhiteSpace(metadata?.ProfileId))
+            return GetPlayerProfile(metadata.ProfileId);
+
+        return GetPlayerProfileByMemberId(GetLeaderboardMemberId(item));
+    }
+
+    private PlayerProfile GetPlayerProfileByMemberId(string memberId)
+    {
+        if (string.IsNullOrWhiteSpace(memberId))
+            return null;
+
+        foreach (PlayerProfile profile in playerProfiles)
+        {
+            if (profile == null)
+                continue;
+
+            if (ArePlayerNamesEquivalent(GetServerMemberIdForProfile(profile), memberId))
+                return profile;
+
+            if (profile.PreviousMemberIds == null)
+                continue;
+
+            foreach (string previousMemberId in profile.PreviousMemberIds)
+            {
+                if (ArePlayerNamesEquivalent(previousMemberId, memberId))
+                    return profile;
+            }
+        }
+
+        return null;
+    }
+
+    private ScoreMetadata GetScoreMetadata(LootLockerLeaderboardMember item)
+    {
+        if (item == null || string.IsNullOrWhiteSpace(item.metadata))
+            return null;
+
+        try
+        {
+            return JsonUtility.FromJson<ScoreMetadata>(item.metadata);
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
+    }
+
+    private bool IsLikelyLootLockerNumericId(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        for (int i = 0; i < value.Length; i++)
+        {
+            if (!char.IsDigit(value[i]))
+                return false;
+        }
+
+        return true;
+    }
+
+    private bool ArePlayerNamesEquivalent(string left, string right)
+    {
+        return string.Equals(
+            NormalizePlayerNameForComparison(left),
+            NormalizePlayerNameForComparison(right),
+            StringComparison.OrdinalIgnoreCase
+        );
+    }
+
+    private string NormalizePlayerNameForComparison(string playerName)
+    {
+        return SanitizePlayerName(playerName).Replace("_", " ").Trim();
     }
 
     private string GeneratePlayerName(string uniqueSource, int playerId)

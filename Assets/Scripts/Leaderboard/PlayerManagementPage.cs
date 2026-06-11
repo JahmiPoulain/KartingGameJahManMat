@@ -21,6 +21,7 @@ public class PlayerManagementPage : MonoBehaviour
     [SerializeField] private GameObject namePopupRoot;
     [SerializeField] private TextMeshProUGUI namePopupTitleText;
     [SerializeField] private TMP_InputField nameInputField;
+    [SerializeField] private TextMeshProUGUI namePopupErrorText;
     [SerializeField] private Button confirmNameButton;
     [SerializeField] private Button cancelNameButton;
 
@@ -37,17 +38,22 @@ public class PlayerManagementPage : MonoBehaviour
     [SerializeField] private string addTitle = "Ajouter un joueur";
     [SerializeField] private string renameTitle = "Renommer le joueur";
     [SerializeField] private string deleteConfirmationFormat = "Supprimer {0} ?";
+    [SerializeField] private string emptyNameError = "Enter a nickname.";
+    [SerializeField] private string duplicateNameError = "This profile already exists.";
+    [SerializeField] private string checkingProfilesMessage = "Checking profiles...";
 
     private Action<string> addPlayerCallback;
     private Action<string, string> renamePlayerCallback;
     private Action<string> deletePlayerCallback;
     private Action<string> choosePlayerCallback;
+    private Action<string, string, Action<bool>> validatePlayerNameCallback;
 
     private string editedPlayerId;
     private string deletedPlayerId;
     private bool isRenamePopup;
     private bool isPopupVisible;
     private bool canAddPlayer = true;
+    private bool isWaitingForNameValidation;
     private int maxPlayerNameLength = 12;
 
     private void Awake()
@@ -79,13 +85,15 @@ public class PlayerManagementPage : MonoBehaviour
         Action<string> onAddPlayer,
         Action<string, string> onRenamePlayer,
         Action<string> onDeletePlayer,
-        Action<string> onChoosePlayer
+        Action<string> onChoosePlayer,
+        Action<string, string, Action<bool>> onValidatePlayerName
     )
     {
         addPlayerCallback = onAddPlayer;
         renamePlayerCallback = onRenamePlayer;
         deletePlayerCallback = onDeletePlayer;
         choosePlayerCallback = onChoosePlayer;
+        validatePlayerNameCallback = onValidatePlayerName;
     }
 
     public void ClearPage()
@@ -153,6 +161,12 @@ public class PlayerManagementPage : MonoBehaviour
             cancelNameButton.onClick.AddListener(CloseAllPopups);
         }
 
+        if (nameInputField != null)
+        {
+            nameInputField.onValueChanged.RemoveListener(OnNameInputChanged);
+            nameInputField.onValueChanged.AddListener(OnNameInputChanged);
+        }
+
         if (confirmDeleteButton != null)
         {
             confirmDeleteButton.onClick.RemoveListener(ConfirmDeletePopup);
@@ -187,6 +201,8 @@ public class PlayerManagementPage : MonoBehaviour
 
     private void OpenNamePopup(string title, string initialValue)
     {
+        EnsureNamePopupErrorText();
+        SetNamePopupError(string.Empty);
         SetPopupBackgroundVisible(true);
 
         if (deletePopupRoot != null)
@@ -202,15 +218,54 @@ public class PlayerManagementPage : MonoBehaviour
         {
             nameInputField.characterLimit = maxPlayerNameLength;
             nameInputField.text = initialValue ?? string.Empty;
+            nameInputField.interactable = true;
             nameInputField.Select();
             nameInputField.ActivateInputField();
         }
+
+        SetNamePopupWaiting(false);
     }
 
     private void ConfirmNamePopup()
     {
-        string playerName = nameInputField != null ? nameInputField.text : string.Empty;
+        if (isWaitingForNameValidation)
+            return;
 
+        string playerName = GetSanitizedNameInput();
+
+        if (string.IsNullOrWhiteSpace(playerName))
+        {
+            SetNamePopupError(emptyNameError);
+            return;
+        }
+
+        string ignoredProfileId = isRenamePopup ? editedPlayerId : null;
+
+        if (validatePlayerNameCallback == null)
+        {
+            ConfirmValidatedName(playerName);
+            return;
+        }
+
+        SetNamePopupWaiting(true);
+        SetNamePopupError(checkingProfilesMessage);
+
+        validatePlayerNameCallback.Invoke(playerName, ignoredProfileId, isAvailable =>
+        {
+            SetNamePopupWaiting(false);
+
+            if (!isAvailable)
+            {
+                SetNamePopupError(duplicateNameError);
+                return;
+            }
+
+            ConfirmValidatedName(playerName);
+        });
+    }
+
+    private void ConfirmValidatedName(string playerName)
+    {
         if (isRenamePopup)
             renamePlayerCallback?.Invoke(editedPlayerId, playerName);
         else
@@ -259,5 +314,77 @@ public class PlayerManagementPage : MonoBehaviour
     {
         if (addPlayerButton != null)
             addPlayerButton.gameObject.SetActive(canAddPlayer && !isPopupVisible);
+    }
+
+    private string GetSanitizedNameInput()
+    {
+        if (nameInputField == null || string.IsNullOrWhiteSpace(nameInputField.text))
+            return string.Empty;
+
+        string playerName = nameInputField.text.Trim();
+
+        if (playerName.Length > maxPlayerNameLength)
+            playerName = playerName.Substring(0, maxPlayerNameLength);
+
+        return playerName;
+    }
+
+    private void OnNameInputChanged(string _)
+    {
+        if (isWaitingForNameValidation)
+            return;
+
+        SetNamePopupError(string.Empty);
+    }
+
+    private void SetNamePopupError(string message)
+    {
+        if (namePopupErrorText == null)
+            return;
+
+        namePopupErrorText.text = message ?? string.Empty;
+        namePopupErrorText.gameObject.SetActive(!string.IsNullOrWhiteSpace(message));
+    }
+
+    private void SetNamePopupWaiting(bool waiting)
+    {
+        isWaitingForNameValidation = waiting;
+
+        if (confirmNameButton != null)
+            confirmNameButton.interactable = !waiting;
+
+        if (cancelNameButton != null)
+            cancelNameButton.interactable = !waiting;
+
+        if (nameInputField != null)
+            nameInputField.interactable = !waiting;
+    }
+
+    private void EnsureNamePopupErrorText()
+    {
+        if (namePopupErrorText != null || namePopupRoot == null)
+            return;
+
+        GameObject errorObject = new GameObject("NamePopupErrorText", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+        errorObject.transform.SetParent(namePopupRoot.transform, false);
+
+        RectTransform errorTransform = errorObject.GetComponent<RectTransform>();
+        errorTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        errorTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        errorTransform.pivot = new Vector2(0.5f, 0.5f);
+        errorTransform.sizeDelta = new Vector2(420f, 28f);
+
+        if (nameInputField != null && nameInputField.transform is RectTransform inputTransform)
+            errorTransform.anchoredPosition = inputTransform.anchoredPosition + new Vector2(0f, -45f);
+        else
+            errorTransform.anchoredPosition = new Vector2(0f, -45f);
+
+        namePopupErrorText = errorObject.GetComponent<TextMeshProUGUI>();
+        namePopupErrorText.alignment = TextAlignmentOptions.Center;
+        namePopupErrorText.color = new Color(0.82f, 0.18f, 0.18f, 1f);
+        namePopupErrorText.fontSize = 16f;
+        namePopupErrorText.raycastTarget = false;
+        namePopupErrorText.text = string.Empty;
+        namePopupErrorText.gameObject.SetActive(false);
     }
 }
