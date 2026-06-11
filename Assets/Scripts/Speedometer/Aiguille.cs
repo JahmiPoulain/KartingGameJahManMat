@@ -1,4 +1,5 @@
 using UnityEngine;
+using TMPro;
 
 public class Aiguille : MonoBehaviour
 {
@@ -6,6 +7,9 @@ public class Aiguille : MonoBehaviour
     [SerializeField] private RectTransform pivot;
     // Référence vers l'image de l'aiguille, conservée pour compatibilité avec l'ancienne scène.
     [SerializeField] private RectTransform aiguille;
+    // Texte optionnel pour afficher la vitesse en km/h.
+    [SerializeField] private TextMeshProUGUI speedText;
+    [SerializeField] private float maxDisplayedSpeedKmh = 110f;
     // Référence vers le kart pour connaître sa vitesse et son état de boost
     [SerializeField] private KartScriptV2 kart;
     
@@ -47,6 +51,9 @@ public class Aiguille : MonoBehaviour
 
         // Au lieu de faire un changement brutal de la position de l’aiguille, on lisse la transition pour un effet plus fluide
         displayedSpeed = Mathf.Lerp(displayedSpeed, realSpeed, Time.deltaTime * speedSmooth);
+
+        if (speedText != null)
+            speedText.text = Mathf.RoundToInt(displayedSpeed * maxDisplayedSpeedKmh).ToString();
 
         float target = kart.currentTurboForce > 0 ? 1f : 0f;
         // On fait un blend qui va de 0 à 1 en fonction de si le boost est actif ou pas, avec un lissage pour éviter les changements brusques
