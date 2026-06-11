@@ -137,7 +137,7 @@ public class ContreLaMontre : GameMode
         {
             // Le CLM envoie le temps TOTAL cumulé des 3 tours
             int totalTimeInMs = Mathf.RoundToInt(totalTime * 1000f);
-            bool isReverse = (MainMenuUIManager.Instance != null && MainMenuUIManager.Instance.isMapInverted);
+            bool isReverse = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted);
 
             if (isReverse)
             {
@@ -154,7 +154,7 @@ public class ContreLaMontre : GameMode
 
     private void SaveBestLapAndGhostData()
     {
-        string suffix = (MainMenuUIManager.Instance != null && MainMenuUIManager.Instance.isMapInverted) ? "_Inverted" : "_Normal";
+        string suffix = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted) ? "_Inverted" : "_Normal";
         PlayerPrefs.SetFloat("CLM_BestLapTime" + suffix, bestLapTime);
 
         Wrapper wrapper = new Wrapper { list = bestLapGhostData };
@@ -165,7 +165,7 @@ public class ContreLaMontre : GameMode
 
     private void LoadBestLapAndGhostData()
     {
-        string suffix = (MainMenuUIManager.Instance != null && MainMenuUIManager.Instance.isMapInverted) ? "_Inverted" : "_Normal";
+        string suffix = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted) ? "_Inverted" : "_Normal";
         if (PlayerPrefs.HasKey("CLM_BestLapTime" + suffix))
         {
             bestLapTime = PlayerPrefs.GetFloat("CLM_BestLapTime" + suffix);

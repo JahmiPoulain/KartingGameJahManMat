@@ -44,7 +44,7 @@ public class TimeAttack : GameMode
     // Génère dynamiquement la clé selon l'état d'inversion de la map
     private string GetSavedKey()
     {
-        string suffix = (MainMenuUIManager.Instance != null && MainMenuUIManager.Instance.isMapInverted) ? "_Inverted" : "_Normal";
+        string suffix = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted) ? "_Inverted" : "_Normal";
         return BASE_BEST_TIME_KEY + suffix;
     }
 
@@ -102,7 +102,7 @@ public class TimeAttack : GameMode
             if (LeaderboardManager.Instance != null)
             {
                 int lapTimeInMs = Mathf.RoundToInt(lapTime * 1000f);
-                bool isReverse = (MainMenuUIManager.Instance != null && MainMenuUIManager.Instance.isMapInverted);
+                bool isReverse = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted);
 
                 if (isReverse)
                 {

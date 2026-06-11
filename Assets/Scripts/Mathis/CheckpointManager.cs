@@ -34,10 +34,10 @@ public class CheckpointManager : MonoBehaviour
                 checkpoint.gameObject.SetActive(true);
             }
         }
-        if(MainMenuUIManager.Instance != null)
+        if(InversionCatcher.instance != null)
         {
             // Si la map est inversée, on inverse aussi les checkpoints
-            if (MainMenuUIManager.Instance.isMapInverted)
+            if (InversionCatcher.instance.Inverted)
             {
                 foreach (Checkpoint checkpoint in checkpoints)
                 {
@@ -52,7 +52,7 @@ public class CheckpointManager : MonoBehaviour
         // On calcule l'index que le joueur DOIT percuter maintenant
         int expectedIndex;
 
-        if (MainMenuUIManager.Instance.isMapInverted)
+        if (InversionCatcher.instance.Inverted)
         {
             // Formule : Total - (Nombre déjà validés)
             // Exemple : 10 total, 0 validés -> on attend le 10.

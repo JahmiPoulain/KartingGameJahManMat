@@ -5,6 +5,8 @@ public class InversionCatcher : MonoBehaviour
     public static InversionCatcher instance;
     private bool inverted = false;
 
+    public bool Inverted { get => inverted; set => inverted = value; }
+
     private void Awake()
     {
         if(instance == null) instance = this;
@@ -14,7 +16,7 @@ public class InversionCatcher : MonoBehaviour
 
     public void CatchInversion(bool oui)
     {
-        inverted = oui;
+        Inverted = oui;
     }
 
 }
