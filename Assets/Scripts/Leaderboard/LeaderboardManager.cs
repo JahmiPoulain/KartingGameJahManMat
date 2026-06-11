@@ -1186,6 +1186,7 @@ public class LeaderboardManager : MonoBehaviour
 
         playerManagementPage.gameObject.SetActive(true);
         playerManagementPage.ClearPage();
+        playerManagementPage.SetCanAddPlayer(playerProfiles.Count < MaxPlayerProfiles);
 
         for (int i = 0; i < MaxPlayerProfiles; i++)
         {

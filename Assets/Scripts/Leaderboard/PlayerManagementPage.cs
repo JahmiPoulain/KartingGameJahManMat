@@ -46,6 +46,8 @@ public class PlayerManagementPage : MonoBehaviour
     private string editedPlayerId;
     private string deletedPlayerId;
     private bool isRenamePopup;
+    private bool isPopupVisible;
+    private bool canAddPlayer = true;
     private int maxPlayerNameLength = 12;
 
     private void Awake()
@@ -65,6 +67,12 @@ public class PlayerManagementPage : MonoBehaviour
 
         if (nameInputField != null)
             nameInputField.characterLimit = maxPlayerNameLength;
+    }
+
+    public void SetCanAddPlayer(bool canAdd)
+    {
+        canAddPlayer = canAdd;
+        UpdateAddPlayerButtonVisibility();
     }
 
     public void SetCallbacks(
@@ -160,6 +168,9 @@ public class PlayerManagementPage : MonoBehaviour
 
     private void OpenAddPopup()
     {
+        if (!canAddPlayer)
+            return;
+
         isRenamePopup = false;
         editedPlayerId = string.Empty;
 
@@ -171,7 +182,7 @@ public class PlayerManagementPage : MonoBehaviour
         isRenamePopup = true;
         editedPlayerId = playerId;
 
-        OpenNamePopup(renameTitle, currentName);
+        OpenNamePopup(string.Format(renameTitle, currentName), currentName);
     }
 
     private void OpenNamePopup(string title, string initialValue)
@@ -236,7 +247,17 @@ public class PlayerManagementPage : MonoBehaviour
 
     private void SetPopupBackgroundVisible(bool visible)
     {
+        isPopupVisible = visible;
+
         if (popupBackgroundRoot != null)
             popupBackgroundRoot.SetActive(visible);
+
+        UpdateAddPlayerButtonVisibility();
+    }
+
+    private void UpdateAddPlayerButtonVisibility()
+    {
+        if (addPlayerButton != null)
+            addPlayerButton.gameObject.SetActive(canAddPlayer && !isPopupVisible);
     }
 }
