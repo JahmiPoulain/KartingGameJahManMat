@@ -2,7 +2,9 @@ using UnityEngine;
 
 public class Aiguille : MonoBehaviour
 {
-    // Référence vers l'aiguille du speedometer à faire tourner
+    // Pivot vide à faire tourner. Si non assigné, on utilise l'aiguille directement.
+    [SerializeField] private RectTransform pivot;
+    // Référence vers l'image de l'aiguille, conservée pour compatibilité avec l'ancienne scène.
     [SerializeField] private RectTransform aiguille;
     // Référence vers le kart pour connaître sa vitesse et son état de boost
     [SerializeField] private KartScriptV2 kart;
@@ -22,11 +24,16 @@ public class Aiguille : MonoBehaviour
     [SerializeField] private float shakeAmount = 2f;
     // Fréquence du tremblement. Plus la valeur est haute, plus ça tremble vite
     [SerializeField] private float shakeFrequency = 35f;
+    // Rotation configurée dans Unity pour la position visuelle "vitesse 0"
+    private float zeroSpeedAngle;
 
     void Start()
     {
-        // Au démarrage, on positionne l'aiguille à 90° (vitesse 0)
-        aiguille.rotation = Quaternion.Euler(0f, 0f, 90f);
+        if (pivot == null)
+            pivot = aiguille;
+
+        // La rotation posée dans l'inspector devient la position de repos.
+        zeroSpeedAngle = pivot.eulerAngles.z;
     }
 
     void Update()
@@ -46,9 +53,9 @@ public class Aiguille : MonoBehaviour
         boostBlend = Mathf.Lerp(boostBlend, target, Time.deltaTime * smoothSpeed);
 
         // On calcule l'angle de l'aiguille en fonction de la vitesse affichée
-        // À 0% de la vitesse, l'aiguille est à 90°, et à 100% elle est entre -70° et -90° selon le boost
-        float maxAngle = Mathf.Lerp(-70f, -90f, boostBlend);
-        float angle = Mathf.Lerp(90f, maxAngle, displayedSpeed);
+        // À 0% de la vitesse, l'aiguille reste sur sa rotation initiale.
+        float maxAngle = Mathf.Lerp(-160f, -180f, boostBlend);
+        float angle = zeroSpeedAngle + Mathf.Lerp(0f, maxAngle, displayedSpeed);
         
         // Si la vitesse affichée dépasse le seuil, on ajoute un tremblement à l'aiguille pour renforcer l'impression de vitesse extrême
         float shakeIntensity = Mathf.InverseLerp(shakeThreshold, 1f, displayedSpeed);
@@ -57,6 +64,6 @@ public class Aiguille : MonoBehaviour
         angle += shake * shakeAmount * shakeIntensity;
 
         // On applique la rotation finale à l'aiguille
-        aiguille.rotation = Quaternion.Euler(0f, 0f, angle);
+        pivot.rotation = Quaternion.Euler(0f, 0f, angle);
     }
 }
