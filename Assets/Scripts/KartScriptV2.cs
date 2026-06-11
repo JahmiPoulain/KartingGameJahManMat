@@ -218,7 +218,7 @@ public class KartScriptV2 : MonoBehaviour
         groundNormal = new Vector3(0, 1, 0);
         CanDrive = false;
         activeRespawnPoints = respawnPoints;
-        if (MainMenuUIManager.Instance.isMapInverted)
+        if (InversionCatcher.instance.Inverted)
         {
             // On fait faire demi-tour au kart immédiatement
             transform.rotation *= Quaternion.Euler(0, 180, 0);
@@ -1098,7 +1098,7 @@ public class KartScriptV2 : MonoBehaviour
                 unsignedCurSpeed = -unsignedCurSpeed;
             }
 
-            bounceForce = unsignedCurSpeed * 2f;
+            bounceForce = Mathf.Clamp(unsignedCurSpeed * 2f, 10f, unsignedCurSpeed);
             currentSpeed *= 0.2f;
         }
         else if (collision.gameObject.layer == 9)
@@ -1134,7 +1134,21 @@ public class KartScriptV2 : MonoBehaviour
             grounded = true;
             groundNormal = collision.contacts[0].normal; // l'orientation du kart visuel
         }
-        
+        if (collision.gameObject.layer == 6)
+        {
+            bounce = true;
+            Vector3 rawDir = transform.position - collision.contacts[0].point;
+            bounceDirection = new Vector3(rawDir.x, 0, rawDir.z).normalized;
+            float unsignedCurSpeed = currentSpeed;
+
+            if (unsignedCurSpeed < 0)
+            {
+                unsignedCurSpeed = -unsignedCurSpeed;
+            }
+
+            bounceForce = Mathf.Clamp(unsignedCurSpeed * 2f, 10f, unsignedCurSpeed);
+            currentSpeed *= 0.2f;
+        }
     }
 
     private void OnCollisionExit(Collision collision)

@@ -12,7 +12,7 @@ public class ModeLoader : MonoBehaviour
         // On crée le mode et on le récupère
         GameMode newMode = GameManager.Instance().SetupGameMode(player, lm);
 
-        if(MainMenuUIManager.Instance.isMapInverted)
+        if(InversionCatcher.instance.Inverted)
         {
             normalTrack.SetActive(false);
             reverseTrack.SetActive(true);
