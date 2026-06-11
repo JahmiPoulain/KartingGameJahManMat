@@ -461,6 +461,7 @@ public class MainMenuUIManager : MonoBehaviour
             if (selectedName.Contains("inverted") || selectedName.Contains("toggle"))
             {
                 isMapInverted = !isMapInverted;
+                InversionCatcher.instance.CatchInversion(isMapInverted);
                 Debug.Log("Map inversée est maintenant sur : " + isMapInverted);
 
                 TextMeshProUGUI btnText = playButtonsGenerated[currentPlayIndex].GetComponentInChildren<TextMeshProUGUI>();

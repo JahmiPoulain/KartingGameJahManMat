@@ -448,7 +448,7 @@ public class KartScriptV2 : MonoBehaviour
         flightDir.localEulerAngles = new Vector3(flightDir.localEulerAngles.x, 0f, currentFlightTurnForce * 10f);
         rb.linearVelocity = (flightDir.forward * (flightSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + (currentFallSpeed / (1f + flightSpeed / 2.5f)) * 1.2f) + currentWindDir * currentWindForce;
     }
-
+    
     private void LateUpdate()
     {
         // on gère les visuels du kart
