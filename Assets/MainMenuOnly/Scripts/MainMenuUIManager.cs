@@ -18,7 +18,7 @@ public class WheelItem
     public GameObject windowToOpen;
 
     [Header("--- Personnalisation ---")]
-    [Tooltip("Laisse ï¿½ 0,0 pour utiliser la taille par dï¿½faut du prefab.")]
+    [Tooltip("Laisse à 0,0 pour utiliser la taille par défaut du prefab.")]
     public Vector2 customSize = Vector2.zero;
 }
 
@@ -26,16 +26,16 @@ public class MainMenuUIManager : MonoBehaviour
 {
     public enum MenuState { TitleScreen, MainMenu, PlayGameModes, OptionsMenu, SubWindowOpen, Loading }
 
-    [Header("--- ï¿½tats & Navigation ---")]
+    [Header("--- États & Navigation ---")]
     public MenuState currentState = MenuState.TitleScreen;
-    [Tooltip("Coche ï¿½a si tu trouves que Haut/Bas fait tourner la roue dans le mauvais sens !")]
+    [Tooltip("Coche ça si tu trouves que Haut/Bas fait tourner la roue dans le mauvais sens !")]
     public bool invertNavigation = false;
 
     [SerializeField] private GameObject leaderboardCanvas;
 
     private static bool hasSeenTitleScreen = false;
 
-    [Header("--- Configuration Gï¿½nï¿½rale des Roues ---")]
+    [Header("--- Configuration Générale des Roues ---")]
     public GameObject buttonPrefab;
     public float customAnglePerOption = 45f;
     public float startAngleOffset = 0f;
@@ -44,7 +44,7 @@ public class MainMenuUIManager : MonoBehaviour
     public float wheelRotationSpeed = 10f;
     public bool keepButtonsUpright = true;
 
-    [Header("--- Mouvement Camï¿½ra/ï¿½cran ---")]
+    [Header("--- Mouvement Caméra/Écran ---")]
     public Transform CameraTransform;
     public float Zoffset = 10;
     public Transform titleScreenPosition;
@@ -52,7 +52,7 @@ public class MainMenuUIManager : MonoBehaviour
     public Transform optionsPosition;
 
     [Header("--- Transition Dynamique ---")]
-    [Tooltip("Crï¿½e une courbe qui monte ï¿½ 1.1 puis redescend ï¿½ 1.0 pour l'effet d'ï¿½lan !")]
+    [Tooltip("Crée une courbe qui monte à 1.1 puis redescend à 1.0 pour l'effet d'élan !")]
     public AnimationCurve transitionCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
     public float transitionDuration = 0.8f;
 
@@ -63,7 +63,7 @@ public class MainMenuUIManager : MonoBehaviour
     private Quaternion targetRot;
     private bool isTransitioning = false;
 
-    [Header("--- Navigation Avancï¿½e ---")]
+    [Header("--- Navigation Avancée ---")]
     public float initialRepeatDelay = 0.4f;
     public float minRepeatInterval = 0.1f;
     public float accelerationFactor = 0.02f;
@@ -73,7 +73,7 @@ public class MainMenuUIManager : MonoBehaviour
     private int lastDirection = 0;
     private bool isHolding = false;
 
-    [Header("--- Transition de Scï¿½ne ---")]
+    [Header("--- Transition de Scène ---")]
     public CanvasGroup transitionScreen;
     public float sceneTransitionDuration = 1f;
 
@@ -96,7 +96,7 @@ public class MainMenuUIManager : MonoBehaviour
     private float initialMainAngle = 0f;
     private List<RectTransform> mainButtonsGenerated = new List<RectTransform>();
 
-    [Header("--- Roue Paramï¿½tres (Settings) ---")]
+    [Header("--- Roue Paramètres (Settings) ---")]
     public RectTransform settingsWheelRect;
     public WheelItem[] settingsOptions;
     private int currentSettingsIndex = 0;
@@ -112,8 +112,8 @@ public class MainMenuUIManager : MonoBehaviour
     private float InitialPlayAngle = 0f;
     private List<RectTransform> playButtonsGenerated = new List<RectTransform>();
 
-    [Header("--- Positions Hors-ï¿½cran (ï¿½ la main) ---")]
-    [Tooltip("Coordonnï¿½es X/Y quand la roue est masquï¿½e (ex: X = -1500 pour la mettre ï¿½ gauche toute)")]
+    [Header("--- Positions Hors-Écran (À la main) ---")]
+    [Tooltip("Coordonnées X/Y quand la roue est masquée (ex: X = -1500 pour la mettre à gauche toute)")]
     public Vector2 mainWheelInactivePos;
     public Vector2 settingsWheelInactivePos;
     public Vector2 playWheelInactivePos;
@@ -125,13 +125,13 @@ public class MainMenuUIManager : MonoBehaviour
     private Vector2 settingsWheelActivePos;
     private Vector2 playWheelActivePos;
 
-    [Header("--- Paramï¿½tres Audio ---")]
+    [Header("--- Paramètres Audio ---")]
     public AudioMixer mainAudioMixer;
     public int masterVol = 10;
     public int musicVol = 10;
     public int sfxVol = 10;
 
-    [Header("--- Paramï¿½tres de Jeu (Play) ---")]
+    [Header("--- Paramètres de Jeu (Play) ---")]
     public bool isMapInverted = false;
 
     public string controlsSaveKey = ("Controles");
@@ -139,10 +139,10 @@ public class MainMenuUIManager : MonoBehaviour
     private GameObject currentActiveWindow = null;
     private MenuState stateBeforeSubWindow = MenuState.MainMenu;
 
-    [Header("--- Paramï¿½tres Vidï¿½o ---")]
+    [Header("--- Paramètres Vidéo ---")]
     public string[] resolutions = { "1920x1080", "1600x900", "1280x720", "800x600" };
     public int[] fpsValues = { 30, 60, 120, -1 };
-    public string[] fpsLabels = { "30", "60", "120", "Illimitï¿½" };
+    public string[] fpsLabels = { "30", "60", "120", "Illimité" };
 
     [HideInInspector] public int currentResIndex = 0;
     [HideInInspector] public int currentFpsIndex = 1;
@@ -476,7 +476,7 @@ public class MainMenuUIManager : MonoBehaviour
             {
                 isMapInverted = !isMapInverted;
                 InversionCatcher.instance.CatchInversion(isMapInverted);
-                Debug.Log("Map inversï¿½e est maintenant sur : " + isMapInverted);
+                Debug.Log("Map inversée est maintenant sur : " + isMapInverted);
 
                 TextMeshProUGUI btnText = playButtonsGenerated[currentPlayIndex].GetComponentInChildren<TextMeshProUGUI>();
                 if (btnText != null)

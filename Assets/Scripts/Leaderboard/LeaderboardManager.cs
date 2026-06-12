@@ -168,8 +168,6 @@ public class LeaderboardManager : MonoBehaviour
 
     private void OnEnable()
     {
-        ConfigureControllerNavigation();
-
         if (previousPageButton != null)
             previousPageButton.onClick.AddListener(ShowPreviousPage);
 
@@ -204,7 +202,6 @@ public class LeaderboardManager : MonoBehaviour
         BindProfilsManager();
         HideNavigationButtons();
         UpdateModeLabels();
-        ConfigureControllerNavigation();
         HideStatus();
 
         StartLootLockerSession();
@@ -1512,8 +1509,6 @@ public class LeaderboardManager : MonoBehaviour
 
         if (nextPageButton != null)
             nextPageButton.gameObject.SetActive(hasNextPage);
-
-        ConfigureControllerNavigation();
     }
 
     private void HideNavigationButtons()
@@ -1523,14 +1518,10 @@ public class LeaderboardManager : MonoBehaviour
 
         if (nextPageButton != null)
             nextPageButton.gameObject.SetActive(false);
-
-        ConfigureControllerNavigation();
     }
 
     public void ForceFocusOnNextButton()
     {
-        ConfigureControllerNavigation();
-
         if (nextPageButton != null && nextPageButton.gameObject.activeInHierarchy)
         {
             nextPageButton.Select();
@@ -1553,24 +1544,6 @@ public class LeaderboardManager : MonoBehaviour
         {
             gameModeToggleButton.Select();
         }
-    }
-
-    private void ConfigureControllerNavigation()
-    {
-        SetAutomaticNavigation(previousPageButton);
-        SetAutomaticNavigation(nextPageButton);
-        SetAutomaticNavigation(gameModeToggleButton);
-        SetAutomaticNavigation(circuitModeToggleButton);
-    }
-
-    private static void SetAutomaticNavigation(Selectable selectable)
-    {
-        if (selectable == null)
-            return;
-
-        Navigation navigation = selectable.navigation;
-        navigation.mode = Navigation.Mode.Automatic;
-        selectable.navigation = navigation;
     }
 
     private void ClearSpawnedNormalPages()
