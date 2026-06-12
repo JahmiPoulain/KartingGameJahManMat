@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine.SceneManagement;
 using System.Collections;
 using UnityEngine.Audio;
+using UnityEngine.EventSystems;
 
 [System.Serializable]
 public class WheelItem
@@ -499,6 +500,9 @@ public class MainMenuUIManager : MonoBehaviour
 
     private void OpenWindow(GameObject window)
     {
+        if (window == null)
+            return;
+
         currentActiveWindow = window;
         currentActiveWindow.SetActive(true);
 
@@ -514,6 +518,41 @@ public class MainMenuUIManager : MonoBehaviour
         }
         stateBeforeSubWindow = currentState;
         ChangeState(MenuState.SubWindowOpen);
+        StartCoroutine(FocusOpenedWindowNextFrame(currentActiveWindow));
+    }
+
+    private IEnumerator FocusOpenedWindowNextFrame(GameObject window)
+    {
+        yield return null;
+
+        if (window == null || !window.activeInHierarchy)
+            yield break;
+
+        PlayerManagementPage playerManagementPage = window.GetComponentInChildren<PlayerManagementPage>(true);
+        if (playerManagementPage != null && playerManagementPage.gameObject.activeInHierarchy)
+        {
+            playerManagementPage.FocusFirstSelectable();
+            yield break;
+        }
+
+        LeaderboardManager leaderboardManager = window.GetComponentInChildren<LeaderboardManager>(true);
+        if (leaderboardManager == null)
+            leaderboardManager = LeaderboardManager.Instance;
+
+        if (leaderboardManager != null)
+        {
+            leaderboardManager.FocusFirstControl();
+            yield break;
+        }
+
+        Selectable selectable = window.GetComponentInChildren<Selectable>(false);
+        if (selectable != null && selectable.interactable)
+        {
+            if (EventSystem.current != null)
+                EventSystem.current.SetSelectedGameObject(selectable.gameObject);
+            else
+                selectable.Select();
+        }
     }
 
     private void GenerateWheel(WheelItem[] options, RectTransform wheelParent, List<RectTransform> generatedList, bool invertIdx)
