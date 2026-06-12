@@ -58,7 +58,7 @@ public class Respawner : MonoBehaviour
             dir = checkPointManager.NewPos - kartTransform.position;
             float upForce = Mathf.Clamp(dir.magnitude, 0f, 2f);
             kartTransform.rotation = Quaternion.RotateTowards(kartTransform.rotation, checkPointManager.NewRotation, Mathf.Clamp(upForce / 8f, 1f, 5f));
-            Debug.Log(checkPointManager.NewRotation);
+            //Debug.Log(checkPointManager.NewRotation);
             kartTransform.position += (dir.normalized * 0.5f + dir + new Vector3(0, upForce, 0)) * Time.fixedDeltaTime;
 
         }
@@ -68,16 +68,16 @@ public class Respawner : MonoBehaviour
             dir = kartScriptV2.StartPosition - kartTransform.position;
             float upForce = Mathf.Clamp(dir.magnitude, 0f, 2f);
             kartTransform.rotation = Quaternion.RotateTowards(kartTransform.rotation, kartScriptV2.StartRotation, Mathf.Clamp(upForce / 8f, 1f, 5f));
-            Debug.Log(checkPointManager.NewRotation);
+            //Debug.Log(checkPointManager.NewRotation);
             kartTransform.position += (dir.normalized * 0.5f + dir + new Vector3(0, upForce, 0)) * Time.fixedDeltaTime;
 
         }
 
 
         respawnBubble.position = kartTransform.position;
-        if (respawnBubble.localScale.x < 1f)
+        if (respawnBubble.localScale.x < 2f)
         {
-            respawnBubble.localScale += Vector3.one * 3f * Time.deltaTime;
+            respawnBubble.localScale += Vector3.one * 10f * Time.deltaTime;
         }
 
         if (dir.sqrMagnitude < 0.1f)
@@ -92,16 +92,19 @@ public class Respawner : MonoBehaviour
         }
 
         IEnumerator BlowUpBubble()
-        {        
+        {
+            Debug.Log("B");
             yield return null;
-            if (respawnBubble.localScale.x < 2f)
+            if (respawnBubble.localScale.x < 4f)
             {
+                Debug.Log(respawnBubble.localScale.x + "      1");
                 respawnBubble.position = kartTransform.position;
-                respawnBubble.localScale += Vector3.one * 15f * Time.deltaTime;
+                respawnBubble.localScale += Vector3.one * 22f * Time.deltaTime;
                 StartCoroutine(BlowUpBubble());
             }
             else
             {
+                Debug.Log(respawnBubble.localScale.x + "      2");
                 respawnBubble.localScale = Vector3.zero;
             }
         }

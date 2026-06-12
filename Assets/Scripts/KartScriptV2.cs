@@ -110,7 +110,7 @@ public class KartScriptV2 : MonoBehaviour
     public Transform preOrientation;
     public Transform groundNormalT;
     public Transform groundRayOrigin;
-    private bool grounded;
+    [SerializeField] bool grounded;
     float groundedCoyoteTimer;
 
     [Header("Drift")]
@@ -167,6 +167,7 @@ public class KartScriptV2 : MonoBehaviour
     private Vector3 startPosition;
     private Quaternion startRotation;
 
+    int outOfBoundsFrames;
     [Header("Ghost & Spline Settings")]
     [SerializeField] private bool ghostMode = false;
     [SerializeField] private SplineContainer raceSpline;
@@ -244,6 +245,7 @@ public class KartScriptV2 : MonoBehaviour
         PlayerInputs();
         HandleDrift();
         HandleSteeringWheel();
+
     }
 
     private void FixedUpdate()
@@ -266,6 +268,8 @@ public class KartScriptV2 : MonoBehaviour
         HandleBounceForce();
         HandleWindBlow();
         HandleGravity();
+
+        CheckIfOutOfBounds();
 
         if (outOfBounds)
         {
@@ -1082,6 +1086,14 @@ public class KartScriptV2 : MonoBehaviour
         camPivot.transform.rotation = oldYRot;
     }
 
+    void CheckIfOutOfBounds()
+    {
+        if (outOfBoundsFrames > 100)
+        {
+            outOfBounds = true;
+            outOfBoundsFrames = 0;
+        }
+    }
     private void OnCollisionEnter(Collision collision)
     {
         isFlying = false;
@@ -1126,6 +1138,7 @@ public class KartScriptV2 : MonoBehaviour
         {
             cameraZoneUp = 0f;
         }
+        outOfBoundsFrames=0;
     }
     private void OnCollisionStay(Collision collision)
     {
@@ -1148,6 +1161,8 @@ public class KartScriptV2 : MonoBehaviour
 
             bounceForce = Mathf.Clamp(unsignedCurSpeed * 2f, 10f, unsignedCurSpeed);
             currentSpeed *= 0.2f;
+
+            outOfBoundsFrames++;
         }
     }
 
