@@ -1140,6 +1140,7 @@ public class KartScriptV2 : MonoBehaviour
         }
         outOfBoundsFrames=0;
     }
+
     private void OnCollisionStay(Collision collision)
     {
         if (collision.gameObject.layer == 7)
@@ -1171,6 +1172,7 @@ public class KartScriptV2 : MonoBehaviour
         // quand on quitte le sol
         if (collision.gameObject.layer == 7)
         {
+            Debug.Log("QUITTE LE SOL");
             grounded = false;
             airSpeed = currentSpeed;
             flightSpeed = currentSpeed;
