@@ -57,12 +57,19 @@ public class LapManager : MonoBehaviour
 
     private void CompleteLap()
     {
-        float finalLapTime = chrono.CurrentTime; // CAPTURE ICI
+        float finalLapTime = chrono.CurrentTime;
         _lapTimes.Add(finalLapTime);
 
         currentMode.OnLapCompleted(finalLapTime);
         chrono.ResetChrono();
         checkpointManager.ResetCheckpoints();
+
+        // --- RESET DE LA PROGRESS BAR AU NOUVEAU TOUR ---
+        if (CheckpointProgressBarUI.Instance != null)
+        {
+            CheckpointProgressBarUI.Instance.ResetProgressBar();
+        }
+        // ------------------------------------------------
 
         StartCoroutine(LapCompletionAnimation(finalLapTime));
         _currentLap++;
@@ -73,11 +80,11 @@ public class LapManager : MonoBehaviour
 
     private void UpdateLapUI()
     {
-        if (currentMode is TimeAttack) lapUI.text = $"Try {_currentLap}";
+        if (currentMode is TimeAttack) lapUI.text = $"Attempt {_currentLap}";
 
         else lapUI.text = $"Lap {_currentLap}/{currentMode.MaxLaps}";
 
-        if (currentMode.RaceFinished) lapUI.text = $"Round {currentMode.MaxLaps}/{currentMode.MaxLaps}";
+        if (currentMode.RaceFinished) lapUI.text = $"Lap {currentMode.MaxLaps}/{currentMode.MaxLaps}";
     }
 
     private string FormatTime(float time)

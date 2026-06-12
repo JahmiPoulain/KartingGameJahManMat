@@ -47,15 +47,20 @@ public class CheckpointManager : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        if (CheckpointProgressBarUI.Instance != null)
+        {
+            CheckpointProgressBarUI.Instance.InitializeUI(this);
+        }
+    }
+
     public void CompareCheckpoint(Checkpoint checkpoint)
     {
-        // On calcule l'index que le joueur DOIT percuter maintenant
         int expectedIndex;
 
-        if (InversionCatcher.instance.Inverted)
+        if (InversionCatcher.instance != null && InversionCatcher.instance.Inverted)
         {
-            // Formule : Total - (Nombre déjà validés)
-            // Exemple : 10 total, 0 validés -> on attend le 10.
             expectedIndex = TotalCheckpointCount - (nextIndex - 1);
         }
         else
@@ -65,21 +70,30 @@ public class CheckpointManager : MonoBehaviour
 
         if (checkpoint.Index == expectedIndex)
         {
-            nextIndex++; // On progresse (on a validé un checkpoint de plus)
+            nextIndex++;
 
-            // Enregistrement du respawn
+            // --- INJECTION DE LA LOGIQUE DE TEMPS DE SECTEUR ET D'UI ---
+            // On récupère le script de Chronomètre attaché au LapManager
+            ChronoScript chrono = lapManager.GetComponent<ChronoScript>();
+            if (chrono != null && CheckpointProgressBarUI.Instance != null)
+            {
+                // On envoie l'index réel franchi et le temps au tour actuel
+                CheckpointProgressBarUI.Instance.OnCheckpointPassed(checkpoint.Index, chrono.CurrentTime);
+            }
+            // -----------------------------------------------------------
+
             newPos = checkpoint.transform.position + Vector3.up * 0.5f;
             newRotation = checkpoint.transform.rotation;
 
-            // Si inversé, on tourne la rotation de 180° pour réapparaître dans le bon sens
-            if (MainMenuUIManager.Instance.isMapInverted) newRotation *= Quaternion.Euler(0, 180, 0);
+            if (InversionCatcher.instance != null && InversionCatcher.instance.Inverted)
+                newRotation *= Quaternion.Euler(0, 180, 0);
 
             hasCheckpoint = true;
-            Debug.Log($"Checkpoint {checkpoint.Index} validé. Progrès : {nextIndex - 1}/{TotalCheckpointCount}");
+            Debug.Log($"Checkpoint {checkpoint.Index} validated. Progress: {nextIndex - 1}/{TotalCheckpointCount}");
         }
         else
         {
-            Debug.LogWarning($"Mauvais sens ! Traversé : {checkpoint.Index}, Attendu : {expectedIndex}");
+            Debug.LogWarning($"Wrong way! Crossed: {checkpoint.Index}, Expected: {expectedIndex}");
         }
     }
 

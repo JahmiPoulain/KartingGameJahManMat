@@ -4988,11 +4988,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1640116346}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 0.5}
+  m_AnchorMax: {x: 0, y: 0.5}
+  m_AnchoredPosition: {x: -0.000038146973, y: -0.000015258789}
   m_SizeDelta: {x: 100, y: 100}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_Pivot: {x: 0, y: 0.5}
 --- !u!1001 &623669003
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5272,7 +5272,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -21.1204, y: 209}
+  m_AnchoredPosition: {x: -21.1204, y: 201}
   m_SizeDelta: {x: 450.8126, y: 30.1002}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &660221558
@@ -9244,7 +9244,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1067834888
 RectTransform:
   m_ObjectHideFlags: 0
@@ -10563,8 +10563,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_AnchoredPosition: {x: -17.6243, y: -4.9257}
+  m_SizeDelta: {x: 447.3813, y: 19.4523}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1226628621
 MonoBehaviour:
@@ -12859,7 +12859,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 207}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1490576587
@@ -13850,8 +13850,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 50, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_AnchoredPosition: {x: -181, y: 212}
+  m_SizeDelta: {x: 53.473, y: 47.7144}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1577193209
 MonoBehaviour:
@@ -14265,6 +14265,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1640116346}
+  - component: {fileID: 1640116347}
   m_Layer: 5
   m_Name: CheckpointProgressBar
   m_TagString: Untagged
@@ -14296,6 +14297,26 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1640116347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1640116345}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abbc5039d9458ea4baea4ad9fcf22703, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fillImage: {fileID: 1226628621}
+  cursorRect: {fileID: 1577193208}
+  progressBarRect: {fileID: 1640116346}
+  deltaText: {fileID: 1067834889}
+  tickPrefab: {fileID: 231109965669092769, guid: 5465782293d3aa745adb4f1f9afac26b, type: 3}
+  ticksContainer: {fileID: 622475412}
+  aheadColor: {r: 0, g: 1, b: 0, a: 1}
+  behindColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!1 &1640521822
 GameObject:
   m_ObjectHideFlags: 0
@@ -16946,7 +16967,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -26, y: 169}
+  m_AnchoredPosition: {x: -26, y: 161}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &2778462123638937356

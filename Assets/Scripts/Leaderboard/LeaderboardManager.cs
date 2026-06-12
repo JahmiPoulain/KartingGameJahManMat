@@ -157,13 +157,16 @@ public class LeaderboardManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject); // <-- Empêche la destruction au rechargement de la scène
+        }
+        else
         {
             Destroy(gameObject);
             return;
         }
-
-        Instance = this;
         localPlayerName = "Player";
     }
 

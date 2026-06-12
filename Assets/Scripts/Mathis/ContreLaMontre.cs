@@ -18,7 +18,7 @@ public class ContreLaMontre : GameMode
     bool boostWindow = false;
     bool playerPressed = false;
 
-    [Header("Configuration du Ghost")]
+    [Header("Ghost Configuration")]
     [SerializeField] private KartScriptV2 ghostKartPrefab;
     private KartScriptV2 spawnedGhostKart;
 
@@ -45,11 +45,12 @@ public class ContreLaMontre : GameMode
 
         LoadBestLapAndGhostData();
 
+        // Le Ghost spawn dès le début de la course s'il y a des données enregistrées
         if (bestLapGhostData.Count > 0 && ghostKartPrefab != null)
         {
             spawnedGhostKart = Instantiate(ghostKartPrefab, kartScript.transform.position, kartScript.transform.rotation);
             spawnedGhostKart.GhostMode = true;
-            spawnedGhostKart.CanDrive = false;
+            spawnedGhostKart.CanDrive = false; // Bloqué pendant le décompte
         }
 
         StartCoroutine(StartCountdown());
@@ -57,8 +58,20 @@ public class ContreLaMontre : GameMode
 
     void Update()
     {
+        // --- DETECTION INPUT DEPART TURBO ---
+        if (boostWindow && !raceStarted)
+        {
+            // Vérifie si le joueur appuie sur Espace ou Z (adapte selon tes touches d'accélération)
+            if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.UpArrow))
+            {
+                playerPressed = true;
+                Debug.Log("Turbo timing start validated!");
+            }
+        }
+
         if (raceStarted && !raceFinished)
         {
+            // Enregistrement des données du joueur
             if (isRecordingGhost)
             {
                 recordTimer += Time.deltaTime;
@@ -72,6 +85,7 @@ public class ContreLaMontre : GameMode
                 }
             }
 
+            // Lecture et déplacement forcé du Ghost (évite les conflits physiques)
             if (spawnedGhostKart != null && bestLapGhostData.Count > 0)
             {
                 playbackTimer += Time.deltaTime;
@@ -82,6 +96,18 @@ public class ContreLaMontre : GameMode
                     if (ghostPlaybackIndex < bestLapGhostData.Count)
                     {
                         spawnedGhostKart.SplineProgress = bestLapGhostData[ghostPlaybackIndex].splineProgress;
+
+                        // Sécurité anti-gravité / physique résiduelle sur le Ghost
+                        Rigidbody ghostRb = spawnedGhostKart.GetComponent<Rigidbody>();
+                        if (ghostRb != null)
+                        {
+                            ghostRb.linearVelocity = Vector3.zero;
+                            ghostRb.angularVelocity = Vector3.zero;
+                        }
+                    }
+                    else
+                    {
+                        ghostPlaybackIndex = 0; // Boucle si le joueur est plus lent que son ghost
                     }
                 }
             }
@@ -120,31 +146,28 @@ public class ContreLaMontre : GameMode
         }
 
         float totalTime = 0;
-        string detailScores = "Score :\n";
+        string detailScores = "RACE RESULTS:\n";
 
         for (int i = 0; i < lapManager.LapTimes.Count; i++)
         {
             float t = lapManager.LapTimes[i];
             totalTime += t;
-            detailScores += $"Lap {i + 1} : {FormatTime(t)}\n";
+            detailScores += $"Lap {i + 1}: {FormatTime(t)}\n";
         }
 
         if (scoreUI != null)
-            scoreUI.text = detailScores + $"TOTAL : {FormatTime(totalTime)}";
+            scoreUI.text = detailScores + $"TOTAL TIME: {FormatTime(totalTime)}";
 
-        int totalTimeInMs = Mathf.RoundToInt(totalTime * 1000f);
-        bool isReverse = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted);
-
-        if (isReverse)
+        if (LeaderboardManager.Instance != null)
         {
-            LeaderboardService.EnsureInstance().SubmitContreLaMontreReverse(totalTimeInMs);
-        }
-        else
-        {
-            LeaderboardService.EnsureInstance().SubmitContreLaMontreNormal(totalTimeInMs);
-        }
+            int totalTimeInMs = Mathf.RoundToInt(totalTime * 1000f);
+            bool isReverse = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted);
 
-        Debug.Log($"Score ContreLaMontre soumis au service (Reverse: {isReverse}) : {totalTimeInMs} ms");
+            if (isReverse)
+                LeaderboardManager.Instance.SubmitContreLaMontreReverse(totalTimeInMs);
+            else
+                LeaderboardManager.Instance.SubmitContreLaMontreNormal(totalTimeInMs);
+        }
     }
 
     private void SaveBestLapAndGhostData()
@@ -189,11 +212,11 @@ public class ContreLaMontre : GameMode
         if (startUI != null) startUI.text = "3";
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "2";
-        boostWindow = true;
+        boostWindow = true; // Fenêtre ouverte pendant le "2"
 
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "1";
-        boostWindow = false;
+        boostWindow = false; // Fermée au "1"
 
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "GO!";
@@ -203,6 +226,14 @@ public class ContreLaMontre : GameMode
 
         raceStarted = true;
         isRecordingGhost = true;
+
+        // --- APPLICATION DE LA FORCE TURBO DIRECTE ---
+        if (playerPressed && kartScript != null)
+        {
+            // On injecte directement une forte valeur dans la jauge de poussée du kart
+            kartScript.currentTurboForce = 45f; // Ajuste cette valeur (ex: 35f à 60f) selon la puissance voulue
+            Debug.Log("Turbo Boost triggered at GO!");
+        }
 
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "";
