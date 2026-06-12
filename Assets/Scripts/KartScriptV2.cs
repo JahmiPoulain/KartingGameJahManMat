@@ -250,6 +250,10 @@ public class KartScriptV2 : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (outOfBounds)
+        {
+            grounded = false;
+        }
         raceTimer += Time.fixedDeltaTime;
         
         if (respawnPointsArr.Length == 0)
