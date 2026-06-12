@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -83,6 +84,16 @@ public class PlayerManagementRow : MonoBehaviour
         gameObject.SetActive(false);
     }
 
+    public void AddUsableButtons(List<Selectable> selectables)
+    {
+        if (selectables == null || !gameObject.activeInHierarchy)
+            return;
+
+        AddIfUsable(selectables, chooseButton);
+        AddIfUsable(selectables, renameButton);
+        AddIfUsable(selectables, deleteButton);
+    }
+
     private static void ConfigureButton(Button button, Action action, bool interactable)
     {
         if (button == null)
@@ -93,5 +104,13 @@ public class PlayerManagementRow : MonoBehaviour
 
         if (action != null)
             button.onClick.AddListener(() => action.Invoke());
+    }
+
+    private static void AddIfUsable(List<Selectable> selectables, Selectable selectable)
+    {
+        if (selectable == null || !selectable.gameObject.activeInHierarchy || !selectable.interactable)
+            return;
+
+        selectables.Add(selectable);
     }
 }

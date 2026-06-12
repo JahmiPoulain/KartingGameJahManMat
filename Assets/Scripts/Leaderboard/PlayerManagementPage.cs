@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -134,6 +135,8 @@ public class PlayerManagementPage : MonoBehaviour
 
         if (namePopupRoot != null && namePopupRoot.activeInHierarchy)
         {
+            ConfigureNamePopupNavigation();
+
             if (nameInputField != null && nameInputField.gameObject.activeInHierarchy && nameInputField.interactable)
             {
                 SelectGameObject(nameInputField.gameObject);
@@ -150,6 +153,8 @@ public class PlayerManagementPage : MonoBehaviour
 
         if (deletePopupRoot != null && deletePopupRoot.activeInHierarchy)
         {
+            ConfigureDeletePopupNavigation();
+
             if (TrySelect(cancelDeleteButton))
                 return;
 
@@ -157,13 +162,23 @@ public class PlayerManagementPage : MonoBehaviour
             return;
         }
 
-        Selectable[] selectables = GetComponentsInChildren<Selectable>(false);
+        ConfigurePageNavigation();
+        List<Selectable> selectables = GetPageSelectables();
 
         foreach (Selectable selectable in selectables)
         {
             if (TrySelect(selectable))
                 return;
         }
+    }
+
+    public bool TryHandleCancel()
+    {
+        if (!isPopupVisible)
+            return false;
+
+        CloseAllPopups();
+        return true;
     }
 
     public void CloseAllPopups()
@@ -179,6 +194,9 @@ public class PlayerManagementPage : MonoBehaviour
         editedPlayerId = string.Empty;
         deletedPlayerId = string.Empty;
         isRenamePopup = false;
+
+        if (isActiveAndEnabled)
+            FocusFirstSelectable();
     }
 
     private void BindButtons()
@@ -408,6 +426,70 @@ public class PlayerManagementPage : MonoBehaviour
 
         SelectGameObject(selectable.gameObject);
         return true;
+    }
+
+    private void ConfigurePageNavigation()
+    {
+        ConfigureNavigationLoop(GetPageSelectables());
+    }
+
+    private List<Selectable> GetPageSelectables()
+    {
+        List<Selectable> selectables = new();
+
+        foreach (PlayerManagementRow row in rows)
+            row?.AddUsableButtons(selectables);
+
+        AddIfUsable(selectables, addPlayerButton);
+
+        return selectables;
+    }
+
+    private void ConfigureNamePopupNavigation()
+    {
+        List<Selectable> selectables = new();
+        AddIfUsable(selectables, nameInputField);
+        AddIfUsable(selectables, confirmNameButton);
+        AddIfUsable(selectables, cancelNameButton);
+        ConfigureNavigationLoop(selectables);
+    }
+
+    private void ConfigureDeletePopupNavigation()
+    {
+        List<Selectable> selectables = new();
+        AddIfUsable(selectables, cancelDeleteButton);
+        AddIfUsable(selectables, confirmDeleteButton);
+        ConfigureNavigationLoop(selectables);
+    }
+
+    private static void ConfigureNavigationLoop(List<Selectable> selectables)
+    {
+        for (int i = 0; i < selectables.Count; i++)
+        {
+            Selectable selectable = selectables[i];
+            if (selectable == null)
+                continue;
+
+            Selectable previous = selectables.Count > 1 ? selectables[(i - 1 + selectables.Count) % selectables.Count] : null;
+            Selectable next = selectables.Count > 1 ? selectables[(i + 1) % selectables.Count] : null;
+
+            Navigation navigation = selectable.navigation;
+            navigation.mode = Navigation.Mode.Explicit;
+            navigation.wrapAround = selectables.Count > 1;
+            navigation.selectOnUp = previous;
+            navigation.selectOnLeft = previous;
+            navigation.selectOnDown = next;
+            navigation.selectOnRight = next;
+            selectable.navigation = navigation;
+        }
+    }
+
+    private static void AddIfUsable(List<Selectable> selectables, Selectable selectable)
+    {
+        if (selectable == null || !selectable.gameObject.activeInHierarchy || !selectable.interactable)
+            return;
+
+        selectables.Add(selectable);
     }
 
     private static void SelectGameObject(GameObject target)

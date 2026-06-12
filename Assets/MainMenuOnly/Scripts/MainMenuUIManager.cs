@@ -334,6 +334,10 @@ public class MainMenuUIManager : MonoBehaviour
         {
             if (currentActiveWindow != null)
             {
+                PlayerManagementPage playerManagementPage = currentActiveWindow.GetComponentInChildren<PlayerManagementPage>(true);
+                if (playerManagementPage != null && playerManagementPage.TryHandleCancel())
+                    return;
+
                 CloseProfileManagementWindowIfNeeded(currentActiveWindow);
                 currentActiveWindow.SetActive(false);
             }
