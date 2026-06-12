@@ -5,6 +5,7 @@ using LootLocker.Requests;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
 
 public enum LeaderboardGameMode
 {
@@ -1243,6 +1244,8 @@ public class LeaderboardManager : MonoBehaviour
                 if (circuitModeToggleButton != null)
                     circuitModeToggleButton.gameObject.SetActive(false);
             }
+
+            profilsManager?.GetComponentInChildren<PlayerManagementPage>(true)?.FocusFirstSelectable();
         }
         else
         {
@@ -1256,6 +1259,7 @@ public class LeaderboardManager : MonoBehaviour
         }
 
         UpdateModeLabels();
+        StartCoroutine(FocusFirstControlNextFrame());
     }
 
     private void OnCurrentProfileChanged()
@@ -1497,6 +1501,7 @@ public class LeaderboardManager : MonoBehaviour
         }
 
         UpdateNavigationButtons();
+        FocusFirstControl();
     }
 
     private void UpdateNavigationButtons()
@@ -1522,28 +1527,54 @@ public class LeaderboardManager : MonoBehaviour
 
     public void ForceFocusOnNextButton()
     {
+        FocusFirstControl();
+    }
+
+    public void FocusFirstControl()
+    {
         if (nextPageButton != null && nextPageButton.gameObject.activeInHierarchy)
         {
-            nextPageButton.Select();
+            SelectGameObject(nextPageButton.gameObject);
             return;
         }
 
         if (previousPageButton != null && previousPageButton.gameObject.activeInHierarchy)
         {
-            previousPageButton.Select();
+            SelectGameObject(previousPageButton.gameObject);
             return;
         }
 
         if (circuitModeToggleButton != null && circuitModeToggleButton.gameObject.activeInHierarchy)
         {
-            circuitModeToggleButton.Select();
+            SelectGameObject(circuitModeToggleButton.gameObject);
             return;
         }
 
         if (gameModeToggleButton != null && gameModeToggleButton.gameObject.activeInHierarchy)
         {
-            gameModeToggleButton.Select();
+            SelectGameObject(gameModeToggleButton.gameObject);
+            return;
         }
+
+        if (profilsManager != null)
+            profilsManager.GetComponentInChildren<PlayerManagementPage>(true)?.FocusFirstSelectable();
+    }
+
+    private IEnumerator FocusFirstControlNextFrame()
+    {
+        yield return null;
+        FocusFirstControl();
+    }
+
+    private static void SelectGameObject(GameObject target)
+    {
+        if (target == null)
+            return;
+
+        if (EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(target);
+        else
+            target.GetComponent<Selectable>()?.Select();
     }
 
     private void ClearSpawnedNormalPages()

@@ -1,6 +1,7 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class PlayerManagementPage : MonoBehaviour
@@ -126,6 +127,45 @@ public class PlayerManagementPage : MonoBehaviour
             statusText.text = message ?? string.Empty;
     }
 
+    public void FocusFirstSelectable()
+    {
+        if (!isActiveAndEnabled)
+            return;
+
+        if (namePopupRoot != null && namePopupRoot.activeInHierarchy)
+        {
+            if (nameInputField != null && nameInputField.gameObject.activeInHierarchy && nameInputField.interactable)
+            {
+                SelectGameObject(nameInputField.gameObject);
+                nameInputField.ActivateInputField();
+                return;
+            }
+
+            if (TrySelect(confirmNameButton))
+                return;
+
+            TrySelect(cancelNameButton);
+            return;
+        }
+
+        if (deletePopupRoot != null && deletePopupRoot.activeInHierarchy)
+        {
+            if (TrySelect(cancelDeleteButton))
+                return;
+
+            TrySelect(confirmDeleteButton);
+            return;
+        }
+
+        Selectable[] selectables = GetComponentsInChildren<Selectable>(false);
+
+        foreach (Selectable selectable in selectables)
+        {
+            if (TrySelect(selectable))
+                return;
+        }
+    }
+
     public void CloseAllPopups()
     {
         SetPopupBackgroundVisible(false);
@@ -219,11 +259,10 @@ public class PlayerManagementPage : MonoBehaviour
             nameInputField.characterLimit = maxPlayerNameLength;
             nameInputField.text = initialValue ?? string.Empty;
             nameInputField.interactable = true;
-            nameInputField.Select();
-            nameInputField.ActivateInputField();
         }
 
         SetNamePopupWaiting(false);
+        FocusFirstSelectable();
     }
 
     private void ConfirmNamePopup()
@@ -288,6 +327,8 @@ public class PlayerManagementPage : MonoBehaviour
 
         if (deletePopupText != null)
             deletePopupText.text = string.Format(deleteConfirmationFormat, playerName);
+
+        FocusFirstSelectable();
     }
 
     private void ConfirmDeletePopup()
@@ -358,6 +399,26 @@ public class PlayerManagementPage : MonoBehaviour
 
         if (nameInputField != null)
             nameInputField.interactable = !waiting;
+    }
+
+    private static bool TrySelect(Selectable selectable)
+    {
+        if (selectable == null || !selectable.gameObject.activeInHierarchy || !selectable.interactable)
+            return false;
+
+        SelectGameObject(selectable.gameObject);
+        return true;
+    }
+
+    private static void SelectGameObject(GameObject target)
+    {
+        if (target == null)
+            return;
+
+        if (EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(target);
+        else
+            target.GetComponent<Selectable>()?.Select();
     }
 
     private void EnsureNamePopupErrorText()
