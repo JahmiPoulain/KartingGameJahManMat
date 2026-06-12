@@ -9,7 +9,7 @@ public class GameSceneManager : MonoBehaviour
 {
     public static GameSceneManager Instance;
 
-    [Header("Configuration des Scènes")]
+    [Header("Configuration des ScÃ¨nes")]
     public string mainMenuSceneName = "MainMenu2_0";
     public string graphSceneName = "GraphScene";
 
@@ -17,7 +17,7 @@ public class GameSceneManager : MonoBehaviour
     [SerializeField] private VideoClip transitionClip;
     [SerializeField] private Sprite loadingIconSprite;
 
-    [Tooltip("La couleur qui cache le jeu pendant les 5 frames de chargement de la vidéo (souvent noir)")]
+    [Tooltip("La couleur qui cache le jeu pendant les 5 frames de chargement de la vidÃ©o (souvent noir)")]
     public Color loadingBackgroundColor = Color.black;
 
     private Canvas transitionCanvas;
@@ -29,6 +29,7 @@ public class GameSceneManager : MonoBehaviour
     private float rotationSpeed = -360f;
     private List<string> loadedGameplayScenes = new List<string>();
     private bool isTransitioning = false;
+    private string pendingGameplaySceneName;
 
     private void Awake()
     {
@@ -116,7 +117,13 @@ public class GameSceneManager : MonoBehaviour
 
     public void LoadGame(string gameplaySceneName)
     {
-        if (isTransitioning) return;
+        if (isTransitioning)
+        {
+            pendingGameplaySceneName = gameplaySceneName;
+            Debug.Log($"Chargement de {gameplaySceneName} mis en attente : transition en cours.");
+            return;
+        }
+
         StartCoroutine(TransitionRoutine(gameplaySceneName, true));
     }
 
@@ -174,6 +181,8 @@ public class GameSceneManager : MonoBehaviour
         transitionCanvas.gameObject.SetActive(false);
         Application.backgroundLoadingPriority = ThreadPriority.Normal;
         isTransitioning = false;
+
+        TryConsumePendingGameLoad();
     }
 
     private IEnumerator PlayVideoFromMiddleOnStart()
@@ -200,6 +209,18 @@ public class GameSceneManager : MonoBehaviour
 
         transitionCanvas.gameObject.SetActive(false);
         isTransitioning = false;
+
+        TryConsumePendingGameLoad();
+    }
+
+    private void TryConsumePendingGameLoad()
+    {
+        if (string.IsNullOrWhiteSpace(pendingGameplaySceneName) || isTransitioning)
+            return;
+
+        string sceneToLoad = pendingGameplaySceneName;
+        pendingGameplaySceneName = null;
+        LoadGame(sceneToLoad);
     }
 
     private IEnumerator PlayVideoUntilMiddle()

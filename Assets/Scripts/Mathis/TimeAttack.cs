@@ -4,13 +4,12 @@ using TMPro;
 
 public class TimeAttack : GameMode
 {
-    [Header("Références")]
+    [Header("RÃ©fÃ©rences")]
     [SerializeField] private TextMeshProUGUI startUI;
     [SerializeField] private TextMeshProUGUI currentTimerUI;
     [SerializeField] private TextMeshProUGUI bestScoreUI; // Pour afficher le record
 
     private float bestLapTime = float.MaxValue;
-    private const string BASE_BEST_TIME_KEY = "BestTimeAttackScore";
 
     private void Start()
     {
@@ -37,23 +36,18 @@ public class TimeAttack : GameMode
     {
         if (raceStarted && !raceFinished)
         {
-            // Logique de mise à jour si nécessaire
+            // Logique de mise Ã  jour si nÃ©cessaire
         }
-    }
-
-    // Génère dynamiquement la clé selon l'état d'inversion de la map
-    private string GetSavedKey()
-    {
-        string suffix = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted) ? "_Inverted" : "_Normal";
-        return BASE_BEST_TIME_KEY + suffix;
     }
 
     private void LoadBestScore()
     {
-        string key = GetSavedKey();
-        if (PlayerPrefs.HasKey(key))
+        LeaderboardCircuitMode circuitMode = GetCurrentCircuitMode();
+
+        if (LeaderboardService.Instance != null &&
+            LeaderboardService.Instance.TryGetLocalBestScore(LeaderboardGameMode.TimeAttack, circuitMode, out int bestTimeInMs))
         {
-            bestLapTime = PlayerPrefs.GetFloat(key);
+            bestLapTime = bestTimeInMs / 1000f;
             if (bestScoreUI != null)
                 bestScoreUI.text = "MEILLEUR TEMPS : " + FormatTime(bestLapTime);
         }
@@ -88,33 +82,19 @@ public class TimeAttack : GameMode
 
     public override void OnLapCompleted(float lapTime)
     {
-        // Si le joueur bat son record sur le type de piste actuel
-        if (lapTime < bestLapTime)
+        int lapTimeInMs = Mathf.RoundToInt(lapTime * 1000f);
+        bool isReverse = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted);
+        bool scoreAccepted = isReverse
+            ? LeaderboardService.EnsureInstance().SubmitTimeAttackReverse(lapTimeInMs)
+            : LeaderboardService.EnsureInstance().SubmitTimeAttackNormal(lapTimeInMs);
+
+        // L'affichage local reste un feedback immÃ©diat, mais l'envoi est dÃ©cidÃ© par profil/mode/variante dans LeaderboardService.
+        if (scoreAccepted && lapTime < bestLapTime)
         {
             bestLapTime = lapTime;
-            PlayerPrefs.SetFloat(GetSavedKey(), bestLapTime);
-            PlayerPrefs.Save();
 
             if (bestScoreUI != null)
                 bestScoreUI.text = "NOUVEAU RECORD : " + FormatTime(bestLapTime);
-
-            // --- ENVOI ADAPTÉ AU LEADERBOARD EN LIGNE (LOOTLOCKER) ---
-            if (LeaderboardManager.Instance != null)
-            {
-                int lapTimeInMs = Mathf.RoundToInt(lapTime * 1000f);
-                bool isReverse = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted);
-
-                if (isReverse)
-                {
-                    LeaderboardManager.Instance.SubmitTimeAttackReverse(lapTimeInMs);
-                }
-                else
-                {
-                    LeaderboardManager.Instance.SubmitTimeAttackNormal(lapTimeInMs);
-                }
-
-                Debug.Log($"Score TimeAttack envoyé au manager (Reverse: {isReverse}) : {lapTimeInMs} ms");
-            }
         }
     }
 
@@ -128,5 +108,12 @@ public class TimeAttack : GameMode
         int minutes = (int)(time / 60);
         float seconds = time % 60;
         return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:00}:{1:00.000}", minutes, seconds);
+    }
+
+    private LeaderboardCircuitMode GetCurrentCircuitMode()
+    {
+        return InversionCatcher.instance != null && InversionCatcher.instance.Inverted
+            ? LeaderboardCircuitMode.Reverse
+            : LeaderboardCircuitMode.Normal;
     }
 }

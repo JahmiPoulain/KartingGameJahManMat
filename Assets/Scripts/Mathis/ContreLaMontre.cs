@@ -132,24 +132,19 @@ public class ContreLaMontre : GameMode
         if (scoreUI != null)
             scoreUI.text = detailScores + $"TOTAL : {FormatTime(totalTime)}";
 
-        // --- ENVOI CENTRALISÉ ET ADAPTÉ AU CLASSEMENT EN LIGNE ---
-        if (LeaderboardManager.Instance != null)
+        int totalTimeInMs = Mathf.RoundToInt(totalTime * 1000f);
+        bool isReverse = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted);
+
+        if (isReverse)
         {
-            // Le CLM envoie le temps TOTAL cumulé des 3 tours
-            int totalTimeInMs = Mathf.RoundToInt(totalTime * 1000f);
-            bool isReverse = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted);
-
-            if (isReverse)
-            {
-                LeaderboardManager.Instance.SubmitContreLaMontreReverse(totalTimeInMs);
-            }
-            else
-            {
-                LeaderboardManager.Instance.SubmitContreLaMontreNormal(totalTimeInMs);
-            }
-
-            Debug.Log($"Score ContreLaMontre envoyé au manager (Reverse: {isReverse}) : {totalTimeInMs} ms");
+            LeaderboardService.EnsureInstance().SubmitContreLaMontreReverse(totalTimeInMs);
         }
+        else
+        {
+            LeaderboardService.EnsureInstance().SubmitContreLaMontreNormal(totalTimeInMs);
+        }
+
+        Debug.Log($"Score ContreLaMontre soumis au service (Reverse: {isReverse}) : {totalTimeInMs} ms");
     }
 
     private void SaveBestLapAndGhostData()

@@ -201,6 +201,7 @@ public class LeaderboardManager : MonoBehaviour
     {
         EnsureProfilsManager();
         BindProfilsManager();
+        ConfigureLeaderboardService();
         HideNavigationButtons();
         UpdateModeLabels();
         HideStatus();
@@ -240,6 +241,18 @@ public class LeaderboardManager : MonoBehaviour
         profilsManager.SetOnlineState(simulateOfflineMode, isConnected);
 
         localPlayerName = profilsManager.CurrentProfileName;
+    }
+
+    private void ConfigureLeaderboardService()
+    {
+        LeaderboardService.EnsureInstance().Configure(
+            timeAttackNormalKey,
+            timeAttackReverseKey,
+            contreLaMontreNormalKey,
+            contreLaMontreReverseKey,
+            GetCurrentPlayerProfile(),
+            simulateOfflineMode
+        );
     }
 
     private void SyncProfilsOnlineState()
@@ -1265,12 +1278,14 @@ public class LeaderboardManager : MonoBehaviour
     private void OnCurrentProfileChanged()
     {
         localPlayerName = GetCurrentPlayerProfileName();
+        LeaderboardService.EnsureInstance().SetCurrentProfile(GetCurrentPlayerProfile());
         UpdateModeLabels();
         RefreshLeaderboard();
     }
 
     private void OnProfileRenamed(PlayerProfile profile)
     {
+        LeaderboardService.EnsureInstance().SetCurrentProfile(GetCurrentPlayerProfile());
         MarkAllLocalScoresPendingUpload(profile);
         TryUploadAllPendingLocalScores();
         RefreshLeaderboard();
