@@ -1501,6 +1501,7 @@ public class LeaderboardManager : MonoBehaviour
         }
 
         UpdateNavigationButtons();
+        ConfigureLeaderboardButtonNavigation();
         FocusFirstControl();
     }
 
@@ -1514,6 +1515,8 @@ public class LeaderboardManager : MonoBehaviour
 
         if (nextPageButton != null)
             nextPageButton.gameObject.SetActive(hasNextPage);
+
+        ConfigureLeaderboardButtonNavigation();
     }
 
     private void HideNavigationButtons()
@@ -1523,6 +1526,8 @@ public class LeaderboardManager : MonoBehaviour
 
         if (nextPageButton != null)
             nextPageButton.gameObject.SetActive(false);
+
+        ConfigureLeaderboardButtonNavigation();
     }
 
     public void ForceFocusOnNextButton()
@@ -1532,27 +1537,11 @@ public class LeaderboardManager : MonoBehaviour
 
     public void FocusFirstControl()
     {
-        if (nextPageButton != null && nextPageButton.gameObject.activeInHierarchy)
-        {
-            SelectGameObject(nextPageButton.gameObject);
-            return;
-        }
+        List<Button> buttons = GetActiveLeaderboardButtons();
 
-        if (previousPageButton != null && previousPageButton.gameObject.activeInHierarchy)
+        if (buttons.Count > 0)
         {
-            SelectGameObject(previousPageButton.gameObject);
-            return;
-        }
-
-        if (circuitModeToggleButton != null && circuitModeToggleButton.gameObject.activeInHierarchy)
-        {
-            SelectGameObject(circuitModeToggleButton.gameObject);
-            return;
-        }
-
-        if (gameModeToggleButton != null && gameModeToggleButton.gameObject.activeInHierarchy)
-        {
-            SelectGameObject(gameModeToggleButton.gameObject);
+            SelectGameObject(buttons[0].gameObject);
             return;
         }
 
@@ -1575,6 +1564,50 @@ public class LeaderboardManager : MonoBehaviour
             EventSystem.current.SetSelectedGameObject(target);
         else
             target.GetComponent<Selectable>()?.Select();
+    }
+
+    private void ConfigureLeaderboardButtonNavigation()
+    {
+        List<Button> buttons = GetActiveLeaderboardButtons();
+
+        for (int i = 0; i < buttons.Count; i++)
+        {
+            Button button = buttons[i];
+            if (button == null)
+                continue;
+
+            Selectable previous = buttons.Count > 1 ? buttons[(i - 1 + buttons.Count) % buttons.Count] : null;
+            Selectable next = buttons.Count > 1 ? buttons[(i + 1) % buttons.Count] : null;
+
+            Navigation navigation = button.navigation;
+            navigation.mode = Navigation.Mode.Explicit;
+            navigation.wrapAround = buttons.Count > 1;
+            navigation.selectOnUp = previous;
+            navigation.selectOnLeft = previous;
+            navigation.selectOnDown = next;
+            navigation.selectOnRight = next;
+            button.navigation = navigation;
+        }
+    }
+
+    private List<Button> GetActiveLeaderboardButtons()
+    {
+        List<Button> buttons = new();
+
+        AddIfUsable(buttons, gameModeToggleButton);
+        AddIfUsable(buttons, circuitModeToggleButton);
+        AddIfUsable(buttons, previousPageButton);
+        AddIfUsable(buttons, nextPageButton);
+
+        return buttons;
+    }
+
+    private static void AddIfUsable(List<Button> buttons, Button button)
+    {
+        if (button == null || !button.gameObject.activeInHierarchy || !button.interactable)
+            return;
+
+        buttons.Add(button);
     }
 
     private void ClearSpawnedNormalPages()
