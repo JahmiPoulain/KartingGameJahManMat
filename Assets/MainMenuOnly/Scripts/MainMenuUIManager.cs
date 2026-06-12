@@ -331,7 +331,11 @@ public class MainMenuUIManager : MonoBehaviour
     {
         if (currentState == MenuState.SubWindowOpen)
         {
-            if (currentActiveWindow != null) currentActiveWindow.SetActive(false);
+            if (currentActiveWindow != null)
+            {
+                CloseProfileManagementWindowIfNeeded(currentActiveWindow);
+                currentActiveWindow.SetActive(false);
+            }
             currentActiveWindow = null;
             ChangeState(stateBeforeSubWindow);
         }
@@ -343,6 +347,16 @@ public class MainMenuUIManager : MonoBehaviour
         {
             ChangeState(MenuState.MainMenu);
         }
+    }
+
+    private void CloseProfileManagementWindowIfNeeded(GameObject window)
+    {
+        if (window == null) return;
+        if (window.GetComponentInChildren<PlayerManagementPage>(true) == null) return;
+
+        ProfilsManager profilsManager = FindFirstObjectByType<ProfilsManager>();
+        if (profilsManager != null)
+            profilsManager.HidePlayerManagement();
     }
 
     private void HandleInputs()
@@ -487,6 +501,17 @@ public class MainMenuUIManager : MonoBehaviour
     {
         currentActiveWindow = window;
         currentActiveWindow.SetActive(true);
+
+        PlayerManagementPage playerManagementPage = currentActiveWindow.GetComponentInChildren<PlayerManagementPage>(true);
+        if (playerManagementPage != null)
+        {
+            ProfilsManager profilsManager = currentActiveWindow.GetComponentInChildren<ProfilsManager>(true);
+            if (profilsManager == null)
+                profilsManager = FindFirstObjectByType<ProfilsManager>();
+
+            if (profilsManager != null)
+                profilsManager.OpenPlayerManagement();
+        }
         stateBeforeSubWindow = currentState;
         ChangeState(MenuState.SubWindowOpen);
     }

@@ -23,12 +23,6 @@ public class LeaderboardManager : MonoBehaviour
     public static LeaderboardManager Instance { get; private set; }
 
     private const int EntriesPerPage = 10;
-    private const int MaxPlayerProfiles = 10;
-    private const int MaxPlayerNameLength = 12;
-    private const int RemoteNameCheckBatchSize = 100;
-
-    private const string PlayerProfilesJsonKey = "Leaderboard_PlayerProfilesJson";
-    private const string CurrentPlayerProfileIdKey = "Leaderboard_CurrentPlayerProfileId";
 
     private const string LocalBestScoreKeyPrefix = "Leaderboard_LocalBestScore";
     private const string HasLocalBestScoreKeyPrefix = "Leaderboard_HasLocalBestScore";
@@ -58,13 +52,9 @@ public class LeaderboardManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI gameModeToggleButtonText;
     [SerializeField] private TextMeshProUGUI circuitModeToggleButtonText;
 
-    [Header("Player Management")]
-    [SerializeField] private Button managePlayersButton;
-    [SerializeField] private TextMeshProUGUI managePlayersButtonText;
-    [SerializeField] private PlayerManagementPage playerManagementPage;
+    [Header("Profiles")]
+    [SerializeField] private ProfilsManager profilsManager;
     [SerializeField] private bool hideModeButtonsWhileManagingPlayers = true;
-    [SerializeField] private string managePlayersButtonLabel = "Gérer les joueurs";
-    [SerializeField] private string backToLeaderboardButtonLabel = "Retour classement";
 
     [Header("Optional Labels")]
     [SerializeField] private TextMeshProUGUI leaderboardTitleText;
@@ -82,7 +72,6 @@ public class LeaderboardManager : MonoBehaviour
 
     [Header("Display")]
     [SerializeField] private bool prefixRankInName = true;
-    [SerializeField] private string fallbackLocalPlayerName = "Player";
 
     [Header("Status Message")]
     [SerializeField] private GameObject statusMessageRoot;
@@ -126,12 +115,6 @@ public class LeaderboardManager : MonoBehaviour
 
     private int currentPageIndex;
 
-    private readonly List<PlayerProfile> playerProfiles = new();
-    private string currentPlayerProfileId;
-    private string selectedPlayerProfileId;
-    private bool isPlayerManagementMode;
-    private bool isWaitingDeleteConfirmation;
-
     private struct LeaderboardDisplayEntry
     {
         public int PlayerId;
@@ -171,41 +154,6 @@ public class LeaderboardManager : MonoBehaviour
         }
     }
 
-    [Serializable]
-    private class PlayerProfile
-    {
-        public string Id;
-        public string Name;
-        public List<string> PreviousMemberIds = new();
-
-        public PlayerProfile(string id, string name)
-        {
-            Id = id;
-            Name = name;
-            PreviousMemberIds = new List<string>();
-        }
-    }
-
-    [Serializable]
-    private class PlayerProfileCollection
-    {
-        public List<PlayerProfile> Players = new();
-        public string CurrentPlayerId;
-    }
-
-    [Serializable]
-    private class ScoreMetadata
-    {
-        public string ProfileId;
-        public string ProfileName;
-
-        public ScoreMetadata(string profileId, string profileName)
-        {
-            ProfileId = profileId;
-            ProfileName = profileName;
-        }
-    }
-
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -215,7 +163,7 @@ public class LeaderboardManager : MonoBehaviour
         }
 
         Instance = this;
-        localPlayerName = fallbackLocalPlayerName;
+        localPlayerName = "Player";
     }
 
     private void OnEnable()
@@ -231,10 +179,6 @@ public class LeaderboardManager : MonoBehaviour
 
         if (circuitModeToggleButton != null)
             circuitModeToggleButton.onClick.AddListener(ToggleCircuitMode);
-
-        if (managePlayersButton != null)
-            managePlayersButton.onClick.AddListener(TogglePlayerManagementMode);
-
     }
 
     private void OnDisable()
@@ -250,29 +194,62 @@ public class LeaderboardManager : MonoBehaviour
 
         if (circuitModeToggleButton != null)
             circuitModeToggleButton.onClick.RemoveListener(ToggleCircuitMode);
-
-        if (managePlayersButton != null)
-            managePlayersButton.onClick.RemoveListener(TogglePlayerManagementMode);
-
     }
 
     private void Start()
     {
-        InitializePlayerProfiles();
-        ConfigurePlayerManagementPage();
-        HidePlayerManagementObjects();
+        EnsureProfilsManager();
+        BindProfilsManager();
         HideNavigationButtons();
         UpdateModeLabels();
-        UpdatePlayerManagementControls();
         HideStatus();
 
         StartLootLockerSession();
         StartReconnectLoop();
     }
 
+    private void EnsureProfilsManager()
+    {
+        if (profilsManager == null)
+            profilsManager = GetComponent<ProfilsManager>();
+
+        if (profilsManager == null)
+            profilsManager = FindFirstObjectByType<ProfilsManager>();
+
+        if (profilsManager == null)
+            Debug.LogError("ProfilsManager n'est pas assigné dans le LeaderboardManager.");
+    }
+
+    private void BindProfilsManager()
+    {
+        if (profilsManager == null)
+            return;
+
+        profilsManager.ManagementModeChanged -= OnProfileManagementModeChanged;
+        profilsManager.CurrentProfileChanged -= OnCurrentProfileChanged;
+        profilsManager.ProfileRenamed -= OnProfileRenamed;
+        profilsManager.ProfileDeleted -= OnProfileDeleted;
+
+        profilsManager.ManagementModeChanged += OnProfileManagementModeChanged;
+        profilsManager.CurrentProfileChanged += OnCurrentProfileChanged;
+        profilsManager.ProfileRenamed += OnProfileRenamed;
+        profilsManager.ProfileDeleted += OnProfileDeleted;
+
+        profilsManager.SetLeaderboardKeys(GetAllLeaderboardKeys());
+        profilsManager.SetOnlineState(simulateOfflineMode, isConnected);
+
+        localPlayerName = profilsManager.CurrentProfileName;
+    }
+
+    private void SyncProfilsOnlineState()
+    {
+        if (profilsManager != null)
+            profilsManager.SetOnlineState(simulateOfflineMode, isConnected);
+    }
+
     private void Update()
     {
-        if (isPlayerManagementMode)
+        if (profilsManager != null && profilsManager.IsManagingProfiles)
             return;
 
         if (!enableDebugSubmit)
@@ -308,14 +285,6 @@ public class LeaderboardManager : MonoBehaviour
             : LeaderboardCircuitMode.Normal;
 
         SetDisplayedLeaderboard(currentGameMode, nextCircuitMode);
-    }
-
-    public void TogglePlayerManagementMode()
-    {
-        if (isPlayerManagementMode)
-            HidePlayerManagement();
-        else
-            ShowPlayerManagement();
     }
 
     public void ShowTimeAttack()
@@ -408,6 +377,7 @@ public class LeaderboardManager : MonoBehaviour
         if (simulateOfflineMode)
         {
             isConnected = false;
+            SyncProfilsOnlineState();
             BuildOfflineViewFromLocalSave(true);
             return;
         }
@@ -442,6 +412,7 @@ public class LeaderboardManager : MonoBehaviour
 
                 isConnected = false;
                 isLoading = false;
+                SyncProfilsOnlineState();
 
                 BuildOfflineViewFromLocalSave(true);
 
@@ -531,7 +502,7 @@ public class LeaderboardManager : MonoBehaviour
 
     private void UpdateModeLabels()
     {
-        if (isPlayerManagementMode)
+        if (profilsManager != null && profilsManager.IsManagingProfiles)
         {
             if (leaderboardTitleText != null)
                 leaderboardTitleText.text = "Gérer les joueurs";
@@ -573,6 +544,7 @@ public class LeaderboardManager : MonoBehaviour
         {
             isConnected = false;
             isStartingSession = false;
+            SyncProfilsOnlineState();
 
             Debug.LogWarning("Mode hors ligne simulé actif.");
 
@@ -594,12 +566,14 @@ public class LeaderboardManager : MonoBehaviour
                 Debug.LogWarning("Impossible de démarrer la session LootLocker.");
 
                 isConnected = false;
+                SyncProfilsOnlineState();
                 BuildOfflineViewFromLocalSave(true);
 
                 return;
             }
 
             isConnected = true;
+            SyncProfilsOnlineState();
             localPlayerId = response.player_id;
 
             // Le nom affiché dans le jeu vient du profil local actif.
@@ -634,7 +608,10 @@ public class LeaderboardManager : MonoBehaviour
             if (simulateOfflineMode)
             {
                 if (isConnected)
+                {
                     isConnected = false;
+                    SyncProfilsOnlineState();
+                }
 
                 BuildOfflineViewFromLocalSave(true);
                 continue;
@@ -688,6 +665,7 @@ public class LeaderboardManager : MonoBehaviour
             Debug.LogWarning("Score sauvegardé localement. Mode hors ligne simulé actif.");
 
             isConnected = false;
+            SyncProfilsOnlineState();
 
             if (gameMode == currentGameMode && circuitMode == currentCircuitMode)
                 BuildOfflineViewFromLocalSave(true);
@@ -714,7 +692,7 @@ public class LeaderboardManager : MonoBehaviour
     {
         foreach (LeaderboardTarget target in GetAllLeaderboardTargets())
         {
-            foreach (PlayerProfile profile in playerProfiles)
+            foreach (PlayerProfile profile in GetProfiles())
             {
                 TryUploadPendingLocalScore(profile, target.GameMode, target.CircuitMode);
             }
@@ -735,7 +713,7 @@ public class LeaderboardManager : MonoBehaviour
         if (!isConnected)
             return;
 
-        TryUploadPendingLocalScore(GetPlayerProfile(GetCurrentPlayerProfileId()), gameMode, circuitMode);
+        TryUploadPendingLocalScore(GetCurrentPlayerProfile(), gameMode, circuitMode);
     }
 
     private void TryUploadPendingLocalScore(
@@ -872,7 +850,7 @@ public class LeaderboardManager : MonoBehaviour
 
     private void ApplyLocalScore(int timeInMilliseconds, bool renderAfterApply = true)
     {
-        ApplyLocalProfileScore(GetPlayerProfile(GetCurrentPlayerProfileId()), timeInMilliseconds, renderAfterApply);
+        ApplyLocalProfileScore(GetCurrentPlayerProfile(), timeInMilliseconds, renderAfterApply);
     }
 
     private void ApplyAllLocalScores(
@@ -881,7 +859,7 @@ public class LeaderboardManager : MonoBehaviour
         bool renderAfterApply = true
     )
     {
-        foreach (PlayerProfile profile in playerProfiles)
+        foreach (PlayerProfile profile in GetProfiles())
         {
             if (profile == null || !HasLocalBestScore(gameMode, circuitMode, profile.Id))
                 continue;
@@ -1017,7 +995,7 @@ public class LeaderboardManager : MonoBehaviour
         LeaderboardCircuitMode circuitMode
     )
     {
-        foreach (PlayerProfile profile in playerProfiles)
+        foreach (PlayerProfile profile in GetProfiles())
         {
             if (profile != null && HasLocalBestScore(gameMode, circuitMode, profile.Id))
                 return true;
@@ -1192,6 +1170,17 @@ public class LeaderboardManager : MonoBehaviour
         yield return new LeaderboardTarget(LeaderboardGameMode.ContreLaMontre, LeaderboardCircuitMode.Reverse);
     }
 
+    private IEnumerable<string> GetAllLeaderboardKeys()
+    {
+        foreach (LeaderboardTarget target in GetAllLeaderboardTargets())
+        {
+            string key = GetLeaderboardKey(target.GameMode, target.CircuitMode);
+
+            if (!string.IsNullOrWhiteSpace(key))
+                yield return key;
+        }
+    }
+
     private string GetLocalBestScoreKey(
         LeaderboardGameMode gameMode,
         LeaderboardCircuitMode circuitMode,
@@ -1229,411 +1218,64 @@ public class LeaderboardManager : MonoBehaviour
     }
 
     // -------------------------------------------------------------------------
-    // Player profiles
+    // Profiles integration
     // -------------------------------------------------------------------------
 
-    private void InitializePlayerProfiles()
+    private void OnProfileManagementModeChanged(bool isManagingProfiles)
     {
-        playerProfiles.Clear();
-
-        string json = PlayerPrefs.GetString(PlayerProfilesJsonKey, string.Empty);
-
-        if (!string.IsNullOrWhiteSpace(json))
+        if (isManagingProfiles)
         {
-            try
+            if (pendingServerRefresh != null)
             {
-                PlayerProfileCollection collection = JsonUtility.FromJson<PlayerProfileCollection>(json);
-
-                if (collection?.Players != null)
-                {
-                    foreach (PlayerProfile profile in collection.Players)
-                    {
-                        if (profile == null)
-                            continue;
-
-                        profile.Id = string.IsNullOrWhiteSpace(profile.Id) ? GeneratePlayerProfileId() : profile.Id;
-                        profile.Name = SanitizePlayerName(profile.Name);
-                        profile.PreviousMemberIds ??= new List<string>();
-
-                        if (!string.IsNullOrWhiteSpace(profile.Name) && playerProfiles.Count < MaxPlayerProfiles)
-                            playerProfiles.Add(profile);
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(collection.CurrentPlayerId))
-                        currentPlayerProfileId = collection.CurrentPlayerId;
-                }
+                StopCoroutine(pendingServerRefresh);
+                pendingServerRefresh = null;
             }
-            catch (Exception exception)
+
+            HideStatus();
+            HideScorePages();
+            HideNavigationButtons();
+
+            if (hideModeButtonsWhileManagingPlayers)
             {
-                Debug.LogWarning("Impossible de charger les profils joueurs : " + exception.Message);
+                if (gameModeToggleButton != null)
+                    gameModeToggleButton.gameObject.SetActive(false);
+
+                if (circuitModeToggleButton != null)
+                    circuitModeToggleButton.gameObject.SetActive(false);
             }
         }
-
-        if (playerProfiles.Count == 0)
-            playerProfiles.Add(new PlayerProfile(GeneratePlayerProfileId(), CreateUniqueDefaultPlayerName()));
-
-        string savedCurrentId = PlayerPrefs.GetString(CurrentPlayerProfileIdKey, currentPlayerProfileId);
-
-        if (HasPlayerProfile(savedCurrentId))
-            currentPlayerProfileId = savedCurrentId;
-
-        if (!HasPlayerProfile(currentPlayerProfileId))
-            currentPlayerProfileId = playerProfiles[0].Id;
-
-        selectedPlayerProfileId = currentPlayerProfileId;
-        localPlayerName = GetCurrentPlayerProfileName();
-
-        SavePlayerProfiles();
-
-    }
-
-    private void ShowPlayerManagement()
-    {
-        isPlayerManagementMode = true;
-        isWaitingDeleteConfirmation = false;
-        selectedPlayerProfileId = currentPlayerProfileId;
-
-        if (pendingServerRefresh != null)
-        {
-            StopCoroutine(pendingServerRefresh);
-            pendingServerRefresh = null;
-        }
-
-        HideStatus();
-        HideScorePages();
-        HideNavigationButtons();
-
-        if (hideModeButtonsWhileManagingPlayers)
+        else
         {
             if (gameModeToggleButton != null)
-                gameModeToggleButton.gameObject.SetActive(false);
+                gameModeToggleButton.gameObject.SetActive(true);
 
             if (circuitModeToggleButton != null)
-                circuitModeToggleButton.gameObject.SetActive(false);
-        }
+                circuitModeToggleButton.gameObject.SetActive(true);
 
-        ConfigurePlayerManagementPage();
-
-        if (playerManagementPage != null)
-        {
-            playerManagementPage.gameObject.SetActive(true);
-            playerManagementPage.CloseAllPopups();
-        }
-
-
-        UpdateModeLabels();
-        UpdatePlayerManagementControls();
-        RenderPlayerManagement();
-    }
-
-    private void HidePlayerManagement(bool refreshLeaderboard = true)
-    {
-        isPlayerManagementMode = false;
-        isWaitingDeleteConfirmation = false;
-
-        HidePlayerManagementObjects();
-
-        if (gameModeToggleButton != null)
-            gameModeToggleButton.gameObject.SetActive(true);
-
-        if (circuitModeToggleButton != null)
-            circuitModeToggleButton.gameObject.SetActive(true);
-
-        SetPlayerManagementStatus(string.Empty);
-        UpdateModeLabels();
-        UpdatePlayerManagementControls();
-
-        if (refreshLeaderboard)
             RefreshLeaderboard();
-    }
-
-    private void RenderPlayerManagement()
-    {
-        if (!isPlayerManagementMode)
-            return;
-
-        if (playerManagementPage == null)
-        {
-            Debug.LogError("PlayerManagementPage n'est pas assignée dans le LeaderboardManager.");
-            return;
         }
-
-        playerManagementPage.gameObject.SetActive(true);
-        playerManagementPage.ClearPage();
-        playerManagementPage.SetCanAddPlayer(playerProfiles.Count < MaxPlayerProfiles);
-
-        for (int i = 0; i < MaxPlayerProfiles; i++)
-        {
-            if (i >= playerProfiles.Count)
-                continue;
-
-            PlayerProfile profile = playerProfiles[i];
-            bool isCurrent = profile.Id == currentPlayerProfileId;
-
-            playerManagementPage.SetPlayer(
-                i,
-                profile.Id,
-                profile.Name,
-                isCurrent
-            );
-        }
-    }
-
-    private void ConfigurePlayerManagementPage()
-    {
-        if (playerManagementPage == null)
-            return;
-
-        playerManagementPage.SetMaxPlayerNameLength(MaxPlayerNameLength);
-        playerManagementPage.SetCallbacks(
-            AddPlayerFromPlayerPage,
-            RenamePlayerFromPlayerPage,
-            DeletePlayerFromPlayerPage,
-            SelectPlayerProfile,
-            ValidatePlayerNameFromPlayerPage
-        );
-    }
-
-    private void AddPlayerFromPlayerPage(string rawPlayerName)
-    {
-        string playerName = SanitizePlayerName(rawPlayerName);
-
-        if (string.IsNullOrWhiteSpace(playerName))
-        {
-            SetPlayerManagementStatus("Nom invalide.");
-            return;
-        }
-
-        if (playerProfiles.Count >= MaxPlayerProfiles)
-        {
-            SetPlayerManagementStatus($"Maximum {MaxPlayerProfiles} joueurs.");
-            return;
-        }
-
-        if (IsPlayerNameAlreadyUsed(playerName))
-        {
-            SetPlayerManagementStatus("Ce nom existe déjà.");
-            return;
-        }
-
-        PlayerProfile profile = new PlayerProfile(GeneratePlayerProfileId(), playerName);
-        playerProfiles.Add(profile);
-
-        SetCurrentPlayerProfile(profile.Id);
-        selectedPlayerProfileId = profile.Id;
-        isWaitingDeleteConfirmation = false;
-
-        SavePlayerProfiles();
-        RenderPlayerManagement();
-        UpdatePlayerManagementControls();
-        SetPlayerManagementStatus("Joueur ajouté.");
-    }
-
-    private void RenamePlayerFromPlayerPage(string profileId, string rawPlayerName)
-    {
-        PlayerProfile profile = GetPlayerProfile(profileId);
-
-        if (profile == null)
-        {
-            SetPlayerManagementStatus("Joueur introuvable.");
-            return;
-        }
-
-        string playerName = SanitizePlayerName(rawPlayerName);
-
-        if (string.IsNullOrWhiteSpace(playerName))
-        {
-            SetPlayerManagementStatus("Nom invalide.");
-            return;
-        }
-
-        if (IsPlayerNameAlreadyUsed(playerName, profile.Id))
-        {
-            SetPlayerManagementStatus("Ce nom existe déjà.");
-            return;
-        }
-
-        string previousMemberId = GetServerMemberIdForProfile(profile);
-        AddPreviousMemberId(profile, previousMemberId);
-
-        profile.Name = playerName;
-
-        if (profile.Id == currentPlayerProfileId)
-            localPlayerName = profile.Name;
-
-        selectedPlayerProfileId = profile.Id;
-        isWaitingDeleteConfirmation = false;
-
-        MarkAllLocalScoresPendingUpload(profile);
-
-        SavePlayerProfiles();
-        RenderPlayerManagement();
-        TryUploadAllPendingLocalScores();
-        UpdatePlayerManagementControls();
-        SetPlayerManagementStatus("Nom modifié.");
-    }
-
-    private void ValidatePlayerNameFromPlayerPage(string rawPlayerName, string ignoredProfileId, Action<bool> onValidated)
-    {
-        string playerName = SanitizePlayerName(rawPlayerName);
-
-        if (string.IsNullOrWhiteSpace(playerName) || IsPlayerNameAlreadyUsed(playerName, ignoredProfileId))
-        {
-            onValidated?.Invoke(false);
-            return;
-        }
-
-        if (!string.IsNullOrWhiteSpace(ignoredProfileId) &&
-            ArePlayerNamesEquivalent(playerName, GetPlayerProfileName(ignoredProfileId)))
-        {
-            onValidated?.Invoke(true);
-            return;
-        }
-
-        StartCoroutine(ValidatePlayerNameRemotely(playerName, onValidated));
-    }
-
-    private IEnumerator ValidatePlayerNameRemotely(string playerName, Action<bool> onValidated)
-    {
-        if (simulateOfflineMode || !isConnected)
-        {
-            onValidated?.Invoke(true);
-            yield break;
-        }
-
-        foreach (LeaderboardTarget target in GetAllLeaderboardTargets())
-        {
-            string leaderboardKey = GetLeaderboardKey(target.GameMode, target.CircuitMode);
-
-            if (string.IsNullOrWhiteSpace(leaderboardKey))
-                continue;
-
-            int offset = 0;
-            bool shouldContinue = true;
-
-            while (shouldContinue)
-            {
-                bool requestDone = false;
-                bool requestSucceeded = false;
-                bool nameExists = false;
-                int itemCount = 0;
-
-                LootLockerSDKManager.GetScoreList(leaderboardKey, RemoteNameCheckBatchSize, offset, response =>
-                {
-                    requestDone = true;
-                    requestSucceeded = response.success;
-
-                    LootLockerLeaderboardMember[] items = response.items ?? Array.Empty<LootLockerLeaderboardMember>();
-                    itemCount = items.Length;
-
-                    foreach (LootLockerLeaderboardMember item in items)
-                    {
-                        if (IsRemotePlayerNameMatch(item, playerName))
-                        {
-                            nameExists = true;
-                            break;
-                        }
-                    }
-                });
-
-                yield return new WaitUntil(() => requestDone);
-
-                if (!requestSucceeded)
-                {
-                    Debug.LogWarning("Impossible de vérifier les profils distants LootLocker.");
-                    onValidated?.Invoke(true);
-                    yield break;
-                }
-
-                if (nameExists)
-                {
-                    onValidated?.Invoke(false);
-                    yield break;
-                }
-
-                shouldContinue = itemCount == RemoteNameCheckBatchSize;
-                offset += itemCount;
-            }
-        }
-
-        onValidated?.Invoke(true);
-    }
-
-    private void DeletePlayerFromPlayerPage(string profileId)
-    {
-        PlayerProfile profile = GetPlayerProfile(profileId);
-
-        if (profile == null)
-        {
-            SetPlayerManagementStatus("Joueur introuvable.");
-            return;
-        }
-
-        if (playerProfiles.Count <= 1)
-        {
-            SetPlayerManagementStatus("Tu dois garder au moins un joueur.");
-            return;
-        }
-
-        string deletedProfileId = profile.Id;
-        DeleteLocalSavesForProfile(deletedProfileId);
-        playerProfiles.Remove(profile);
-
-        if (currentPlayerProfileId == deletedProfileId)
-            SetCurrentPlayerProfile(playerProfiles[0].Id);
-
-        selectedPlayerProfileId = currentPlayerProfileId;
-        isWaitingDeleteConfirmation = false;
-
-        SavePlayerProfiles();
-        RenderPlayerManagement();
-        UpdatePlayerManagementControls();
-        SetPlayerManagementStatus("Joueur supprimé.");
-    }
-
-    private void SelectPlayerProfile(string profileId)
-    {
-        if (!HasPlayerProfile(profileId))
-            return;
-
-        selectedPlayerProfileId = profileId;
-        SetCurrentPlayerProfile(profileId);
-        isWaitingDeleteConfirmation = false;
-
-
-        SavePlayerProfiles();
-        RenderPlayerManagement();
-        UpdatePlayerManagementControls();
-        SetPlayerManagementStatus("Joueur actif : " + GetPlayerProfileName(profileId));
-    }
-
-    private void SetCurrentPlayerProfile(string profileId)
-    {
-        if (!HasPlayerProfile(profileId))
-            return;
-
-        currentPlayerProfileId = profileId;
-        localPlayerName = GetCurrentPlayerProfileName();
-
-        PlayerPrefs.SetString(CurrentPlayerProfileIdKey, currentPlayerProfileId);
-        PlayerPrefs.Save();
 
         UpdateModeLabels();
     }
 
-    private void UpdatePlayerManagementControls()
+    private void OnCurrentProfileChanged()
     {
-        if (managePlayersButtonText != null)
-            managePlayersButtonText.text = isPlayerManagementMode ? backToLeaderboardButtonLabel : managePlayersButtonLabel;
+        localPlayerName = GetCurrentPlayerProfileName();
+        UpdateModeLabels();
+        RefreshLeaderboard();
     }
 
-    private void HidePlayerManagementObjects()
+    private void OnProfileRenamed(PlayerProfile profile)
     {
-        if (playerManagementPage != null)
-        {
-            playerManagementPage.CloseAllPopups();
-            playerManagementPage.gameObject.SetActive(false);
-        }
+        MarkAllLocalScoresPendingUpload(profile);
+        TryUploadAllPendingLocalScores();
+        RefreshLeaderboard();
+    }
+
+    private void OnProfileDeleted(string profileId)
+    {
+        DeleteLocalSavesForProfile(profileId);
+        RefreshLeaderboard();
     }
 
     private void HideScorePages()
@@ -1654,124 +1296,41 @@ public class LeaderboardManager : MonoBehaviour
         }
     }
 
-    private string SanitizePlayerName(string rawName)
+    private IEnumerable<PlayerProfile> GetProfiles()
     {
-        if (string.IsNullOrWhiteSpace(rawName))
-            return string.Empty;
-
-        string sanitizedName = rawName.Trim();
-
-        if (sanitizedName.Length > MaxPlayerNameLength)
-            sanitizedName = sanitizedName.Substring(0, MaxPlayerNameLength);
-
-        return sanitizedName;
+        return profilsManager != null
+            ? profilsManager.Profiles
+            : Array.Empty<PlayerProfile>();
     }
 
-    private bool IsPlayerNameAlreadyUsed(string playerName, string ignoredProfileId = null)
+    private PlayerProfile GetCurrentPlayerProfile()
     {
-        foreach (PlayerProfile profile in playerProfiles)
-        {
-            if (profile.Id == ignoredProfileId)
-                continue;
-
-            if (string.Equals(profile.Name, playerName, StringComparison.OrdinalIgnoreCase))
-                return true;
-        }
-
-        return false;
-    }
-
-    private bool HasPlayerProfile(string profileId)
-    {
-        return GetPlayerProfile(profileId) != null;
-    }
-
-    private PlayerProfile GetPlayerProfile(string profileId)
-    {
-        if (string.IsNullOrWhiteSpace(profileId))
-            return null;
-
-        return playerProfiles.Find(profile => profile.Id == profileId);
-    }
-
-    private PlayerProfile GetSelectedPlayerProfile()
-    {
-        return GetPlayerProfile(selectedPlayerProfileId);
+        return profilsManager != null
+            ? profilsManager.GetProfile(profilsManager.CurrentProfileId)
+            : null;
     }
 
     private string GetCurrentPlayerProfileId()
     {
-        if (!HasPlayerProfile(currentPlayerProfileId))
-        {
-            if (playerProfiles.Count == 0)
-                InitializePlayerProfiles();
-
-            currentPlayerProfileId = playerProfiles[0].Id;
-        }
-
-        return currentPlayerProfileId;
+        return profilsManager != null ? profilsManager.CurrentProfileId : string.Empty;
     }
 
     private string GetCurrentPlayerProfileName()
     {
-        return GetPlayerProfileName(GetCurrentPlayerProfileId());
-    }
-
-    private string GetPlayerProfileName(string profileId)
-    {
-        PlayerProfile profile = GetPlayerProfile(profileId);
-        return profile != null ? profile.Name : fallbackLocalPlayerName;
+        return profilsManager != null ? profilsManager.CurrentProfileName : localPlayerName;
     }
 
     private string GetServerMemberIdForCurrentProfile()
     {
-        return GetServerMemberIdForProfile(GetPlayerProfile(GetCurrentPlayerProfileId()));
+        return profilsManager != null ? profilsManager.GetServerMemberIdForCurrentProfile() : GetCurrentPlayerProfileId();
     }
 
     private string GetServerMemberIdForProfile(PlayerProfile profile)
     {
-        if (profile == null)
-            return GetCurrentPlayerProfileId();
+        if (profilsManager == null)
+            return profile != null ? profile.Id : string.Empty;
 
-        string playerName = SanitizePlayerName(profile.Name).Replace(" ", "_");
-        return string.IsNullOrWhiteSpace(playerName) ? profile.Id : playerName;
-    }
-
-    private void AddPreviousMemberId(PlayerProfile profile, string memberId)
-    {
-        if (profile == null || string.IsNullOrWhiteSpace(memberId))
-            return;
-
-        profile.PreviousMemberIds ??= new List<string>();
-
-        if (ArePlayerNamesEquivalent(memberId, GetServerMemberIdForProfile(profile)))
-        {
-            foreach (string previousMemberId in profile.PreviousMemberIds)
-            {
-                if (ArePlayerNamesEquivalent(previousMemberId, memberId))
-                    return;
-            }
-
-            profile.PreviousMemberIds.Add(memberId);
-        }
-    }
-
-    private string GeneratePlayerProfileId()
-    {
-        return Guid.NewGuid().ToString("N");
-    }
-
-    private string CreateUniqueDefaultPlayerName()
-    {
-        for (int i = 0; i < 50; i++)
-        {
-            string candidate = "Player_" + GetShortCode(Guid.NewGuid().ToString("N"));
-
-            if (!IsPlayerNameAlreadyUsed(candidate))
-                return candidate;
-        }
-
-        return "Player_" + UnityEngine.Random.Range(10000, 99999);
+        return profilsManager.GetServerMemberIdForProfile(profile);
     }
 
     private void DeleteLocalSavesForProfile(string playerProfileId)
@@ -1785,25 +1344,6 @@ public class LeaderboardManager : MonoBehaviour
         }
 
         PlayerPrefs.Save();
-    }
-
-    private void SavePlayerProfiles()
-    {
-        PlayerProfileCollection collection = new PlayerProfileCollection
-        {
-            Players = playerProfiles,
-            CurrentPlayerId = currentPlayerProfileId
-        };
-
-        PlayerPrefs.SetString(PlayerProfilesJsonKey, JsonUtility.ToJson(collection));
-        PlayerPrefs.SetString(CurrentPlayerProfileIdKey, currentPlayerProfileId);
-        PlayerPrefs.Save();
-    }
-
-    private void SetPlayerManagementStatus(string message)
-    {
-        if (playerManagementPage != null)
-            playerManagementPage.SetStatus(message);
     }
 
     // -------------------------------------------------------------------------
@@ -1832,13 +1372,8 @@ public class LeaderboardManager : MonoBehaviour
 
     private void RenderLeaderboard()
     {
-        if (isPlayerManagementMode)
-        {
-            RenderPlayerManagement();
+        if (profilsManager != null && profilsManager.IsManagingProfiles)
             return;
-        }
-
-        HidePlayerManagementObjects();
 
         if (firstPage == null)
         {
@@ -1947,9 +1482,6 @@ public class LeaderboardManager : MonoBehaviour
 
     private void ShowPage(int pageIndex)
     {
-        if (!isPlayerManagementMode && playerManagementPage != null)
-            playerManagementPage.gameObject.SetActive(false);
-
         if (pages.Count == 0)
         {
             HideNavigationButtons();
@@ -1999,12 +1531,6 @@ public class LeaderboardManager : MonoBehaviour
         if (previousPageButton != null && previousPageButton.gameObject.activeInHierarchy)
         {
             previousPageButton.Select();
-            return;
-        }
-
-        if (managePlayersButton != null && managePlayersButton.gameObject.activeInHierarchy)
-        {
-            managePlayersButton.Select();
             return;
         }
 
@@ -2066,20 +1592,6 @@ public class LeaderboardManager : MonoBehaviour
         return GeneratePlayerName(null, item.player.id);
     }
 
-    private bool IsRemotePlayerNameMatch(LootLockerLeaderboardMember item, string playerName)
-    {
-        ScoreMetadata metadata = GetScoreMetadata(item);
-
-        if (ArePlayerNamesEquivalent(metadata?.ProfileName, playerName))
-            return true;
-
-        if (item.player != null && ArePlayerNamesEquivalent(item.player.name, playerName))
-            return true;
-
-        string memberId = GetLeaderboardMemberId(item);
-        return ArePlayerNamesEquivalent(memberId, playerName);
-    }
-
     private string GetLeaderboardMemberId(LootLockerLeaderboardMember item)
     {
         return TryGetStringMember(item, "member_id");
@@ -2123,35 +1635,9 @@ public class LeaderboardManager : MonoBehaviour
         ScoreMetadata metadata = GetScoreMetadata(item);
 
         if (!string.IsNullOrWhiteSpace(metadata?.ProfileId))
-            return GetPlayerProfile(metadata.ProfileId);
+            return profilsManager != null ? profilsManager.GetProfile(metadata.ProfileId) : null;
 
-        return GetPlayerProfileByMemberId(GetLeaderboardMemberId(item));
-    }
-
-    private PlayerProfile GetPlayerProfileByMemberId(string memberId)
-    {
-        if (string.IsNullOrWhiteSpace(memberId))
-            return null;
-
-        foreach (PlayerProfile profile in playerProfiles)
-        {
-            if (profile == null)
-                continue;
-
-            if (ArePlayerNamesEquivalent(GetServerMemberIdForProfile(profile), memberId))
-                return profile;
-
-            if (profile.PreviousMemberIds == null)
-                continue;
-
-            foreach (string previousMemberId in profile.PreviousMemberIds)
-            {
-                if (ArePlayerNamesEquivalent(previousMemberId, memberId))
-                    return profile;
-            }
-        }
-
-        return null;
+        return profilsManager != null ? profilsManager.GetProfileByMemberId(GetLeaderboardMemberId(item)) : null;
     }
 
     private ScoreMetadata GetScoreMetadata(LootLockerLeaderboardMember item)
@@ -2185,16 +1671,9 @@ public class LeaderboardManager : MonoBehaviour
 
     private bool ArePlayerNamesEquivalent(string left, string right)
     {
-        return string.Equals(
-            NormalizePlayerNameForComparison(left),
-            NormalizePlayerNameForComparison(right),
-            StringComparison.OrdinalIgnoreCase
-        );
-    }
-
-    private string NormalizePlayerNameForComparison(string playerName)
-    {
-        return SanitizePlayerName(playerName).Replace("_", " ").Trim();
+        return profilsManager != null
+            ? profilsManager.ArePlayerNamesEquivalent(left, right)
+            : string.Equals(left, right, StringComparison.OrdinalIgnoreCase);
     }
 
     private string GeneratePlayerName(string uniqueSource, int playerId)
@@ -2278,7 +1757,7 @@ public class LeaderboardManager : MonoBehaviour
     {
         foreach (LeaderboardTarget target in GetAllLeaderboardTargets())
         {
-            foreach (PlayerProfile profile in playerProfiles)
+            foreach (PlayerProfile profile in GetProfiles())
             {
                 PlayerPrefs.DeleteKey(GetLocalBestScoreKey(target.GameMode, target.CircuitMode, profile.Id));
                 PlayerPrefs.DeleteKey(GetHasLocalBestScoreKey(target.GameMode, target.CircuitMode, profile.Id));
