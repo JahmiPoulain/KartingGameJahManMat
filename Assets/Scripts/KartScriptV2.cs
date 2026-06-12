@@ -1170,6 +1170,8 @@ public class KartScriptV2 : MonoBehaviour
     private void OnCollisionExit(Collision collision)
     {
         // quand on quitte le sol
+
+        Debug.Log("QUITTE LE SOL 11111111111111111111111111111111111111111111111111111111111111111");
         if (collision.gameObject.layer == 7)
         {
             Debug.Log("QUITTE LE SOL");
