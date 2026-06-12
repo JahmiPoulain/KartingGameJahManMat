@@ -258,6 +258,7 @@ public class ProfilsManager : MonoBehaviour
 
         UpdatePlayerManagementControls();
         RenderPlayerManagement();
+        playerManagementPage?.ForceFocusOnFirstButton();
         ManagementModeChanged?.Invoke(true);
     }
 
@@ -290,6 +291,8 @@ public class ProfilsManager : MonoBehaviour
                 profile.Id == currentPlayerProfileId
             );
         }
+
+        playerManagementPage.RefreshControllerNavigation();
     }
 
     private void ConfigurePlayerManagementPage()

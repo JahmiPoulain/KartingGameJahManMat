@@ -103,6 +103,8 @@ public class PlayerManagementPage : MonoBehaviour
             if (rows[i] != null)
                 rows[i].Clear();
         }
+
+        RefreshControllerNavigation();
     }
 
     public void SetPlayer(int rowIndex, string playerId, string playerName, bool isActive)
@@ -118,6 +120,8 @@ public class PlayerManagementPage : MonoBehaviour
             OpenDeletePopup,
             id => choosePlayerCallback?.Invoke(id)
         );
+
+        RefreshControllerNavigation();
     }
 
     public void SetStatus(string message)
@@ -139,6 +143,37 @@ public class PlayerManagementPage : MonoBehaviour
         editedPlayerId = string.Empty;
         deletedPlayerId = string.Empty;
         isRenamePopup = false;
+
+        RefreshControllerNavigation();
+
+        if (gameObject.activeInHierarchy)
+            ForceFocusOnFirstButton();
+    }
+
+    public void ForceFocusOnFirstButton()
+    {
+        RefreshControllerNavigation();
+
+        Button firstSelectableButton = GetFirstSelectableButton();
+
+        if (firstSelectableButton != null)
+            firstSelectableButton.Select();
+    }
+
+    public void RefreshControllerNavigation()
+    {
+        SetAutomaticNavigation(addPlayerButton);
+        SetAutomaticNavigation(nameInputField);
+        SetAutomaticNavigation(confirmNameButton);
+        SetAutomaticNavigation(cancelNameButton);
+        SetAutomaticNavigation(confirmDeleteButton);
+        SetAutomaticNavigation(cancelDeleteButton);
+
+        for (int i = 0; i < rows.Length; i++)
+        {
+            if (rows[i] != null)
+                rows[i].RefreshControllerNavigation();
+        }
     }
 
     private void BindButtons()
@@ -224,6 +259,7 @@ public class PlayerManagementPage : MonoBehaviour
         }
 
         SetNamePopupWaiting(false);
+        RefreshControllerNavigation();
     }
 
     private void ConfirmNamePopup()
@@ -288,6 +324,11 @@ public class PlayerManagementPage : MonoBehaviour
 
         if (deletePopupText != null)
             deletePopupText.text = string.Format(deleteConfirmationFormat, playerName);
+
+        RefreshControllerNavigation();
+
+        if (confirmDeleteButton != null && confirmDeleteButton.gameObject.activeInHierarchy && confirmDeleteButton.interactable)
+            confirmDeleteButton.Select();
     }
 
     private void ConfirmDeletePopup()
@@ -314,6 +355,8 @@ public class PlayerManagementPage : MonoBehaviour
     {
         if (addPlayerButton != null)
             addPlayerButton.gameObject.SetActive(canAddPlayer && !isPopupVisible);
+
+        RefreshControllerNavigation();
     }
 
     private string GetSanitizedNameInput()
@@ -358,6 +401,42 @@ public class PlayerManagementPage : MonoBehaviour
 
         if (nameInputField != null)
             nameInputField.interactable = !waiting;
+
+        RefreshControllerNavigation();
+    }
+
+    private Button GetFirstSelectableButton()
+    {
+        if (IsSelectable(addPlayerButton))
+            return addPlayerButton;
+
+        for (int i = 0; i < rows.Length; i++)
+        {
+            if (rows[i] == null)
+                continue;
+
+            Button firstSelectableButton = rows[i].FirstSelectableButton;
+
+            if (firstSelectableButton != null)
+                return firstSelectableButton;
+        }
+
+        return null;
+    }
+
+    private static bool IsSelectable(Selectable selectable)
+    {
+        return selectable != null && selectable.gameObject.activeInHierarchy && selectable.interactable;
+    }
+
+    private static void SetAutomaticNavigation(Selectable selectable)
+    {
+        if (selectable == null)
+            return;
+
+        Navigation navigation = selectable.navigation;
+        navigation.mode = Navigation.Mode.Automatic;
+        selectable.navigation = navigation;
     }
 
     private void EnsureNamePopupErrorText()

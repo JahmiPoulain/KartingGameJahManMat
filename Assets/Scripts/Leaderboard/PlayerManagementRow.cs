@@ -26,6 +26,23 @@ public class PlayerManagementRow : MonoBehaviour
     private string playerName;
     private bool isActivePlayer;
 
+    public Button FirstSelectableButton
+    {
+        get
+        {
+            if (IsSelectable(chooseButton))
+                return chooseButton;
+
+            if (IsSelectable(renameButton))
+                return renameButton;
+
+            if (IsSelectable(deleteButton))
+                return deleteButton;
+
+            return null;
+        }
+    }
+
     public void SetPlayer(
         string id,
         string displayName,
@@ -62,6 +79,8 @@ public class PlayerManagementRow : MonoBehaviour
             if (!isActivePlayer)
                 onChooseRequested?.Invoke(playerId);
         }, !isActivePlayer);
+
+        RefreshControllerNavigation();
     }
 
     public void Clear()
@@ -83,6 +102,13 @@ public class PlayerManagementRow : MonoBehaviour
         gameObject.SetActive(false);
     }
 
+    public void RefreshControllerNavigation()
+    {
+        SetAutomaticNavigation(chooseButton);
+        SetAutomaticNavigation(renameButton);
+        SetAutomaticNavigation(deleteButton);
+    }
+
     private static void ConfigureButton(Button button, Action action, bool interactable)
     {
         if (button == null)
@@ -93,5 +119,20 @@ public class PlayerManagementRow : MonoBehaviour
 
         if (action != null)
             button.onClick.AddListener(() => action.Invoke());
+    }
+
+    private static bool IsSelectable(Selectable selectable)
+    {
+        return selectable != null && selectable.gameObject.activeInHierarchy && selectable.interactable;
+    }
+
+    private static void SetAutomaticNavigation(Selectable selectable)
+    {
+        if (selectable == null)
+            return;
+
+        Navigation navigation = selectable.navigation;
+        navigation.mode = Navigation.Mode.Automatic;
+        selectable.navigation = navigation;
     }
 }
