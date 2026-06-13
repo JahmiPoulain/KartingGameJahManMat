@@ -324,6 +324,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: "BalconAjust\xE9 (1)"
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 3a648bc30d659654ab6bfb40c133413e, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -741,6 +745,72 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -8381259984995517266, guid: 1e18e394f50859d488c7803137240996, type: 3}
+--- !u!1001 &465271625
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 705556400}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 64623fa011ccc8e40af34f02ac2e3dbe, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -10.461457
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 64623fa011ccc8e40af34f02ac2e3dbe, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.72548944
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 64623fa011ccc8e40af34f02ac2e3dbe, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 224.78726
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 64623fa011ccc8e40af34f02ac2e3dbe, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071067
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 64623fa011ccc8e40af34f02ac2e3dbe, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 64623fa011ccc8e40af34f02ac2e3dbe, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 64623fa011ccc8e40af34f02ac2e3dbe, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 64623fa011ccc8e40af34f02ac2e3dbe, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 64623fa011ccc8e40af34f02ac2e3dbe, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 64623fa011ccc8e40af34f02ac2e3dbe, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 64623fa011ccc8e40af34f02ac2e3dbe, type: 3}
+      propertyPath: m_Name
+      value: "BalconAjust\xE9_arriere"
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 64623fa011ccc8e40af34f02ac2e3dbe, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 64623fa011ccc8e40af34f02ac2e3dbe, type: 3}
+--- !u!4 &465271626 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 64623fa011ccc8e40af34f02ac2e3dbe, type: 3}
+  m_PrefabInstance: {fileID: 465271625}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &477439600
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3299,6 +3369,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 1e18e394f50859d488c7803137240996, type: 3}
       insertIndex: 75
       addedObject: {fileID: 81567732}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 1e18e394f50859d488c7803137240996, type: 3}
+      insertIndex: 76
+      addedObject: {fileID: 465271626}
     - targetCorrespondingSourceObject: {fileID: -8711711259493816023, guid: 1e18e394f50859d488c7803137240996, type: 3}
       insertIndex: -1
       addedObject: {fileID: 49819462}
