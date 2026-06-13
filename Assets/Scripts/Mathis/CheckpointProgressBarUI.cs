@@ -1,170 +1,285 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 
+/// <summary>
+/// Checkpoint Progress Bar UI
+/// 
+/// HIERARCHY SETUP (Canvas > CheckpointProgressBar):
+/// 
+///   CheckpointProgressBar          (RectTransform) → assign to [progressBarRect]
+///   ├── Background                 (Image → checkpoint_contour.png)
+///   ├── FillArea                   (RectTransform, anchors: left=0 right=0 top=0 bot=0, no Image)
+///   │   └── Fill                   (Image → checkpoint_fond.png, anchor stretch full)
+///   │                              → assign Fill's RectTransform to [fillRect]
+///   ├── TicksContainer             (RectTransform, anchors stretch full) → assign to [ticksContainer]
+///   └── Cursor                     (Image → checkpoint_curseur.png, anchor: left=0, pivot X=0.5)
+///                                  → assign to [cursorRect]
+///
+/// HOW THE FILL WORKS:
+///   Fill's anchorMax.x is driven from 0 to 1 (no sizeDelta tricks, no mask needed).
+///   This is pixel-perfect at any canvas resolution.
+///
+/// HOW TICKS WORK:
+///   Each tick anchor is set to (ratio, 0.5) so they scale with the bar automatically.
+/// </summary>
 public class CheckpointProgressBarUI : MonoBehaviour
 {
     public static CheckpointProgressBarUI Instance { get; private set; }
 
-    [Header("UI Components")]
-    [SerializeField] private Image fillImage;
-    [SerializeField] private RectTransform cursorRect;
+    // ─────────────────────────────────────────────
+    //  Inspector References
+    // ─────────────────────────────────────────────
+
+    [Header("Bar Rects")]
+    [Tooltip("Root RectTransform of the whole bar (the 'contour' image object).")]
     [SerializeField] private RectTransform progressBarRect;
 
-    [Header("Delta Display (e.g., LapTimeUI)")]
-    [SerializeField] private TextMeshProUGUI deltaText; // Glisses-y ton LapTimeUI ou �quivalent
+    [Tooltip("The fill image (checkpoint_fond). Its anchorMax.x will be driven 0→1.")]
+    [SerializeField] private RectTransform fillRect;
 
-    [Header("Prefabs & Containers")]
-    [SerializeField] private GameObject tickPrefab; // Image avec la texture 'checkpoint.png'
-    [SerializeField] private Transform ticksContainer;
+    [Tooltip("The cursor image (checkpoint_curseur). Anchored left, pivot centred.")]
+    [SerializeField] private RectTransform cursorRect;
 
-    [Header("Delta Text Colors")]
-    [SerializeField] private Color aheadColor = Color.green;    // Plus rapide (Nouveau record)
-    [SerializeField] private Color behindColor = Color.red;     // Plus lent
+    [Header("Ticks")]
+    [Tooltip("Parent container for checkpoint tick marks.")]
+    [SerializeField] private RectTransform ticksContainer;
 
-    private CheckpointManager checkpointManager;
+    [Tooltip("Prefab: a small Image using checkpoint.png, pivot (0.5, 0.5), anchors (0,0.5).")]
+    [SerializeField] private GameObject tickPrefab;
+
+    [Header("Delta Time Display")]
+    [SerializeField] private TextMeshProUGUI deltaText;
+    [SerializeField] private Color aheadColor = new Color(0.2f, 1f, 0.4f);
+    [SerializeField] private Color behindColor = new Color(1f, 0.3f, 0.3f);
+
+    [Header("Animation")]
+    [Tooltip("How fast the fill and cursor lerp toward the target (units/sec, set 0 for instant).")]
+    [SerializeField][Range(0f, 20f)] private float smoothSpeed = 8f;
+
+    // ─────────────────────────────────────────────
+    //  Private State
+    // ─────────────────────────────────────────────
+
     private int totalCheckpoints;
+    private float targetProgress; // 0 → 1
+    private float currentProgress;
 
-    // Sauvegarde locale du meilleur temps de passage absolu pour chaque checkpoint (Cl�: Index du Checkpoint, Valeur: Temps en secondes)
-    private Dictionary<int, float> personalBestCheckpointTimes = new Dictionary<int, float>();
+    private Coroutine deltaFadeCoroutine;
+
+    private readonly Dictionary<int, float> bestTimes = new Dictionary<int, float>();
+
+    // ─────────────────────────────────────────────
+    //  Unity Lifecycle
+    // ─────────────────────────────────────────────
 
     private void Awake()
     {
         if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        else { Destroy(gameObject); return; }
     }
 
+    private void Update()
+    {
+        if (smoothSpeed <= 0f)
+        {
+            currentProgress = targetProgress;
+        }
+        else
+        {
+            currentProgress = Mathf.Lerp(currentProgress, targetProgress, Time.deltaTime * smoothSpeed);
+        }
+
+        ApplyProgress(currentProgress);
+    }
+
+    // ─────────────────────────────────────────────
+    //  Public API
+    // ─────────────────────────────────────────────
+
+    /// <summary>Call this once when the race/lap starts, before any checkpoint is passed.</summary>
+    public void InitializeUI(int checkpointCount)
+    {
+        totalCheckpoints = checkpointCount;
+        currentProgress = 0f;
+        targetProgress = 0f;
+
+        ApplyProgress(0f);
+        ClearDeltaText();
+
+        // Must wait one frame so Unity has calculated RectTransform sizes.
+        StartCoroutine(BuildTicksNextFrame());
+    }
+
+    /// <summary>Overload accepting a CheckpointManager (keeps compatibility with previous code).</summary>
     public void InitializeUI(CheckpointManager manager)
     {
-        checkpointManager = manager;
-        totalCheckpoints = manager.TotalCheckpointCount;
+        InitializeUI(manager.TotalCheckpointCount);
+    }
 
-        // Nettoyage des anciens rep�res visuels
-        foreach (Transform child in ticksContainer) Destroy(child.gameObject);
+    /// <summary>Call each time the player crosses a checkpoint.</summary>
+    public void OnCheckpointPassed(int checkpointIndex, float currentLapTime)
+    {
+        // Advance fill to this checkpoint's position
+        targetProgress = (float)checkpointIndex / totalCheckpoints;
+        Debug.Log($"[ProgressBar] checkpoint={checkpointIndex}, total={totalCheckpoints}, target={targetProgress}, barWidth={progressBarRect.rect.width}");
 
-        // R�cup�re la largeur r�elle disponible de la barre
-        float width = progressBarRect.rect.width;
+        // ── Delta Logic ──────────────────────────────
+        string key = GetSaveKey(checkpointIndex);
 
-        // G�n�ration automatique des graduations le long de la barre (depuis la gauche vers la droite)
+        // Lazy-load best time from PlayerPrefs on first encounter this session
+        if (!bestTimes.ContainsKey(checkpointIndex) && PlayerPrefs.HasKey(key))
+            bestTimes[checkpointIndex] = PlayerPrefs.GetFloat(key);
+
+        if (!bestTimes.ContainsKey(checkpointIndex))
+        {
+            // First ever time at this checkpoint → set as best, show "RECORD SET"
+            SaveBest(checkpointIndex, currentLapTime, key);
+            ShowDelta(0f, isAhead: true, isFirst: true);
+        }
+        else
+        {
+            float delta = currentLapTime - bestTimes[checkpointIndex];
+            if (delta < 0f)
+            {
+                // New best!
+                SaveBest(checkpointIndex, currentLapTime, key);
+            }
+            ShowDelta(delta, isAhead: delta <= 0f, isFirst: false);
+        }
+    }
+
+    /// <summary>Resets the bar to empty (call at lap start / race reset).</summary>
+    public void ResetProgressBar()
+    {
+        targetProgress = 0f;
+        currentProgress = 0f;
+        ApplyProgress(0f);
+        ClearDeltaText();
+    }
+
+    // ─────────────────────────────────────────────
+    //  Internal Helpers
+    // ─────────────────────────────────────────────
+
+    /// <summary>
+    /// Drives the fill and cursor from a 0–1 progress value.
+    /// Uses anchorMax.x so it works at any canvas resolution without reading pixel widths.
+    /// </summary>
+    private void ApplyProgress(float progress)
+    {
+        progress = Mathf.Clamp01(progress);
+
+        // Fill: stretch anchorMax.x from 0 to 1
+        if (fillRect != null)
+        {
+            Vector2 anchorMax = fillRect.anchorMax;
+            anchorMax.x = progress;
+            fillRect.anchorMax = anchorMax;
+
+            // Keep sizeDelta.x at 0 so it doesn't offset the anchor
+            Vector2 sd = fillRect.sizeDelta;
+            sd.x = 0f;
+            fillRect.sizeDelta = sd;
+        }
+
+        // Cursor: move along the bar using anchoredPosition relative to parent width
+        if (cursorRect != null && progressBarRect != null)
+        {
+            float barWidth = progressBarRect.rect.width;
+            cursorRect.anchoredPosition = new Vector2(progress * barWidth, cursorRect.anchoredPosition.y);
+        }
+    }
+
+    /// <summary>Waits one frame then builds tick marks so rect sizes are ready.</summary>
+    private IEnumerator BuildTicksNextFrame()
+    {
+        yield return null;
+
+        foreach (Transform child in ticksContainer)
+            Destroy(child.gameObject);
+
         for (int i = 1; i <= totalCheckpoints; i++)
         {
             GameObject tick = Instantiate(tickPrefab, ticksContainer);
             RectTransform tickRect = tick.GetComponent<RectTransform>();
 
-            // Ratio de progression (Ex: si 4 checkpoints : 0.25, 0.50, 0.75, 1.00)
-            float progressRatio = (float)i / totalCheckpoints;
+            float ratio = (float)i / totalCheckpoints;
 
-            // Calcul de la position depuis le bord gauche (0) jusqu'au bord droit (width)
-            float xPosition = progressRatio * width;
-
-            // Comme le TicksContainer a son pivot � gauche (0), PosX = 0 signifie l'origine exacte de la jauge
-            tickRect.anchoredPosition = new Vector2(xPosition, 0f);
-        }
-
-        ResetProgressBar();
-    }
-
-    public void OnCheckpointPassed(int checkpointIndex, float currentLapTime)
-    {
-        // 1. Mise � jour de la jauge et du curseur
-        float progress = (float)checkpointIndex / totalCheckpoints;
-        fillImage.fillAmount = progress;
-
-        float width = progressBarRect.rect.width;
-
-        // Le curseur glisse d�sormais de 0 (tout � gauche) � la largeur max (tout � droite)
-        float newCursorX = progress * width;
-        cursorRect.anchoredPosition = new Vector2(newCursorX, cursorRect.anchoredPosition.y);
-
-        // 2. Calcul du Delta de temps par rapport au meilleur passage historique � ce checkpoint
-        string savedKey = GetCheckpointSaveKey(checkpointIndex);
-
-        // Charger le record du checkpoint depuis les PlayerPrefs s'il n'est pas encore en m�moire
-        if (!personalBestCheckpointTimes.ContainsKey(checkpointIndex))
-        {
-            if (PlayerPrefs.HasKey(savedKey))
-            {
-                personalBestCheckpointTimes[checkpointIndex] = PlayerPrefs.GetFloat(savedKey);
-            }
-        }
-
-        if (!personalBestCheckpointTimes.ContainsKey(checkpointIndex))
-        {
-            // Premier passage absolu dans l'histoire du jeu : on d�finit le temps de r�f�rence
-            personalBestCheckpointTimes[checkpointIndex] = currentLapTime;
-            PlayerPrefs.SetFloat(savedKey, currentLapTime);
-            PlayerPrefs.Save();
-
-            DisplayDeltaText(0f, true); // Indique "PASSED" ou "SEC. RECORD"
-        }
-        else
-        {
-            // Comparaison : Temps actuel - Meilleur temps enregistr�
-            float delta = currentLapTime - personalBestCheckpointTimes[checkpointIndex];
-
-            if (delta < 0f)
-            {
-                // Nouveau record absolu sur ce secteur ! On �crase et on sauvegarde
-                personalBestCheckpointTimes[checkpointIndex] = currentLapTime;
-                PlayerPrefs.SetFloat(savedKey, currentLapTime);
-                PlayerPrefs.Save();
-
-                DisplayDeltaText(delta, true);
-            }
-            else
-            {
-                // Plus lent que le record
-                DisplayDeltaText(delta, false);
-            }
+            // On ne touche qu'à la position X, tout le reste vient du prefab
+            Vector2 pos = tickRect.anchoredPosition;
+            pos.x = ratio * ticksContainer.rect.width;
+            pos.y = 3f;
+            tickRect.anchoredPosition = pos;
         }
     }
 
-    private void DisplayDeltaText(float delta, bool isAhead)
+    private void ShowDelta(float delta, bool isAhead, bool isFirst)
     {
         if (deltaText == null) return;
 
-        StopAllCoroutines();
+        if (deltaFadeCoroutine != null)
+            StopCoroutine(deltaFadeCoroutine);
 
-        if (delta == 0f)
+        if (isFirst || delta == 0f)
         {
             deltaText.text = "RECORD SET";
             deltaText.color = Color.white;
         }
         else
         {
-            // Formatage de l'affichage en anglais (-00:01.230 ou +00:00.450)
             string sign = isAhead ? "-" : "+";
-            float absDelta = Mathf.Abs(delta);
-            int minutes = (int)(absDelta / 60);
-            float seconds = absDelta % 60;
+            float abs = Mathf.Abs(delta);
+            int mins = (int)(abs / 60f);
+            float secs = abs % 60f;
 
-            deltaText.text = string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}{1:00}:{2:00.000}", sign, minutes, seconds);
+            deltaText.text = string.Format(
+                System.Globalization.CultureInfo.InvariantCulture,
+                "{0}{1:00}:{2:00.000}", sign, mins, secs);
             deltaText.color = isAhead ? aheadColor : behindColor;
         }
 
-        // On lance la disparition progressive apr�s 2.5 secondes
-        StartCoroutine(FadeOutDeltaText());
+        deltaText.alpha = 1f;
+        deltaFadeCoroutine = StartCoroutine(FadeOutDelta());
     }
 
-    private IEnumerator FadeOutDeltaText()
+    private IEnumerator FadeOutDelta()
     {
         yield return new WaitForSeconds(2.5f);
+
+        float elapsed = 0f;
+        float duration = 0.5f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            deltaText.alpha = Mathf.Lerp(1f, 0f, elapsed / duration);
+            yield return null;
+        }
+
+        deltaText.alpha = 0f;
         deltaText.text = "";
     }
 
-    public void ResetProgressBar()
+    private void ClearDeltaText()
     {
-        fillImage.fillAmount = 0f;
-        // Remet le curseur au point 0 (tout � gauche) au d�but du tour
-        cursorRect.anchoredPosition = new Vector2(0f, cursorRect.anchoredPosition.y);
+        if (deltaFadeCoroutine != null) StopCoroutine(deltaFadeCoroutine);
+        if (deltaText != null) { deltaText.text = ""; deltaText.alpha = 1f; }
     }
 
-    private string GetCheckpointSaveKey(int checkpointIndex)
+    private void SaveBest(int index, float time, string key)
     {
-        // Diff�rencie proprement les records selon que la map soit invers�e ou non
-        string suffix = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted) ? "_Inverted" : "_Normal";
+        bestTimes[index] = time;
+        PlayerPrefs.SetFloat(key, time);
+        PlayerPrefs.Save();
+    }
+
+    private string GetSaveKey(int checkpointIndex)
+    {
+        string suffix = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted)
+            ? "_Inverted" : "_Normal";
         return $"BestCheckpointTime_{checkpointIndex}{suffix}";
     }
 }

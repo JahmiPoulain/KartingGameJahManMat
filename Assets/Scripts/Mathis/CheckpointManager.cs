@@ -49,6 +49,7 @@ public class CheckpointManager : MonoBehaviour
 
     private void Start()
     {
+        Debug.Log("CheckpointProgressBarUI.Instance = " + CheckpointProgressBarUI.Instance);
         if (CheckpointProgressBarUI.Instance != null)
         {
             CheckpointProgressBarUI.Instance.InitializeUI(this);
@@ -74,7 +75,7 @@ public class CheckpointManager : MonoBehaviour
 
             // --- INJECTION DE LA LOGIQUE DE TEMPS DE SECTEUR ET D'UI ---
             // On récupère le script de Chronomètre attaché au LapManager
-            ChronoScript chrono = lapManager.GetComponent<ChronoScript>();
+            ChronoScript chrono = lapManager.GetComponentInParent<ChronoScript>();
             if (chrono != null && CheckpointProgressBarUI.Instance != null)
             {
                 // On envoie l'index réel franchi et le temps au tour actuel
