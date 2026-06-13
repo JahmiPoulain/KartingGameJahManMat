@@ -268,7 +268,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   boostForce: 25
   boostTime: 0.1
-  activateFlight: 0
+  activateFlight: 1
   deactivatesFlight: 0
   turnsKart: 0
   turnDir: {fileID: 8677680643751666528}
@@ -309,7 +309,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
