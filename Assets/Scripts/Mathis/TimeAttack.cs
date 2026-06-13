@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using TMPro;
+using UnityEngine.UI;
 
 public class TimeAttack : GameMode
 {
@@ -8,6 +9,7 @@ public class TimeAttack : GameMode
     [SerializeField] private TextMeshProUGUI startUI;
     [SerializeField] private TextMeshProUGUI currentTimerUI;
     [SerializeField] private TextMeshProUGUI bestScoreUI; // Pour afficher le record
+    [SerializeField] private GameObject bestScoreImage; // Pour afficher le record
 
     private float bestLapTime = float.MaxValue;
 
@@ -19,6 +21,8 @@ public class TimeAttack : GameMode
         startUI = GameObject.Find("CountDownUI")?.GetComponent<TextMeshProUGUI>();
         currentTimerUI = GameObject.Find("ChronoUI")?.GetComponent<TextMeshProUGUI>();
         bestScoreUI = GameObject.Find("BestScoreUI")?.GetComponent<TextMeshProUGUI>();
+        bestScoreImage = GameObject.Find("BestScoreImage");
+        bestScoreImage?.SetActive(true); // Assurez-vous que l'image est visible au début
 
         maxLaps = 99999;
         LoadBestScore();
@@ -49,13 +53,13 @@ public class TimeAttack : GameMode
         {
             bestLapTime = bestTimeInMs / 1000f;
             if (bestScoreUI != null)
-                bestScoreUI.text = "BEST TIME : " + FormatTime(bestLapTime);
+                bestScoreUI.text = "Best Time :\n\n\n " + FormatTime(bestLapTime);
         }
         else
         {
             bestLapTime = float.MaxValue;
             if (bestScoreUI != null)
-                bestScoreUI.text = "BEST TIME : --:--.--";
+                bestScoreUI.text = "Best Time :\n\n\n  --:--.--";
         }
     }
 
@@ -94,7 +98,7 @@ public class TimeAttack : GameMode
             bestLapTime = lapTime;
 
             if (bestScoreUI != null)
-                bestScoreUI.text = "NEW RECORD : " + FormatTime(bestLapTime);
+                bestScoreUI.text = "New Record :\n\n\n  " + FormatTime(bestLapTime);
         }
     }
 

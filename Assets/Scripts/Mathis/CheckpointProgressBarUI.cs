@@ -210,7 +210,7 @@ public class CheckpointProgressBarUI : MonoBehaviour
 
             // On ne touche qu'à la position X, tout le reste vient du prefab
             Vector2 pos = tickRect.anchoredPosition;
-            pos.x = (ratio * ticksContainer.rect.width) - 2f;
+            pos.x = (ratio * ticksContainer.rect.width) - 0.5f;
             pos.y = 10f;
             tickRect.anchoredPosition = pos;
         }

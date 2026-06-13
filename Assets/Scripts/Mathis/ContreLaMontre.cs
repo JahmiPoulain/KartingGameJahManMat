@@ -146,7 +146,7 @@ public class ContreLaMontre : GameMode
         }
 
         float totalTime = 0;
-        string detailScores = "RACE RESULTS:\n";
+        string detailScores = "Race Results:\n";
 
         for (int i = 0; i < lapManager.LapTimes.Count; i++)
         {
@@ -156,7 +156,7 @@ public class ContreLaMontre : GameMode
         }
 
         if (scoreUI != null)
-            scoreUI.text = detailScores + $"TOTAL TIME: {FormatTime(totalTime)}";
+            scoreUI.text = detailScores + $"Total Time: {FormatTime(totalTime)}";
 
         if (LeaderboardManager.Instance != null)
         {
