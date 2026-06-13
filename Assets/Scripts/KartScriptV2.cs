@@ -1092,7 +1092,11 @@ public class KartScriptV2 : MonoBehaviour
 
     void CheckIfOutOfBounds()
     {
-        if (outOfBoundsFrames > 100)
+        if (outOfBoundsFrames > 5)
+        {
+            currentSpeed *= 0.5f;
+        }
+        else if (outOfBoundsFrames > 10)
         {
             outOfBounds = true;
             outOfBoundsFrames = 0;
@@ -1100,10 +1104,11 @@ public class KartScriptV2 : MonoBehaviour
     }
     private void OnCollisionEnter(Collision collision)
     {
-        isFlying = false;
+        //isFlying = false;
 
         if (collision.gameObject.layer == 6)
         {
+            StopFlight();
             bounce = true;
             Vector3 rawDir = transform.position - collision.contacts[0].point;
             bounceDirection = new Vector3(rawDir.x, 0, rawDir.z).normalized;
@@ -1114,11 +1119,17 @@ public class KartScriptV2 : MonoBehaviour
                 unsignedCurSpeed = -unsignedCurSpeed;
             }
 
-            bounceForce = Mathf.Clamp(unsignedCurSpeed * 2f, 10f, unsignedCurSpeed);
+            bounceForce = Mathf.Clamp(unsignedCurSpeed * 2f, 15f, unsignedCurSpeed);
             currentSpeed *= 0.2f;
+            currentTurboForce *= 0.2f;
+        }
+        else if (collision.gameObject.layer == 7)
+        {
+            StopFlight();
         }
         else if (collision.gameObject.layer == 9)
         {
+            StopFlight();
             //Debug.Log("gogog");
             //transform.position = collision.transform.GetChild(0).transform.position;
             //transform.eulerAngles = collision.transform.GetChild(0).transform.localEulerAngles;
@@ -1151,6 +1162,7 @@ public class KartScriptV2 : MonoBehaviour
         {
             grounded = true;
             groundNormal = collision.contacts[0].normal; // l'orientation du kart visuel
+            outOfBoundsFrames = 0;
         }
         if (collision.gameObject.layer == 6)
         {
@@ -1175,7 +1187,7 @@ public class KartScriptV2 : MonoBehaviour
     {
         // quand on quitte le sol
 
-        Debug.Log("QUITTE LE SOL 11111111111111111111111111111111111111111111111111111111111111111");
+        //Debug.Log("QUITTE LE SOL 11111111111111111111111111111111111111111111111111111111111111111");
         if (collision.gameObject.layer == 7)
         {
             Debug.Log("QUITTE LE SOL");
