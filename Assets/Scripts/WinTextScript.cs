@@ -55,5 +55,4 @@ public class WinTextScript : TimedUI
         }
         text.text = newMinutes + " : " + newSeconds;
     }
-    
 }
