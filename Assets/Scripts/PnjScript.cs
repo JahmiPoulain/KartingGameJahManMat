@@ -8,12 +8,12 @@ public class PnjVibes : MonoBehaviour
     public float rotationSpeed = 10f;
     public float arrivalDistance = 0.2f;
 
-    [Header("Paramètres du Sautillant (Funny)")]
+    [Header("Paramï¿½tres du Sautillant (Funny)")]
     public float bounceForce = 0.5f;
     public float bounceSpeed = 10f;
     public float tiltAmount = 15f;
 
-    [Header("Paramètres d'Impact (Ragdoll)")]
+    [Header("Paramï¿½tres d'Impact (Ragdoll)")]
     public float impactForce = 20f;
     public float explosionRadius = 3f;
     public float upwardModifier = 1.5f;
@@ -30,6 +30,9 @@ public class PnjVibes : MonoBehaviour
 
     void Start()
     {
+        // add constraint to the rigid body to avoid any glitch thins and stuff shity butty physics.
+
+        
         meshOffset = transform.position;
 
         mainRigidbody = GetComponent<Rigidbody>();
@@ -37,6 +40,8 @@ public class PnjVibes : MonoBehaviour
 
         ragdollRigidbodies = GetComponentsInChildren<Rigidbody>();
         ragdollColliders = GetComponentsInChildren<Collider>();
+
+        mainRigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
 
         DisableRagdoll();
     }
@@ -111,6 +116,9 @@ public class PnjVibes : MonoBehaviour
 
         if (mainCollider != null) mainCollider.enabled = false;
         if (mainRigidbody != null) mainRigidbody.isKinematic = true;
+
+        // desactiver les constraints pour que le ragdoll puisse se comporter normalement
+        mainRigidbody.constraints = RigidbodyConstraints.None;
 
         foreach (Collider col in ragdollColliders)
         {

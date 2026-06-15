@@ -13,7 +13,7 @@ public class ProfilsManager : MonoBehaviour
     public event Action<PlayerProfile> ProfileRenamed;
     public event Action<string> ProfileDeleted;
 
-    private const int MaxPlayerProfiles = 10;
+    private const int MaxPlayerProfiles = 6;
     private const int MaxPlayerNameLength = 12;
     private const int RemoteNameCheckBatchSize = 100;
 

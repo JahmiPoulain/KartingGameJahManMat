@@ -83,6 +83,7 @@ public class CheckpointProgressBarUI : MonoBehaviour
 
     private void Update()
     {
+
         if (smoothSpeed <= 0f)
         {
             currentProgress = targetProgress;

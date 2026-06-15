@@ -47,10 +47,14 @@ public class UIManager2 : MonoBehaviour
     public float floatingSpeed = 12;
     public float floatingAmount = 0.2f;
 
+    [Header("Resolution Setup")]
+    public Vector2 referenceResolution = new Vector2(1920, 1080);
+
+
+
     #region Initialisation et Inputs
     void Awake()
     {
-
         if (instance == null) instance = this;
         else Destroy(gameObject);
 
@@ -63,7 +67,7 @@ public class UIManager2 : MonoBehaviour
         if (globalVolume != null && globalVolume.profile != null)
             globalVolume.profile.TryGet(out depthOfField);
 
-        depthOfField.active = false;
+        if (depthOfField != null) depthOfField.active = false;
 
         parentCanvas = GetComponentInParent<Canvas>();
         if (parentCanvas != null && !parentCanvas.isRootCanvas) parentCanvas = parentCanvas.rootCanvas;
@@ -78,13 +82,19 @@ public class UIManager2 : MonoBehaviour
         }
         AnimatePointer(true);
     }
+
     void AnimatePointer(bool snapImmediately)
     {
         if (pointeur == null || selectables == null || selectables.Length == 0 || index >= selectables.Length)
             return;
 
-        float currentScaleFactor = parentCanvas != null ? parentCanvas.scaleFactor : 1f;
-        Vector3 basePosition = selectables[index].transform.position + (Offset * currentScaleFactor);
+        // 1. On calcule le ratio de l'écran par rapport à ton 1920x1080
+        float ratioX = Screen.width / referenceResolution.x;
+        float ratioY = Screen.height / referenceResolution.y;
+
+        // 2. On applique ce ratio directement sur ton Offset
+        Vector3 dynamicOffset = new Vector3(Offset.x * ratioX, Offset.y * ratioY, Offset.z);
+        Vector3 basePosition = selectables[index].transform.position + dynamicOffset;
 
         if (snapImmediately)
         {
@@ -92,11 +102,13 @@ public class UIManager2 : MonoBehaviour
             return;
         }
 
-        float waveY = Mathf.Sin(Time.unscaledTime * floatingSpeed) * floatingAmount;
+        // 3. On applique aussi le ratioY sur le flottement pour pas qu'il soit énorme sur un petit écran
+        float waveY = Mathf.Sin(Time.unscaledTime * floatingSpeed) * (floatingAmount * ratioY);
 
-        pointeur.position = new Vector3(basePosition.x, basePosition.y + (waveY * currentScaleFactor), basePosition.z);
+        pointeur.position = new Vector3(basePosition.x, basePosition.y + waveY, basePosition.z);
     }
 
+    
     private void OnDisable()
     {
         if (pauseAction != null)
@@ -134,7 +146,8 @@ public class UIManager2 : MonoBehaviour
 
     public void Resume()
     {
-        KartScriptV2.instance.CanDrive = true;
+        // Remplacer par ta propre logique de jeu
+        // KartScriptV2.instance.CanDrive = true; 
         mainCanva.SetActive(true);
         pauseMenuUI.SetActive(false);
         Time.timeScale = 1f;
@@ -145,7 +158,7 @@ public class UIManager2 : MonoBehaviour
     void Pause()
     {
         if (canPause == false) return;
-        KartScriptV2.instance.CanDrive = false;
+        // KartScriptV2.instance.CanDrive = false;
         mainCanva.SetActive(false);
         pauseMenuUI.SetActive(true);
         Time.timeScale = 0f;
@@ -188,7 +201,10 @@ public class UIManager2 : MonoBehaviour
 
     void UpdateVisuals()
     {
-        float currentScaleFactor = parentCanvas != null ? parentCanvas.scaleFactor : 1f;
+        // On recalcule le ratio ici aussi pour l'appliquer instantanément quand tu changes de bouton
+        float ratioX = Screen.width / referenceResolution.x;
+        float ratioY = Screen.height / referenceResolution.y;
+        Vector3 dynamicOffset = new Vector3(Offset.x * ratioX, Offset.y * ratioY, Offset.z);
 
         for (int i = 0; i < selectables.Length; i++)
         {
@@ -199,7 +215,9 @@ public class UIManager2 : MonoBehaviour
                 selectables[i].transform.localScale = defaultScales[i] * selectedScale;
                 SetColorRecursive(selectables[i].transform, selectedColor);
                 if (pointeur != null)
-                    pointeur.position = selectables[i].transform.position + (Offset * currentScaleFactor);
+                {
+                    pointeur.position = selectables[i].transform.position + dynamicOffset;
+                }
             }
             else
             {
@@ -219,7 +237,7 @@ public class UIManager2 : MonoBehaviour
 
     public void QuitToMainMenu()
     {
-        GameSceneManager.Instance.ReturnToMainMenu();
+        // GameSceneManager.Instance.ReturnToMainMenu();
     }
 
     void SetColorRecursive(Transform parent, Color c)
