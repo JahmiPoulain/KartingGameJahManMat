@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.SceneManagement; // REQUIS pour recharger la scène
 
 public class MenuPauseScriptIG : MonoBehaviour
 {
@@ -11,7 +12,8 @@ public class MenuPauseScriptIG : MonoBehaviour
     public GameObject pauseMenuUI;
     private bool isPaused = false;
 
-    [Header("Navigation (0: Continuer, 1: Quitter)")]
+    // CONFIGURATION : Ajuste la taille dans l'inspecteur à 3 (0: Continuer, 1: Recommencer, 2: Quitter)
+    [Header("Navigation (0: Continuer, 1: Recommencer, 2: Quitter)")]
     public Transform pointeur;
     public int index = 0;
     public GameObject[] selectables;
@@ -43,11 +45,17 @@ public class MenuPauseScriptIG : MonoBehaviour
             if (selectables[i] != null) defaultScales[i] = selectables[i].transform.localScale;
         }
 
-        if (globalVolume != null && globalVolume.profile != null)
-            globalVolume.profile.TryGet(out depthOfField);
+        if (globalVolume != null && globalVolume.profile.TryGet<DepthOfField>(out var dof))
+        {
+            depthOfField = dof;
+        }
 
         parentCanvas = GetComponentInParent<Canvas>();
-        if (parentCanvas != null && !parentCanvas.isRootCanvas) parentCanvas = parentCanvas.rootCanvas;
+    }
+
+    void Start()
+    {
+        if (pauseMenuUI != null) pauseMenuUI.SetActive(false);
     }
 
     void Update()
@@ -61,46 +69,22 @@ public class MenuPauseScriptIG : MonoBehaviour
         if (isPaused)
         {
             HandleNavigation();
-
-            if (Input.GetButtonDown("Submit") || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space))
-            {
-                InteractWithCurrentSelection();
-            }
         }
-    }
-
-    public void Resume()
-    {
-        pauseMenuUI.SetActive(false);
-        Time.timeScale = 1f;
-        isPaused = false;
-        if (depthOfField != null) depthOfField.active = false;
-        Debug.Log("Jeu Repris");
-    }
-
-    void Pause()
-    {
-        pauseMenuUI.SetActive(true);
-        Time.timeScale = 0f;
-        isPaused = true;
-        index = 0;
-        UpdateVisuals();
-        if (depthOfField != null) depthOfField.active = true;
-        Debug.Log("Jeu en Pause");
     }
 
     void HandleNavigation()
     {
         float v = Input.GetAxisRaw("Vertical");
 
-        if (Input.GetKeyDown(KeyCode.UpArrow)) MoveSelection(-1);
-        else if (Input.GetKeyDown(KeyCode.DownArrow)) MoveSelection(1);
-        else if (Mathf.Abs(v) > 0.5f)
+        if (v != 0)
         {
             if (!isVerticalAxisInUse)
             {
-                int dir = v < -0.5f ? 1 : -1;
-                MoveSelection(dir);
+                if (v < 0) index = (index + 1) % selectables.Length;
+                else if (v > 0) index = (index - 1 + selectables.Length) % selectables.Length;
+
+                PlaySfx(soundNav);
+                UpdateVisuals();
                 isVerticalAxisInUse = true;
             }
         }
@@ -108,23 +92,20 @@ public class MenuPauseScriptIG : MonoBehaviour
         {
             isVerticalAxisInUse = false;
         }
-    }
 
-    void MoveSelection(int dir)
-    {
-        int oldIndex = index;
-        index = Mathf.Clamp(index + dir, 0, selectables.Length - 1);
-
-        if (index != oldIndex)
+        if (Input.GetKeyDown(KeyCode.Return) || Input.GetButtonDown("Submit"))
         {
-            UpdateVisuals();
-            PlaySfx(soundNav);
+            InteractWithCurrentSelection();
         }
     }
 
     void UpdateVisuals()
     {
-        float currentScaleFactor = parentCanvas != null ? parentCanvas.scaleFactor : 1f;
+        float currentScaleFactor = 1f;
+        if (parentCanvas != null && parentCanvas.renderMode == RenderMode.ScreenSpaceOverlay)
+        {
+            currentScaleFactor = parentCanvas.transform.localScale.x;
+        }
 
         for (int i = 0; i < selectables.Length; i++)
         {
@@ -154,7 +135,47 @@ public class MenuPauseScriptIG : MonoBehaviour
         Debug.Log("Selection validée : Index " + index);
 
         if (index == 0) Resume();
-        else if (index == 1) QuitToMainMenu();
+        else if (index == 1) Restart(); // Nouvelle option !
+        else if (index == 2) QuitToMainMenu();
+    }
+
+    public void Resume()
+    {
+        if (pauseMenuUI != null) pauseMenuUI.SetActive(false);
+        Time.timeScale = 1f;
+        isPaused = false;
+        if (depthOfField != null) depthOfField.active = false;
+    }
+
+    void Pause()
+    {
+        if (pauseMenuUI != null) pauseMenuUI.SetActive(true);
+        Time.timeScale = 0f;
+        isPaused = true;
+        index = 0;
+        UpdateVisuals();
+        if (depthOfField != null) depthOfField.active = true;
+    }
+
+
+    void Restart()
+    {
+        Time.timeScale = 1f;
+
+
+        if (KartScriptV2.instance != null)
+        {
+            AudioSource[] kartSources = KartScriptV2.instance.GetComponentsInChildren<AudioSource>();
+            foreach (AudioSource src in kartSources)
+            {
+                if (src.loop) src.Stop();
+            }
+        }
+
+        if (depthOfField != null) depthOfField.active = false;
+
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     void QuitToMainMenu()
@@ -165,7 +186,7 @@ public class MenuPauseScriptIG : MonoBehaviour
         if (MainMenuUIManager.Instance != null)
             MainMenuUIManager.Instance.LaunchScene("MainMenu2_0");
         else
-            UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu2_0");
+            SceneManager.LoadScene("MainMenu2_0");
     }
 
     void SetColorRecursive(Transform parent, Color c)
