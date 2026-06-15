@@ -232,7 +232,28 @@ public class UIManager2 : MonoBehaviour
     {
         PlaySfx(soundSubmit);
         if (index == 0) Resume();
-        else if (index == 1) QuitToMainMenu();
+        else if (index == 1) Restart();
+        else if (index == 2) QuitToMainMenu();
+    }
+
+    void Restart()
+    {
+        Time.timeScale = 1f;
+
+
+        if (KartScriptV2.instance != null)
+        {
+            AudioSource[] kartSources = KartScriptV2.instance.GetComponentsInChildren<AudioSource>();
+            foreach (AudioSource src in kartSources)
+            {
+                if (src.loop) src.Stop();
+            }
+        }
+
+        if (depthOfField != null) depthOfField.active = false;
+
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void QuitToMainMenu()
