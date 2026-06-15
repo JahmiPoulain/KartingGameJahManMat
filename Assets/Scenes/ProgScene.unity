@@ -18,16 +18,16 @@ RenderSettings:
   m_FogColor: {r: 0.6627451, g: 0.8509804, b: 0.8509804, a: 1}
   m_FogMode: 1
   m_FogDensity: 0
-  m_LinearFogStart: 273.26
-  m_LinearFogEnd: 420.4
+  m_LinearFogStart: 96.66
+  m_LinearFogEnd: 318.9
   m_AmbientSkyColor: {r: 0.6627451, g: 0.8509804, b: 0.8509804, a: 1}
   m_AmbientEquatorColor: {r: 0.9490196, g: 0.654902, b: 0.70980394, a: 1}
   m_AmbientGroundColor: {r: 0.42745098, g: 0.5254902, b: 0.63529414, a: 1}
   m_AmbientIntensity: 1
   m_AmbientMode: 1
-  m_SubtractiveShadowColor: {r: 1, g: 1, b: 1, a: 0}
+  m_SubtractiveShadowColor: {r: 0.8490566, g: 0, b: 0, a: 0}
   m_SkyboxMaterial: {fileID: 2100000, guid: 3f3c044aed413684086f6761edcf8a9b, type: 2}
-  m_HaloStrength: 0.5
+  m_HaloStrength: 0.462
   m_FlareStrength: 1
   m_FlareFadeSpeed: 69.4
   m_HaloTexture: {fileID: 0}
@@ -339,7 +339,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: eaef789088516f14b9736dcf90e59426, type: 3}
+  m_Sprite: {fileID: 21300000, guid: a6a224e1fd3c94745943055d4cc72453, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -854,7 +854,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -95, y: -41}
+  m_AnchoredPosition: {x: -101.8, y: -45}
   m_SizeDelta: {x: 306.36, y: 89.957}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &94836774
@@ -904,8 +904,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20
-  m_fontSizeBase: 20
+  m_fontSize: 10
+  m_fontSizeBase: 10
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -1775,7 +1775,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &191725867
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9194,7 +9194,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: a09d2006c3f640e4abc7ef9dfb946600, type: 3}
+  m_Sprite: {fileID: 21300000, guid: c1710061ac283544ea5cc4dbd2b2e0fd, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -10271,8 +10271,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 329, y: 174}
-  m_SizeDelta: {x: 150, y: 60}
+  m_AnchoredPosition: {x: 316.1888, y: 176.90489}
+  m_SizeDelta: {x: 124.3777, y: 50.2098}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1124151994
 MonoBehaviour:
@@ -10294,7 +10294,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: d2ca9519a4aab294894a51e73f2895de, type: 3}
+  m_Sprite: {fileID: 21300000, guid: e4288374e6fcb6446b3aa6cb1b81b911, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -11120,8 +11120,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 6.23, y: 1}
-  m_SizeDelta: {x: 10, y: -10}
+  m_AnchoredPosition: {x: 6.23, y: -2}
+  m_SizeDelta: {x: 0, y: -4}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &1261179297
 MonoBehaviour:
@@ -11143,7 +11143,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 554b860cfc724da4f9c6cf73f7a07008, type: 3}
+  m_Sprite: {fileID: 21300000, guid: db679971ac10d5b4faf83e7d7a596d40, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -17715,7 +17715,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -298, y: 188}
+  m_AnchoredPosition: {x: -277, y: 157.5}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &2778462123638937356
@@ -17866,8 +17866,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20
-  m_fontSizeBase: 20
+  m_fontSize: 10
+  m_fontSizeBase: 10
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18

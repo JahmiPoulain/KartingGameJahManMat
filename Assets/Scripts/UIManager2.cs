@@ -237,7 +237,7 @@ public class UIManager2 : MonoBehaviour
 
     public void QuitToMainMenu()
     {
-        // GameSceneManager.Instance.ReturnToMainMenu();
+        GameSceneManager.Instance.ReturnToMainMenu();
     }
 
     void SetColorRecursive(Transform parent, Color c)
