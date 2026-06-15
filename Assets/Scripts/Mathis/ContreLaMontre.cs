@@ -12,6 +12,7 @@ public struct GhostFrameData
 
 public class ContreLaMontre : GameMode
 {
+
     private TextMeshProUGUI scoreUI;
     private TextMeshProUGUI startUI;
 
@@ -34,11 +35,17 @@ public class ContreLaMontre : GameMode
 
     private float bestLapTime = float.MaxValue;
 
+
+
+
+
     public override void Initialize(LapManager lm, KartScriptV2 ks)
     {
         base.Initialize(lm, ks);
         this.MaxLaps = 3;
         if (kartScript != null) kartScript.CanDrive = false;
+
+
 
         startUI = GameObject.Find("CountDownUI")?.GetComponent<TextMeshProUGUI>();
         scoreUI = GameObject.Find("ScoreUI")?.GetComponent<TextMeshProUGUI>();
@@ -231,7 +238,13 @@ public class ContreLaMontre : GameMode
         if (playerPressed && kartScript != null)
         {
             // On injecte directement une forte valeur dans la jauge de poussée du kart
-            kartScript.StartTurbo(10f,2f); 
+            kartScript.StartTurbo(10f,2f);
+            Debug.Log(audioSource);
+            Debug.Log(turboStartSound);
+            if (audioSource != null && turboStartSound != null)
+            {
+                audioSource.PlayOneShot(turboStartSound);
+            }
             Debug.Log("Turbo Boost triggered at GO!");
         }
 
