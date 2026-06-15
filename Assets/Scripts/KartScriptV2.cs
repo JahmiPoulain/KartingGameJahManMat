@@ -617,7 +617,7 @@ public class KartScriptV2 : MonoBehaviour
     }
 
     void HandleDrift()
-    { 
+    {
         if (tryToDrift) //if (tryToDrift && grounded)
         {
             tryDriftCoyoteTime = 0.4f;
@@ -678,14 +678,14 @@ public class KartScriptV2 : MonoBehaviour
         }
         else // quand on lache le drift
         {
-             if (driftCoyoteTime > 0f)
-             {
-                 driftCoyoteTime -= Time.deltaTime;
-                 return;
-             }                   
+            if (driftCoyoteTime > 0f)
+            {
+                driftCoyoteTime -= Time.deltaTime;
+                return;
+            }
             if (nextYDriftRot < 0)
             {
-                nextYDriftRot += 12f  * Time.fixedDeltaTime;
+                nextYDriftRot += 12f * Time.fixedDeltaTime;
                 if (nextYDriftRot > 0)
                 {
                     nextYDriftRot = 0;
@@ -693,7 +693,7 @@ public class KartScriptV2 : MonoBehaviour
             }
             else if (nextYDriftRot > 0)
             {
-                nextYDriftRot += -12f  * Time.fixedDeltaTime;
+                nextYDriftRot += -12f * Time.fixedDeltaTime;
                 if (nextYDriftRot < 0)
                 {
                     nextYDriftRot = 0;
@@ -730,7 +730,7 @@ public class KartScriptV2 : MonoBehaviour
             for (int i = 0; i < driftParticlesGenerators.Length; i++)
             {
                 driftParticlesGenerators[i].gameObject.SetActive(false);
-               // Debug.Log("DEACTIVATE");
+                // Debug.Log("DEACTIVATE");
             }
 
             //return; 
@@ -749,7 +749,7 @@ public class KartScriptV2 : MonoBehaviour
                 fireWheelEffects[i].transform.localScale = new Vector3(0.5f, 0.05f, 0.5f);
             }
         }
-       
+
         if (driftTurboGauge > gaugeToActivateTurbo)
         {
             for (int i = 0; i < fireWheelEffects.Length; i++)
@@ -800,21 +800,34 @@ public class KartScriptV2 : MonoBehaviour
         }
         if (audioSourceDrift != null && driftSound != null)
         {
-            // Si driftDir est différent de 0, le kart est en dérapage
+            // Si driftDir est différent de 0, le kart dérape activement
             if (driftDir != 0)
             {
                 if (!audioSourceDrift.isPlaying)
                 {
                     audioSourceDrift.clip = driftSound;
-                    audioSourceDrift.loop = true; // Le clip tourne en boucle tant qu'on maintient le drift
+                    audioSourceDrift.loop = true;
                     audioSourceDrift.Play();
                 }
+
+
+                float targetPitch = Mathf.Lerp(0.9f, 1.4f, driftTurboGauge / gaugeToActivateTurbo);
+
+
+                audioSourceDrift.pitch = Mathf.Lerp(audioSourceDrift.pitch, targetPitch, 5f * Time.deltaTime);
+
+
+                float targetVolume = Mathf.Lerp(0.7f, 1.0f, driftTurboGauge / gaugeToActivateTurbo);
+                audioSourceDrift.volume = Mathf.Lerp(audioSourceDrift.volume, targetVolume, 5f * Time.deltaTime);
             }
             else
             {
-                // Si driftDir repasse à 0 (fin du drift ou kart à l'arrêt), on coupe le son
+
                 if (audioSourceDrift.isPlaying)
                 {
+
+                    audioSourceDrift.pitch = 1f;
+                    audioSourceDrift.volume = 1f;
                     audioSourceDrift.Stop();
                 }
             }
@@ -1311,7 +1324,7 @@ public class KartScriptV2 : MonoBehaviour
                 audioSourceMotor.pitch = Random.Range(0.60f, 0.70f);
 
 
-                audioSourceMotor.volume = Mathf.Lerp(0.03f, 0.05f, speedRatio);
+                audioSourceMotor.volume = Mathf.Lerp(0.01f, 0.03f, speedRatio);
 
 
                 audioSourceMotor.PlayOneShot(bubbleSound);
