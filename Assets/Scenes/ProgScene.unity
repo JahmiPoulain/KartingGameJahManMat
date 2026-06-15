@@ -10199,6 +10199,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7926506448043299815, guid: 97be06b2881f28b4a91a1d31361894d3, type: 3}
   m_PrefabInstance: {fileID: 1401708578}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &1116402953 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3662353073275384674, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+  m_PrefabInstance: {fileID: 7863942287254133310}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1122573053
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -12011,6 +12016,24 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1347192760}
   m_CullTransparentMesh: 1
+--- !u!1 &1351760739 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 725112269072190750, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+  m_PrefabInstance: {fileID: 7863942287254133310}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1351760743
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1351760739}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 317fde376116fa247b4053c7e25d073e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  activate: 0
 --- !u!1 &1352873150
 GameObject:
   m_ObjectHideFlags: 0
@@ -18318,6 +18341,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: gliderGO
+      value: 
+      objectReference: {fileID: 1351760743}
+    - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: raceSpline
       value: 
       objectReference: {fileID: 855718231}
@@ -18325,6 +18352,30 @@ PrefabInstance:
       propertyPath: checkPointManager
       value: 
       objectReference: {fileID: 1640521823}
+    - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: firstPersonInvisible.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: 'firstPersonInvisible.Array.data[0]'
+      value: 
+      objectReference: {fileID: 1116402953}
+    - target: {fileID: 2084083135515726510, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 2084083135515726510, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 2084083135515726510, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 2084083135515726510, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2211944736484526548, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: m_Name
       value: Kart
@@ -18376,7 +18427,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 725112269072190750, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1351760743}
   m_SourcePrefab: {fileID: 100100000, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
 --- !u!1 &7867861069978731390
 GameObject:
