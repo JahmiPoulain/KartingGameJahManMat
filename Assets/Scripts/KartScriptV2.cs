@@ -179,6 +179,7 @@ public class KartScriptV2 : MonoBehaviour
 
     [Header("SFX")]
     [SerializeField] private AudioClip bubbleSound; // Ton son de bulle actuel
+    [SerializeField] private AudioClip driftSound; // Ton son de bulle actuel
     [SerializeField] private AudioSource audioSourceMotor; 
     [SerializeField] private AudioSource audioSourceDrift; 
     [SerializeField] private AudioSource audioSourceBounce; 
@@ -797,7 +798,30 @@ public class KartScriptV2 : MonoBehaviour
 
             currentDriftForce = driftDir * driftCatchUp * 0.8f;
         }
+        if (audioSourceDrift != null && driftSound != null)
+        {
+            // Si driftDir est différent de 0, le kart est en dérapage
+            if (driftDir != 0)
+            {
+                if (!audioSourceDrift.isPlaying)
+                {
+                    audioSourceDrift.clip = driftSound;
+                    audioSourceDrift.loop = true; // Le clip tourne en boucle tant qu'on maintient le drift
+                    audioSourceDrift.Play();
+                }
+            }
+            else
+            {
+                // Si driftDir repasse à 0 (fin du drift ou kart à l'arrêt), on coupe le son
+                if (audioSourceDrift.isPlaying)
+                {
+                    audioSourceDrift.Stop();
+                }
+            }
+        }
     }
+
+
 
     void HandleTurning()
     {
