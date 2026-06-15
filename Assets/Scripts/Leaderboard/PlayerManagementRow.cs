@@ -94,6 +94,20 @@ public class PlayerManagementRow : MonoBehaviour
         AddIfUsable(selectables, deleteButton);
     }
 
+    public Selectable GetUsableButtonInColumn(int columnIndex)
+    {
+        if (!gameObject.activeInHierarchy)
+            return null;
+
+        return columnIndex switch
+        {
+            0 => GetIfUsable(chooseButton),
+            1 => GetIfUsable(renameButton),
+            2 => GetIfUsable(deleteButton),
+            _ => null
+        };
+    }
+
     private static void ConfigureButton(Button button, Action action, bool interactable)
     {
         if (button == null)
@@ -112,5 +126,13 @@ public class PlayerManagementRow : MonoBehaviour
             return;
 
         selectables.Add(selectable);
+    }
+
+    private static Selectable GetIfUsable(Selectable selectable)
+    {
+        if (selectable == null || !selectable.gameObject.activeInHierarchy || !selectable.interactable)
+            return null;
+
+        return selectable;
     }
 }
