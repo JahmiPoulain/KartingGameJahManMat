@@ -1169,12 +1169,11 @@ public class KartScriptV2 : MonoBehaviour
 
     void CheckIfOutOfBounds()
     {
+        
         if (outOfBoundsFrames > 5)
         {
-            currentSpeed *= 0.5f;
-        }
-        else if (outOfBoundsFrames > 10)
-        {
+            StopFlight();
+
             outOfBounds = true;
             outOfBoundsFrames = 0;
         }
@@ -1204,17 +1203,12 @@ public class KartScriptV2 : MonoBehaviour
         {
             StopFlight();
         }
-        else if (collision.gameObject.layer == 9)
-        {
-            StopFlight();
-            //Debug.Log("gogog");
-            //transform.position = collision.transform.GetChild(0).transform.position;
-            //transform.eulerAngles = collision.transform.GetChild(0).transform.localEulerAngles;
-            //transform.rotation = collision.transform.GetChild(0).transform.rotation;
-            //transform.position = new Vector3(230.6f, 16, 365.2f);
-            //transform.eulerAngles = new Vector3(0, 661.515f, 0);
-            outOfBounds = true;
-        }
+        //else if (//collision.gameObject.layer == 9)
+       // {            
+        //    StopFlight();
+           
+        //    outOfBounds = true;
+       // }
 
     }
     private void OnTriggerStay(Collider other)
@@ -1230,7 +1224,7 @@ public class KartScriptV2 : MonoBehaviour
         {
             cameraZoneUp = 0f;
         }
-        outOfBoundsFrames=0;
+        outOfBoundsFrames = 0;
     }
 
     private void OnCollisionStay(Collision collision)
@@ -1256,6 +1250,10 @@ public class KartScriptV2 : MonoBehaviour
             bounceForce = Mathf.Clamp(unsignedCurSpeed * 2f, 10f, unsignedCurSpeed);
             currentSpeed *= 0.2f;
 
+            outOfBoundsFrames++;
+        }
+        if (collision.gameObject.layer == 9)
+        {
             outOfBoundsFrames++;
         }
     }
