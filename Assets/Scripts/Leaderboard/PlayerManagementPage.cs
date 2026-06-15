@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 public class PlayerManagementPage : MonoBehaviour
 {
-    private const int MaxRows = 10;
+    private const int MaxRows = 6;
 
     [Header("Rows")]
     [SerializeField] private PlayerManagementRow[] rows = new PlayerManagementRow[MaxRows];
