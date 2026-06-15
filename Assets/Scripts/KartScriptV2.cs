@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Splines;
 
@@ -89,6 +88,8 @@ public class KartScriptV2 : MonoBehaviour
     float creteAccelZ;
     float creteAccelX;
 
+    [SerializeField] Transform[] firstPersonInvisible;
+
     [Header("Bounce Animation")]
     public bool bounce;
     private float bounceTimer;
@@ -136,7 +137,7 @@ public class KartScriptV2 : MonoBehaviour
     public float maxFlightTurnForce;
     private float currentFlightTurnForce;
     private float inputGlideUpDown;
-    public GameObject gliderGO;
+    [SerializeField] GliderAnimation gliderGO;
     // visual flight
     private float visualFlightRotSpeedZ;
     [Header("Wind")]
@@ -277,7 +278,7 @@ public class KartScriptV2 : MonoBehaviour
 
         if (outOfBounds)
         {
-            gliderGO.SetActive(false);
+            gliderGO.activate = false;
             currentSpeed = 0f;
             currentTurboForce = 0f;
             bounceForce = 0f;
@@ -296,7 +297,7 @@ public class KartScriptV2 : MonoBehaviour
             }
 
             groundedCoyoteTimer = 0.3f;
-            gliderGO.SetActive(false);
+            gliderGO.activate = false;
             transform.Rotate(0, currentTurnSpeed + currentDriftForce, 0);
             rb.linearVelocity = (preOrientation.transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
         }
@@ -377,7 +378,7 @@ public class KartScriptV2 : MonoBehaviour
     }
     private void HandleGliderFlight()
     {
-        gliderGO.SetActive(true);
+        gliderGO.activate = true;
 
         if (flightDir.eulerAngles.x > 0f && flightDir.eulerAngles.x < 180f)
         {
@@ -519,7 +520,7 @@ public class KartScriptV2 : MonoBehaviour
     public void StopFlight()
     {
         isFlying = false;
-        gliderGO.SetActive(false);
+        gliderGO.activate = false;
         flightSpeed = 0f;
     }
 
@@ -903,12 +904,12 @@ public class KartScriptV2 : MonoBehaviour
 
     void HandleVisualKartBody()
     {
-        if (!InputSystemHandler.instance.inputCameraMode)
+       /* if (!InputSystemHandler.instance.inputCameraMode)
         {
             visualKartBody.transform.forward = transform.forward;
             return; 
-        }
-            if (isFlying && !grounded)
+        }*/
+        if (isFlying && !grounded)
         {
             visualKartBody.transform.forward = flightDir.forward;
             visualKartBody.transform.localEulerAngles = new Vector3(visualKartBody.transform.localEulerAngles.x, visualKartBody.transform.localEulerAngles.y, -currentFlightTurnForce * 32f);
@@ -971,7 +972,14 @@ public class KartScriptV2 : MonoBehaviour
         groundNormalT.transform.rotation = Quaternion.LookRotation(Vector3.Cross(transform.right, groundNormal), groundNormal); // oriente le y vers le haut de la normale et le x vers l'avant du kart ( 2 semaines de galère )
         preOrientation.localRotation = Quaternion.RotateTowards(preOrientation.localRotation, groundNormalT.localRotation, 120f * Time.deltaTime);
         Quaternion rotTarget = Quaternion.Euler(nextTotalSpeed * 0.8f, 0, visKartZRot);
-        visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 40f * Time.deltaTime);
+       // if (InputSystemHandler.instance.inputCameraMode)
+        //{
+            visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 40f * Time.deltaTime);
+       // }
+        //else
+       // {
+            
+        //}
 
         cocot.localRotation = Quaternion.Slerp(cocot.localRotation, Quaternion.Euler(nextTotalSpeed * 0.3f - 90, visKartZRot * 1.2f, 0), 0.5f);
         creteAccelZ += Mathf.Abs(visKartZRot);
@@ -1038,6 +1046,21 @@ public class KartScriptV2 : MonoBehaviour
     }*/
     void HandleCameraTransform()
     {
+        if (InputSystemHandler.instance.inputCameraMode)
+         {
+            currentCamPosCenter = thirdPersonCamPos;
+         }
+         else
+         {
+            currentCamPosCenter = firstPersonCamPos;           
+         }
+        if (!InputSystemHandler.instance.inputCameraMode)
+        {
+            if (currentCamPosCenter == firstPersonCamPos)
+            {
+
+            }
+        }
         float driftForce = Mathf.Clamp(currentDriftForce, -1f, 1f);
 
         if (driftForce < 0)
@@ -1061,14 +1084,7 @@ public class KartScriptV2 : MonoBehaviour
 
         camPivot.localEulerAngles = new Vector3(camPivot.localEulerAngles.x, camPivot.localEulerAngles.y, camPivotZ);
 
-         if (InputSystemHandler.instance.inputCameraMode)
-         {
-            currentCamPosCenter = thirdPersonCamPos;
-         }
-         else
-         {
-            currentCamPosCenter = firstPersonCamPos;           
-         }
+         
 
         Vector3 rayOrigin = transform.position + transform.forward * 5f + new Vector3 (currentCamPosCenter.z, currentCamPosCenter.y, 0);
 
@@ -1081,9 +1097,27 @@ public class KartScriptV2 : MonoBehaviour
         }
 
         Vector3 nextDir = playerCamera.transform.localPosition - (currentCamPosCenter + camCollisionCompensation);
-        if (nextDir.sqrMagnitude > 0.01f)
+        if (nextDir.sqrMagnitude > 0.005f)
         {
             playerCamera.transform.localPosition = Vector3.Lerp(playerCamera.transform.localPosition, currentCamPosCenter + camCollisionCompensation, 8f * Time.deltaTime);
+            if (InputSystemHandler.instance.inputCameraMode && !firstPersonInvisible[0].gameObject.activeSelf)
+            {
+                for (int i = 0; i < firstPersonInvisible.Length; i++)
+                {
+                    firstPersonInvisible[i].gameObject.SetActive(true);
+                }
+            }
+        }
+        else
+        {
+            playerCamera.transform.localPosition = currentCamPosCenter + camCollisionCompensation;
+            if (!InputSystemHandler.instance.inputCameraMode && firstPersonInvisible[0].gameObject.activeSelf)
+            {
+                for (int i = 0; i < firstPersonInvisible.Length; i++) 
+                {
+                    firstPersonInvisible[i].gameObject.SetActive(false);
+                }
+            }
         }
     }
 
