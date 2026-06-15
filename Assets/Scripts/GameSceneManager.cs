@@ -127,6 +127,27 @@ public class GameSceneManager : MonoBehaviour
         StartCoroutine(TransitionRoutine(gameplaySceneName, true));
     }
 
+
+    public void RestartCurrentRace()
+    {
+
+        if (isTransitioning) return;
+
+
+        if (loadedGameplayScenes.Count > 0)
+        {
+            string currentRaceScene = loadedGameplayScenes[0]; 
+
+
+            StartCoroutine(TransitionRoutine(currentRaceScene,isTransitioning));
+        }
+        else
+        {
+ 
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
+    }
+
     public void ReturnToMainMenu()
     {
         if (isTransitioning) return;

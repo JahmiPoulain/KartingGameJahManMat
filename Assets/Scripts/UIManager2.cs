@@ -238,6 +238,7 @@ public class UIManager2 : MonoBehaviour
 
     void Restart()
     {
+
         Time.timeScale = 1f;
 
 
@@ -250,10 +251,18 @@ public class UIManager2 : MonoBehaviour
             }
         }
 
+
         if (depthOfField != null) depthOfField.active = false;
 
+        if (GameSceneManager.Instance != null)
+        {
+            GameSceneManager.Instance.RestartCurrentRace();
+        }
+        else
+        {
 
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
     }
 
     public void QuitToMainMenu()
