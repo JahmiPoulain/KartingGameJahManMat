@@ -61,7 +61,7 @@ public class ContreLaMontre : GameMode
         // --- DETECTION INPUT DEPART TURBO ---
         if (boostWindow && !raceStarted)
         {
-            // Vérifie si le joueur appuie sur Espace ou Z (adapte selon tes touches d'accélération)
+
             if (InputSystemHandler.instance.inputForwardDir >= 1 || Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.UpArrow))
             {
                 playerPressed = true;
@@ -141,7 +141,7 @@ public class ContreLaMontre : GameMode
 
         if (kartScript != null)
         {
-            kartScript.CanDrive = false;
+            //kartScript.CanDrive = false;
             kartScript.GhostMode = true;
         }
 
@@ -231,7 +231,7 @@ public class ContreLaMontre : GameMode
         if (playerPressed && kartScript != null)
         {
             // On injecte directement une forte valeur dans la jauge de poussée du kart
-            kartScript.StartTurbo(2f,0.5f); // Ajuste cette valeur (ex: 35f à 60f) selon la puissance voulue
+            kartScript.StartTurbo(10f,2f); 
             Debug.Log("Turbo Boost triggered at GO!");
         }
 
