@@ -60737,6 +60737,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rb: {fileID: 0}
+  turnDirection: 0
   maxSpeed: 25
   currentSpeed: 0
   maxBackSpeed: 8
@@ -60746,6 +60747,7 @@ MonoBehaviour:
   decelSpeed: 0.0001
   flatDecelSpeed: 0.15
   maxTurnSpeed: 1.75
+  currentMaxTurnSpeed: 0
   currentTurnSpeed: 0
   turnAccelSpeed: 12
   turnDecelSpeed: 20
@@ -60760,6 +60762,7 @@ MonoBehaviour:
   minBounceDecelForce: 200
   playerCamera: {fileID: 2138573176}
   camPivot: {fileID: 0}
+  emptyCamSpot: {fileID: 0}
   thirdPersonCamPos: {x: 0, y: 0, z: 0}
   firstPersonCamPos: {x: 0, y: 0, z: 0}
   visualKartBody: {fileID: 1704164085}
@@ -60780,13 +60783,19 @@ MonoBehaviour:
   visWheelsYRot: 0
   turningWheelsRatioScaling: 70
   nonTurningWheelsRatioScaling: 80
+  steeringWheel: {fileID: 0}
+  cocot: {fileID: 0}
+  cretes: []
+  firstPersonInvisible: []
   bounce: 0
   smokePrefab: {fileID: 8390876692391091962, guid: 8337be2acc838da409777d083ab08fa6, type: 3}
   smokeOrigin: {fileID: 1517190747}
   baseSmokeMat: {fileID: 2100000, guid: aa7b70ec96d663740b306c193ab0ba90, type: 2}
   fireSmokeMat: {fileID: 2100000, guid: 632ee81195b274c44aa9d2b9c4a01af4, type: 2}
-  smokeParticlesGenerator: {fileID: 1517190745}
-  fireParticlesGenerator: {fileID: 1493823566}
+  smokeParticlesGenerator:
+  - {fileID: 0}
+  fireParticlesGenerator:
+  - {fileID: 0}
   driftParticlesGenerators:
   - {fileID: 2017795630}
   - {fileID: 1363385130}
@@ -60795,6 +60804,7 @@ MonoBehaviour:
   preOrientation: {fileID: 954892369}
   groundNormalT: {fileID: 1837716828}
   groundRayOrigin: {fileID: 954892369}
+  grounded: 0
   keepDrifting: 0
   highDrift: 0
   lowDrift: 0
@@ -60806,7 +60816,7 @@ MonoBehaviour:
   flightSpeed: 0
   flightDir: {fileID: 0}
   maxFlightTurnForce: 0
-  gliderGO: {fileID: 0}
+  glider: {fileID: 0}
   respawnPoints: []
   respawnPointsArr: []
   activeRespawnPoints: []
@@ -60815,11 +60825,12 @@ MonoBehaviour:
   lastTurnTime: 0
   checkPointManager: {fileID: 0}
   canDrive: 1
-  contreLaMontre: {fileID: 0}
-  trackPath: {fileID: 0}
   ghostMode: 0
-  currentWaypoint: {fileID: 0}
-  firstWaypoint: {fileID: 0}
+  raceSpline: {fileID: 0}
+  splineProgress: 0
+  ghostSpeed: 15
+  lookAheadDistance: 0.01
+  bubbleSound: {fileID: 0}
 --- !u!114 &1855561718
 MonoBehaviour:
   m_ObjectHideFlags: 0
