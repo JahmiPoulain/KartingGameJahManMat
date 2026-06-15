@@ -179,7 +179,9 @@ public class KartScriptV2 : MonoBehaviour
 
     [Header("SFX")]
     [SerializeField] private AudioClip bubbleSound; // Ton son de bulle actuel
-    private AudioSource audioSource; //
+    [SerializeField] private AudioSource audioSourceMotor; 
+    [SerializeField] private AudioSource audioSourceDrift; 
+    [SerializeField] private AudioSource audioSourceBounce; 
     private float bubbleSoundTimer; // Pour gérer la cadence des bruitages
 
 
@@ -203,10 +205,10 @@ public class KartScriptV2 : MonoBehaviour
 
 
         controls = new InputSystem_Actions(); // initialiser input    
-        audioSource = GetComponent<AudioSource>();
-        audioSource.clip = bubbleSound;
-        audioSource.loop = false; // Important : on veut entendre chaque bulle éclater individuellement
-        audioSource.playOnAwake = false;
+
+        audioSourceMotor.clip = bubbleSound;
+        audioSourceMotor.loop = false; // Important : on veut entendre chaque bulle éclater individuellement
+        audioSourceMotor.playOnAwake = false;
 
         startPosition = transform.position;
         startRotation = transform.rotation;
@@ -1282,13 +1284,13 @@ public class KartScriptV2 : MonoBehaviour
             if (bubbleSoundTimer <= 0f)
             {
 
-                audioSource.pitch = Random.Range(0.60f, 0.70f);
+                audioSourceMotor.pitch = Random.Range(0.60f, 0.70f);
 
 
-                audioSource.volume = Mathf.Lerp(0.03f, 0.05f, speedRatio);
+                audioSourceMotor.volume = Mathf.Lerp(0.03f, 0.05f, speedRatio);
 
 
-                audioSource.PlayOneShot(bubbleSound);
+                audioSourceMotor.PlayOneShot(bubbleSound);
 
                 bubbleSoundTimer = bubbleDelay;
             }
