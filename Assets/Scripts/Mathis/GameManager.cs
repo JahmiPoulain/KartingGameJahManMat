@@ -32,13 +32,13 @@ public class GameManager : MonoBehaviour
 
 
     // Cette méthode sera appelée par un "LevelLoader" ou au Start de la scène de course
-    public GameMode SetupGameMode(GameObject racingKart, LapManager lm) // Ajoute GameMode comme type de retour
+    public GameMode SetupGameMode(GameObject modeManager,GameObject racingKart, LapManager lm) // Ajoute GameMode comme type de retour
     {
         GameMode mode;
         if (currentMode == GameModeType.TimeAttack)
-            mode = racingKart.AddComponent<TimeAttack>();
+            mode = modeManager.GetComponent<TimeAttack>();
         else
-            mode = racingKart.AddComponent<ContreLaMontre>();
+            mode = modeManager.GetComponent<ContreLaMontre>();
 
         mode.Initialize(lm, racingKart.GetComponent<KartScriptV2>());
         return mode; // Renvoie le mode

@@ -11,7 +11,7 @@ public class ModeLoader : MonoBehaviour
         GameObject player = FindFirstObjectByType<KartScriptV2>().gameObject;
 
         // On crée le mode et on le récupère
-        GameMode newMode = GameManager.Instance().SetupGameMode(player, lm);
+        GameMode newMode = GameManager.Instance().SetupGameMode(this.gameObject,player, lm);
 
         if (GameManager.Instance().currentMode == GameManager.GameModeType.TimeAttack)
         {

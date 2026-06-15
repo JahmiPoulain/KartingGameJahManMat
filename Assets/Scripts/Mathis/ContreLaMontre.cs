@@ -35,8 +35,8 @@ public class ContreLaMontre : GameMode
 
     private float bestLapTime = float.MaxValue;
 
-
-
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip turboStartSound;
 
 
     public override void Initialize(LapManager lm, KartScriptV2 ks)
@@ -73,7 +73,9 @@ public class ContreLaMontre : GameMode
             {
                 playerPressed = true;
                 Debug.Log("Turbo timing start validated!");
+
             }
+
         }
 
         if (raceStarted && !raceFinished)
@@ -239,8 +241,6 @@ public class ContreLaMontre : GameMode
         {
             // On injecte directement une forte valeur dans la jauge de poussée du kart
             kartScript.StartTurbo(10f,2f);
-            Debug.Log(audioSource);
-            Debug.Log(turboStartSound);
             if (audioSource != null && turboStartSound != null)
             {
                 audioSource.PlayOneShot(turboStartSound);
