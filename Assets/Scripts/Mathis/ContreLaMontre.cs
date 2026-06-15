@@ -152,7 +152,7 @@ public class ContreLaMontre : GameMode
         {
             float t = lapManager.LapTimes[i];
             totalTime += t;
-            detailScores += $"Lap {i + 1}: {FormatTime(t)}\n";
+            detailScores += $"{i + 1}: {FormatTime(t)}\n";
         }
 
         if (scoreUI != null)
@@ -231,7 +231,7 @@ public class ContreLaMontre : GameMode
         if (playerPressed && kartScript != null)
         {
             // On injecte directement une forte valeur dans la jauge de poussée du kart
-            kartScript.currentTurboForce = 45f; // Ajuste cette valeur (ex: 35f à 60f) selon la puissance voulue
+            kartScript.StartTurbo(2f,0.5f); // Ajuste cette valeur (ex: 35f à 60f) selon la puissance voulue
             Debug.Log("Turbo Boost triggered at GO!");
         }
 

@@ -53,13 +53,13 @@ public class TimeAttack : GameMode
         {
             bestLapTime = bestTimeInMs / 1000f;
             if (bestScoreUI != null)
-                bestScoreUI.text = "Best Time :\n\n\n " + FormatTime(bestLapTime);
+                bestScoreUI.text = "" + FormatTime(bestLapTime);
         }
         else
         {
             bestLapTime = float.MaxValue;
             if (bestScoreUI != null)
-                bestScoreUI.text = "Best Time :\n\n\n  --:--.--";
+                bestScoreUI.text = "--:--.--";
         }
     }
 
@@ -98,7 +98,7 @@ public class TimeAttack : GameMode
             bestLapTime = lapTime;
 
             if (bestScoreUI != null)
-                bestScoreUI.text = "New Record :\n\n\n  " + FormatTime(bestLapTime);
+                bestScoreUI.text = "" + FormatTime(bestLapTime);
         }
     }
 
