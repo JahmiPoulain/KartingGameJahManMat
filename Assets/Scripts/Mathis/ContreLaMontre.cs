@@ -62,7 +62,7 @@ public class ContreLaMontre : GameMode
         if (boostWindow && !raceStarted)
         {
             // Vérifie si le joueur appuie sur Espace ou Z (adapte selon tes touches d'accélération)
-            if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.UpArrow))
+            if (InputSystemHandler.instance.inputForwardDir >= 1 || Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.UpArrow))
             {
                 playerPressed = true;
                 Debug.Log("Turbo timing start validated!");
