@@ -430,7 +430,51 @@ public class PlayerManagementPage : MonoBehaviour
 
     private void ConfigurePageNavigation()
     {
-        ConfigureNavigationLoop(GetPageSelectables());
+        List<List<Selectable>> grid = GetPageSelectableGrid();
+
+        for (int rowIndex = 0; rowIndex < grid.Count; rowIndex++)
+        {
+            List<Selectable> row = grid[rowIndex];
+
+            for (int columnIndex = 0; columnIndex < row.Count; columnIndex++)
+            {
+                Selectable selectable = row[columnIndex];
+                if (selectable == null)
+                    continue;
+
+                Navigation navigation = selectable.navigation;
+                navigation.mode = Navigation.Mode.Explicit;
+                navigation.wrapAround = false;
+                navigation.selectOnLeft = FindHorizontalSelectable(row, columnIndex, -1);
+                navigation.selectOnRight = FindHorizontalSelectable(row, columnIndex, 1);
+                navigation.selectOnUp = FindVerticalSelectable(grid, rowIndex, columnIndex, -1);
+                navigation.selectOnDown = FindVerticalSelectable(grid, rowIndex, columnIndex, 1);
+                selectable.navigation = navigation;
+            }
+        }
+
+        if (addPlayerButton != null && addPlayerButton.gameObject.activeInHierarchy && addPlayerButton.interactable)
+        {
+            Selectable lastRowSelectable = FindLastSelectableInGrid(grid);
+
+            Navigation addNavigation = addPlayerButton.navigation;
+            addNavigation.mode = Navigation.Mode.Explicit;
+            addNavigation.wrapAround = false;
+            addNavigation.selectOnUp = lastRowSelectable;
+            addNavigation.selectOnDown = null;
+            addNavigation.selectOnLeft = null;
+            addNavigation.selectOnRight = null;
+            addPlayerButton.navigation = addNavigation;
+
+            if (lastRowSelectable != null)
+            {
+                Navigation lastNavigation = lastRowSelectable.navigation;
+                lastNavigation.selectOnDown = addPlayerButton;
+                lastRowSelectable.navigation = lastNavigation;
+            }
+
+            LinkBottomRowToAddButton(grid, addPlayerButton);
+        }
     }
 
     private List<Selectable> GetPageSelectables()
@@ -443,6 +487,29 @@ public class PlayerManagementPage : MonoBehaviour
         AddIfUsable(selectables, addPlayerButton);
 
         return selectables;
+    }
+
+    private List<List<Selectable>> GetPageSelectableGrid()
+    {
+        List<List<Selectable>> grid = new();
+
+        foreach (PlayerManagementRow row in rows)
+        {
+            if (row == null || !row.gameObject.activeInHierarchy)
+                continue;
+
+            List<Selectable> rowSelectables = new()
+            {
+                row.GetUsableButtonInColumn(0),
+                row.GetUsableButtonInColumn(1),
+                row.GetUsableButtonInColumn(2)
+            };
+
+            if (HasAnySelectable(rowSelectables))
+                grid.Add(rowSelectables);
+        }
+
+        return grid;
     }
 
     private void ConfigureNamePopupNavigation()
@@ -482,6 +549,104 @@ public class PlayerManagementPage : MonoBehaviour
             navigation.selectOnRight = next;
             selectable.navigation = navigation;
         }
+    }
+
+    private static Selectable FindHorizontalSelectable(List<Selectable> row, int columnIndex, int direction)
+    {
+        if (row == null)
+            return null;
+
+        for (int i = columnIndex + direction; i >= 0 && i < row.Count; i += direction)
+        {
+            if (row[i] != null)
+                return row[i];
+        }
+
+        return null;
+    }
+
+    private static Selectable FindVerticalSelectable(List<List<Selectable>> grid, int rowIndex, int columnIndex, int direction)
+    {
+        if (grid == null)
+            return null;
+
+        for (int i = rowIndex + direction; i >= 0 && i < grid.Count; i += direction)
+        {
+            List<Selectable> row = grid[i];
+
+            if (row != null && columnIndex >= 0 && columnIndex < row.Count && row[columnIndex] != null)
+                return row[columnIndex];
+        }
+
+        return null;
+    }
+
+    private static Selectable FindLastSelectableInGrid(List<List<Selectable>> grid)
+    {
+        if (grid == null)
+            return null;
+
+        for (int rowIndex = grid.Count - 1; rowIndex >= 0; rowIndex--)
+        {
+            List<Selectable> row = grid[rowIndex];
+            if (row == null)
+                continue;
+
+            for (int columnIndex = row.Count - 1; columnIndex >= 0; columnIndex--)
+            {
+                if (row[columnIndex] != null)
+                    return row[columnIndex];
+            }
+        }
+
+        return null;
+    }
+
+    private static void LinkBottomRowToAddButton(List<List<Selectable>> grid, Selectable addButton)
+    {
+        if (grid == null || addButton == null)
+            return;
+
+        for (int rowIndex = grid.Count - 1; rowIndex >= 0; rowIndex--)
+        {
+            List<Selectable> row = grid[rowIndex];
+            if (row == null)
+                continue;
+
+            bool linkedAnyButton = false;
+
+            foreach (Selectable selectable in row)
+            {
+                if (selectable == null)
+                    continue;
+
+                Navigation navigation = selectable.navigation;
+                if (navigation.selectOnDown == null)
+                {
+                    navigation.selectOnDown = addButton;
+                    selectable.navigation = navigation;
+                }
+
+                linkedAnyButton = true;
+            }
+
+            if (linkedAnyButton)
+                return;
+        }
+    }
+
+    private static bool HasAnySelectable(List<Selectable> selectables)
+    {
+        if (selectables == null)
+            return false;
+
+        foreach (Selectable selectable in selectables)
+        {
+            if (selectable != null)
+                return true;
+        }
+
+        return false;
     }
 
     private static void AddIfUsable(List<Selectable> selectables, Selectable selectable)
