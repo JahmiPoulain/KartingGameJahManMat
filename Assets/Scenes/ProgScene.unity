@@ -20,7 +20,7 @@ RenderSettings:
   m_FogDensity: 0.104
   m_LinearFogStart: 373.1
   m_LinearFogEnd: 514.16
-  m_AmbientSkyColor: {r: 0.8879232, g: 0.38642952, b: 0.46207705, a: 1}
+  m_AmbientSkyColor: {r: 0.8666667, g: 0.70980394, b: 0.634171, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
@@ -4274,6 +4274,7 @@ MonoBehaviour:
   globalVolume: {fileID: 191725867}
   floatingSpeed: 12
   floatingAmount: 13
+  referenceResolution: {x: 1920, y: 1080}
 --- !u!4 &566441327
 Transform:
   m_ObjectHideFlags: 0
@@ -13168,6 +13169,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2588a24f05481a84bbb22ce8a035d28b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rotationSpeed: 1
 --- !u!1001 &1482578856
 PrefabInstance:
   m_ObjectHideFlags: 0
