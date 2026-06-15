@@ -82,9 +82,9 @@ public class LapManager : MonoBehaviour
     {
         if (currentMode is TimeAttack) lapUI.text = $"Attempt {_currentLap}";
 
-        else lapUI.text = $"Lap {_currentLap}/{currentMode.MaxLaps}";
+        else lapUI.text = $"{_currentLap}/{currentMode.MaxLaps}";
 
-        if (currentMode.RaceFinished) lapUI.text = $"Lap {currentMode.MaxLaps}/{currentMode.MaxLaps}";
+        if (currentMode.RaceFinished) lapUI.text = $"{currentMode.MaxLaps}/{currentMode.MaxLaps}";
     }
 
     private string FormatTime(float time)

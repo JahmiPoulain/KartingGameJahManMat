@@ -903,8 +903,12 @@ public class KartScriptV2 : MonoBehaviour
 
     void HandleVisualKartBody()
     {
-
-        if (isFlying && !grounded)
+        if (!InputSystemHandler.instance.inputCameraMode)
+        {
+            visualKartBody.transform.forward = transform.forward;
+            return; 
+        }
+            if (isFlying && !grounded)
         {
             visualKartBody.transform.forward = flightDir.forward;
             visualKartBody.transform.localEulerAngles = new Vector3(visualKartBody.transform.localEulerAngles.x, visualKartBody.transform.localEulerAngles.y, -currentFlightTurnForce * 32f);
@@ -1006,7 +1010,7 @@ public class KartScriptV2 : MonoBehaviour
         }
     }
 
-    float IncrementTowardsValue(float currentValue, float targetValue, float increment)
+   /* float IncrementTowardsValue(float currentValue, float targetValue, float increment)
     {
         //Debug.Log(currentValue + " " + targetValue + " " + increment);
         if (currentValue > targetValue)
@@ -1031,7 +1035,7 @@ public class KartScriptV2 : MonoBehaviour
         }
         //Debug.Log(currentValue);
         return currentValue;
-    }
+    }*/
     void HandleCameraTransform()
     {
         float driftForce = Mathf.Clamp(currentDriftForce, -1f, 1f);
