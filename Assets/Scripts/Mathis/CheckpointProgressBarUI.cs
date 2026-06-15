@@ -83,6 +83,7 @@ public class CheckpointProgressBarUI : MonoBehaviour
 
     private void Update()
     {
+
         if (smoothSpeed <= 0f)
         {
             currentProgress = targetProgress;
@@ -210,7 +211,7 @@ public class CheckpointProgressBarUI : MonoBehaviour
 
             // On ne touche qu'à la position X, tout le reste vient du prefab
             Vector2 pos = tickRect.anchoredPosition;
-            pos.x = (ratio * ticksContainer.rect.width) - 0.5f;
+            pos.x = (ratio * ticksContainer.rect.width) - 10f;
             pos.y = 10f;
             tickRect.anchoredPosition = pos;
         }
@@ -225,7 +226,7 @@ public class CheckpointProgressBarUI : MonoBehaviour
 
         if (isFirst || delta == 0f)
         {
-            deltaText.text = "RECORD SET";
+            deltaText.text = "Recor Set";
             deltaText.color = Color.white;
         }
         else
