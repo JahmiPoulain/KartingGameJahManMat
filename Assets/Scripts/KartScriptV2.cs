@@ -137,7 +137,7 @@ public class KartScriptV2 : MonoBehaviour
     public float maxFlightTurnForce;
     private float currentFlightTurnForce;
     private float inputGlideUpDown;
-    [SerializeField] GliderAnimation gliderGO;
+    [SerializeField] GliderAnimation glider;
     // visual flight
     private float visualFlightRotSpeedZ;
     [Header("Wind")]
@@ -278,7 +278,7 @@ public class KartScriptV2 : MonoBehaviour
 
         if (outOfBounds)
         {
-            gliderGO.activate = false;
+            glider.activate = false;
             currentSpeed = 0f;
             currentTurboForce = 0f;
             bounceForce = 0f;
@@ -297,7 +297,7 @@ public class KartScriptV2 : MonoBehaviour
             }
 
             groundedCoyoteTimer = 0.3f;
-            gliderGO.activate = false;
+            glider.activate = false;
             transform.Rotate(0, currentTurnSpeed + currentDriftForce, 0);
             rb.linearVelocity = (preOrientation.transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
         }
@@ -378,7 +378,7 @@ public class KartScriptV2 : MonoBehaviour
     }
     private void HandleGliderFlight()
     {
-        gliderGO.activate = true;
+        glider.activate = true;
 
         if (flightDir.eulerAngles.x > 0f && flightDir.eulerAngles.x < 180f)
         {
@@ -520,7 +520,7 @@ public class KartScriptV2 : MonoBehaviour
     public void StopFlight()
     {
         isFlying = false;
-        gliderGO.activate = false;
+        glider.activate = false;
         flightSpeed = 0f;
     }
 
