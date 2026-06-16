@@ -65,6 +65,7 @@ public class KartScriptV2 : MonoBehaviour
     private float turboTimer;
     float cameraZoneUp;
     float camPivotZ;
+    float camPivotY;
 
     [Header("Visual Kart")]
     public GameObject visualKartBody;
@@ -180,7 +181,6 @@ public class KartScriptV2 : MonoBehaviour
     [Header("SFX")]
     [SerializeField] private AudioClip bubbleSound; // Ton son de bulle actuel
     [SerializeField] private AudioClip driftSound; // Ton son de bulle actuel
-    [SerializeField] private AudioClip bounceSound; // Ton son de bulle actuel
     [SerializeField] private AudioSource audioSourceMotor; 
     [SerializeField] private AudioSource audioSourceDrift; 
     [SerializeField] private AudioSource audioSourceBounce; 
@@ -536,7 +536,6 @@ public class KartScriptV2 : MonoBehaviour
         if (nextBounceForce > 0)
         {
             bounceForce = nextBounceForce;
-
         }
         else
         {
@@ -1123,9 +1122,21 @@ public class KartScriptV2 : MonoBehaviour
 
         camPivotZ = Mathf.Clamp(camPivotZ, -3f, 3f);
 
-        camPivot.localEulerAngles = new Vector3(camPivot.localEulerAngles.x, camPivot.localEulerAngles.y, camPivotZ);
+        // faire tourner en y la cam pendant virages
+        if (camPivotY < currentTurnSpeed && driftDir == 0) camPivotY += (2f + (3f - currentTurnSpeed)) * Time.deltaTime;
+        else if (camPivotY > currentTurnSpeed && driftDir == 0) camPivotY -= (2f + (3f - currentTurnSpeed)) * Time.deltaTime;
+        else if (driftDir < 0) { camPivotY -= (2f + (3f - camPivotY)) * Time.deltaTime; }
+        else if (driftDir > 0) { camPivotY += (2f + (3f - camPivotY)) * Time.deltaTime; }
 
-         
+        camPivotY = Mathf.Clamp(camPivotZ, -10f, 10f);
+        camPivotY *= -5f;
+        if (driftDir != 0)
+        {
+            Debug.Log(camPivotY);
+            if (camPivotY < camPivot.localEulerAngles.y) { camPivotY += (2f + (3f - camPivotY)) * Time.deltaTime; }
+            else if (camPivotY > camPivot.localEulerAngles.y) { camPivotY -= (2f + (3f - camPivotY)) * Time.deltaTime; }        
+        }
+        camPivot.localEulerAngles = new Vector3(camPivot.localEulerAngles.x, camPivotY, camPivotZ);
 
         Vector3 rayOrigin = transform.position + transform.forward * 5f + new Vector3 (currentCamPosCenter.z, currentCamPosCenter.y, 0);
 
@@ -1187,11 +1198,6 @@ public class KartScriptV2 : MonoBehaviour
         if (collision.gameObject.layer == 6)
         {
             StopFlight();
-            if (audioSourceBounce != null && bounceSound != null)
-            {
-                audioSourceBounce.PlayOneShot(bounceSound);
-
-            }
             bounce = true;
             Vector3 rawDir = transform.position - collision.contacts[0].point;
             bounceDirection = new Vector3(rawDir.x, 0, rawDir.z).normalized;
@@ -1299,7 +1305,6 @@ public class KartScriptV2 : MonoBehaviour
                 bounce = false;
                 bounceTimer = 0;
             }
-
         }
     }
 
