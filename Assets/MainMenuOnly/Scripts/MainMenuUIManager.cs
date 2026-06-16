@@ -171,6 +171,7 @@ public class MainMenuUIManager : MonoBehaviour
         GenerateWheel(mainMenuOptions, mainWheelRect, mainButtonsGenerated, true);
         GenerateWheel(settingsOptions, settingsWheelRect, settingsButtonsGenerated, false);
         GenerateWheel(playButtons, playWheelRect, playButtonsGenerated, false);
+        UpdateInvertedButtonText();
 
         if (hasSeenTitleScreen)
         {
@@ -486,7 +487,7 @@ public class MainMenuUIManager : MonoBehaviour
                 TextMeshProUGUI btnText = playButtonsGenerated[currentPlayIndex].GetComponentInChildren<TextMeshProUGUI>();
                 if (btnText != null)
                 {
-                    btnText.text = isMapInverted ? "INVERTED Y" : "INVERTED N";
+                    btnText.text = GetInvertedButtonLabel();
                 }
             }
             else if (selectedName.Contains("ghost") || selectedName.Contains("fantome"))
@@ -586,6 +587,26 @@ public class MainMenuUIManager : MonoBehaviour
             }
             if (options[i].windowToOpen != null) options[i].windowToOpen.SetActive(false);
             generatedList.Add(rectT);
+        }
+    }
+
+    private string GetInvertedButtonLabel()
+    {
+        return isMapInverted ? "INVERTED (YES)" : "INVERTED (NO)";
+    }
+
+    private void UpdateInvertedButtonText()
+    {
+        for (int i = 0; i < playButtons.Length && i < playButtonsGenerated.Count; i++)
+        {
+            string buttonName = playButtons[i].itemName.ToLower();
+            if (!buttonName.Contains("inverted") && !buttonName.Contains("toggle")) continue;
+
+            TextMeshProUGUI btnText = playButtonsGenerated[i].GetComponentInChildren<TextMeshProUGUI>();
+            if (btnText != null)
+            {
+                btnText.text = GetInvertedButtonLabel();
+            }
         }
     }
 
