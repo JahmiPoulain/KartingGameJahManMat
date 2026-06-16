@@ -19394,6 +19394,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1228333275}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &1102002751 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7809375738156829419, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+  m_PrefabInstance: {fileID: 7863942287254133310}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1102322762
 GameObject:
   m_ObjectHideFlags: 0
@@ -29091,6 +29096,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 387331803}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1918167567
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1918167568}
+  m_Layer: 8
+  m_Name: 3rd Person Camera Pivot 2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1918167568
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1918167567}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0.000000014901159, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1102002751}
+  m_LocalEulerAnglesHint: {x: 0, y: -27.019, z: 0}
 --- !u!1001 &1922305337
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -32820,6 +32856,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1351760743}
     - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: camPivot2
+      value: 
+      objectReference: {fileID: 1918167568}
+    - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: driftSound
       value: 
       objectReference: {fileID: 8300000, guid: 61cadff8229cfa64bb5ff593e5588a26, type: 3}
@@ -32933,7 +32973,10 @@ PrefabInstance:
       objectReference: {fileID: 996782331}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 7809375738156829419, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      insertIndex: 0
+      addedObject: {fileID: 1918167568}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 2211944736484526548, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       insertIndex: -1

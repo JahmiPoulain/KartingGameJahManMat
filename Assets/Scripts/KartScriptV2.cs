@@ -58,6 +58,7 @@ public class KartScriptV2 : MonoBehaviour
     [Header("Camera")]
     public GameObject playerCamera;
     public Transform camPivot;
+    public Transform camPivot2;
     [SerializeField] Transform emptyCamSpot;
     public Vector3 thirdPersonCamPos;
     public Vector3 firstPersonCamPos;
@@ -1130,7 +1131,7 @@ public class KartScriptV2 : MonoBehaviour
 
         camPivotY = Mathf.Clamp(camPivotZ, -10f, 10f);
         camPivotY *= -5f;
-        if (driftDir != 0)
+        if (driftDir == 0 && currentDriftForce != 0)
         {
             Debug.Log(camPivotY);
             if (camPivotY < camPivot.localEulerAngles.y) { camPivotY += (2f + (3f - camPivotY)) * Time.deltaTime; }
