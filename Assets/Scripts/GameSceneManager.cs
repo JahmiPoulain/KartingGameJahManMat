@@ -128,24 +128,20 @@ public class GameSceneManager : MonoBehaviour
     }
 
 
-    public void RestartCurrentRace()
-    {
 
+
+    public void RestartRace(string progSceneName)
+    {
         if (isTransitioning) return;
 
 
-        if (loadedGameplayScenes.Count > 0)
-        {
-            string currentRaceScene = loadedGameplayScenes[0]; 
+        loadedGameplayScenes.Clear();
 
 
-            StartCoroutine(TransitionRoutine(currentRaceScene,isTransitioning));
-        }
-        else
-        {
- 
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        }
+        pendingGameplaySceneName = progSceneName;
+
+
+        StartCoroutine(TransitionRoutine(progSceneName,isTransitioning));
     }
 
     public void ReturnToMainMenu()

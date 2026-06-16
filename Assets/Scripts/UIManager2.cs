@@ -238,10 +238,11 @@ public class UIManager2 : MonoBehaviour
 
     void Restart()
     {
-
+        // 1. On remet impérativement le temps à 1 pour débloquer Unity et les Coroutines
         Time.timeScale = 1f;
 
-
+        // 2. SÉCURITÉ AUDIO : On coupe les bruits en boucle (moteur, dérapage dynamique...)
+        // pour éviter qu'ils continuent pendant la transition vidéo
         if (KartScriptV2.instance != null)
         {
             AudioSource[] kartSources = KartScriptV2.instance.GetComponentsInChildren<AudioSource>();
@@ -251,17 +252,21 @@ public class UIManager2 : MonoBehaviour
             }
         }
 
-
+        // 3. On coupe l'effet de flou du menu pause
         if (depthOfField != null) depthOfField.active = false;
 
+        // 4. On récupère le nom de la scène de circuit (progScene) actuellement active
+        string currentProgSceneName = SceneManager.GetActiveScene().name;
+
+        // 5. On demande au GameSceneManager de relancer le duo (GraphScene + cette progScene)
         if (GameSceneManager.Instance != null)
         {
-            GameSceneManager.Instance.RestartCurrentRace();
+            GameSceneManager.Instance.RestartRace(currentProgSceneName);
         }
         else
         {
-
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            // Secours brut si le manager global est introuvable
+            SceneManager.LoadScene(currentProgSceneName);
         }
     }
 
