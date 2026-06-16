@@ -19,9 +19,15 @@ public class ChronoScript : MonoBehaviour
         }
 
         if (gameMode.RaceFinished || !gameMode.getRaceStarted())
+        {
+            Debug.Log(gameMode.RaceFinished);
+            Debug.Log(gameMode.getRaceStarted());
             return;
+        }
 
         // On n'incrémente et n'affiche que si le LapManager n'est pas en train de faire son animation
+        Debug.Log(lapManager);
+        Debug.Log(lapManager.IsChecking);
         if (lapManager != null && !lapManager.IsChecking)
         {
             delta += Time.deltaTime;
