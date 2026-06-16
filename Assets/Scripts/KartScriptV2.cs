@@ -180,6 +180,7 @@ public class KartScriptV2 : MonoBehaviour
     [Header("SFX")]
     [SerializeField] private AudioClip bubbleSound; // Ton son de bulle actuel
     [SerializeField] private AudioClip driftSound; // Ton son de bulle actuel
+    [SerializeField] private AudioClip bounceSound; // Ton son de bulle actuel
     [SerializeField] private AudioSource audioSourceMotor; 
     [SerializeField] private AudioSource audioSourceDrift; 
     [SerializeField] private AudioSource audioSourceBounce; 
@@ -535,6 +536,7 @@ public class KartScriptV2 : MonoBehaviour
         if (nextBounceForce > 0)
         {
             bounceForce = nextBounceForce;
+
         }
         else
         {
@@ -1185,6 +1187,11 @@ public class KartScriptV2 : MonoBehaviour
         if (collision.gameObject.layer == 6)
         {
             StopFlight();
+            if (audioSourceBounce != null && bounceSound != null)
+            {
+                audioSourceBounce.PlayOneShot(bounceSound);
+
+            }
             bounce = true;
             Vector3 rawDir = transform.position - collision.contacts[0].point;
             bounceDirection = new Vector3(rawDir.x, 0, rawDir.z).normalized;
@@ -1292,6 +1299,7 @@ public class KartScriptV2 : MonoBehaviour
                 bounce = false;
                 bounceTimer = 0;
             }
+
         }
     }
 
