@@ -276,6 +276,7 @@ public class ProfilsManager : MonoBehaviour
         playerManagementPage.gameObject.SetActive(true);
         playerManagementPage.ClearPage();
         playerManagementPage.SetCanAddPlayer(playerProfiles.Count < MaxPlayerProfiles);
+        playerManagementPage.SetCanDeletePlayers(playerProfiles.Count > 1);
 
         for (int i = 0; i < MaxPlayerProfiles; i++)
         {

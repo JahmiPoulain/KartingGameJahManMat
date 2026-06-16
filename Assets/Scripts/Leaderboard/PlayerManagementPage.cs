@@ -55,6 +55,7 @@ public class PlayerManagementPage : MonoBehaviour
     private bool isRenamePopup;
     private bool isPopupVisible;
     private bool canAddPlayer = true;
+    private bool canDeletePlayers = true;
     private bool isWaitingForNameValidation;
     private int maxPlayerNameLength = 12;
 
@@ -81,6 +82,11 @@ public class PlayerManagementPage : MonoBehaviour
     {
         canAddPlayer = canAdd;
         UpdateAddPlayerButtonVisibility();
+    }
+
+    public void SetCanDeletePlayers(bool canDelete)
+    {
+        canDeletePlayers = canDelete;
     }
 
     public void SetCallbacks(
@@ -116,6 +122,7 @@ public class PlayerManagementPage : MonoBehaviour
             playerId,
             playerName,
             isActive,
+            canDeletePlayers,
             OpenRenamePopup,
             OpenDeletePopup,
             id => choosePlayerCallback?.Invoke(id)
@@ -333,6 +340,9 @@ public class PlayerManagementPage : MonoBehaviour
 
     private void OpenDeletePopup(string playerId, string playerName)
     {
+        if (!canDeletePlayers)
+            return;
+
         deletedPlayerId = playerId;
 
         SetPopupBackgroundVisible(true);
@@ -351,6 +361,12 @@ public class PlayerManagementPage : MonoBehaviour
 
     private void ConfirmDeletePopup()
     {
+        if (!canDeletePlayers)
+        {
+            CloseAllPopups();
+            return;
+        }
+
         string playerId = deletedPlayerId;
 
         CloseAllPopups();

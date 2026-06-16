@@ -31,6 +31,7 @@ public class PlayerManagementRow : MonoBehaviour
         string id,
         string displayName,
         bool isActive,
+        bool canDelete,
         Action<string, string> onRenameRequested,
         Action<string, string> onDeleteRequested,
         Action<string> onChooseRequested
@@ -57,7 +58,11 @@ public class PlayerManagementRow : MonoBehaviour
         }
 
         ConfigureButton(renameButton, () => onRenameRequested?.Invoke(playerId, playerName), true);
-        ConfigureButton(deleteButton, () => onDeleteRequested?.Invoke(playerId, playerName), true);
+        ConfigureButton(deleteButton, () => onDeleteRequested?.Invoke(playerId, playerName), canDelete);
+
+        if (deleteButton != null)
+            deleteButton.gameObject.SetActive(canDelete);
+
         ConfigureButton(chooseButton, () =>
         {
             if (!isActivePlayer)
@@ -80,6 +85,9 @@ public class PlayerManagementRow : MonoBehaviour
         ConfigureButton(renameButton, null, false);
         ConfigureButton(deleteButton, null, false);
         ConfigureButton(chooseButton, null, false);
+
+        if (deleteButton != null)
+            deleteButton.gameObject.SetActive(true);
 
         gameObject.SetActive(false);
     }
