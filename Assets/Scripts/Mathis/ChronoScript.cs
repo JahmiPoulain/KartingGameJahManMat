@@ -11,23 +11,28 @@ public class ChronoScript : MonoBehaviour
 
     void Update()
     {
-        // On cherche le mode de jeu s'il n'est pas encore là
+        // Au lieu de FindFirstObjectByType, on récupère le mode validé et configuré par le GameManager
         if (gameMode == null)
         {
-            gameMode = FindFirstObjectByType<GameMode>();
-            return;
+
+
+            // Secours si tu utilises l'ancien système :
+            gameMode = FindFirstObjectByType<ContreLaMontre>();
+            if (gameMode == null || !gameMode.enabled)
+                gameMode = FindFirstObjectByType<TimeAttack>();
+
+            if (gameMode == null) return;
         }
 
         if (gameMode.RaceFinished || !gameMode.getRaceStarted())
         {
-            Debug.Log(gameMode.RaceFinished);
-            Debug.Log(gameMode.getRaceStarted());
+            // Ces logs te diront si tu es sur le bon script
+            // Si getRaceStarted() affiche False alors que le décompte est fini, 
+            // c'est que le chrono pointe sur un deuxième script ContreLaMontre fantôme dans la scène !
+            Debug.Log("Chrono bloqué - RaceFinished: " + gameMode.RaceFinished + " | RaceStarted: " + gameMode.getRaceStarted() + " sur l'objet: " + gameMode.gameObject.name);
             return;
         }
 
-        // On n'incrémente et n'affiche que si le LapManager n'est pas en train de faire son animation
-        Debug.Log(lapManager);
-        Debug.Log(lapManager.IsChecking);
         if (lapManager != null && !lapManager.IsChecking)
         {
             delta += Time.deltaTime;

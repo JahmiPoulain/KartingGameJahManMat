@@ -38,10 +38,7 @@ public class ContreLaMontre : GameMode
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip turboStartSound;
 
-    private void Start()
-    {
-        //currentTimerUI = GameObject.Find("ChronoUI")?.GetComponent<TextMeshProUGUI>();
-    }
+
 
     public override void Initialize(LapManager lm, KartScriptV2 ks)
     {
