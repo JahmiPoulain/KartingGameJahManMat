@@ -160,14 +160,42 @@ public class LeaderboardManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // <-- Empêche la destruction au rechargement de la scène
         }
         else
         {
             Destroy(gameObject);
             return;
         }
+
         localPlayerName = "Player";
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance != this)
+            return;
+
+        Instance = null;
+
+        if (profilsManager != null)
+        {
+            profilsManager.ManagementModeChanged -= OnProfileManagementModeChanged;
+            profilsManager.CurrentProfileChanged -= OnCurrentProfileChanged;
+            profilsManager.ProfileRenamed -= OnProfileRenamed;
+            profilsManager.ProfileDeleted -= OnProfileDeleted;
+        }
+
+        if (pendingServerRefresh != null)
+        {
+            StopCoroutine(pendingServerRefresh);
+            pendingServerRefresh = null;
+        }
+
+        if (reconnectCoroutine != null)
+        {
+            StopCoroutine(reconnectCoroutine);
+            reconnectCoroutine = null;
+        }
     }
 
     private void OnEnable()
@@ -208,6 +236,7 @@ public class LeaderboardManager : MonoBehaviour
         HideNavigationButtons();
         UpdateModeLabels();
         HideStatus();
+        BuildOfflineViewFromLocalSave(false);
 
         StartLootLockerSession();
         StartReconnectLoop();
@@ -572,6 +601,7 @@ public class LeaderboardManager : MonoBehaviour
         if (isConnected || isStartingSession)
             return;
 
+        LootLockerConfigSanitizer.SanitizeApiKey();
         isStartingSession = true;
 
         LootLockerSDKManager.StartGuestSession(response =>

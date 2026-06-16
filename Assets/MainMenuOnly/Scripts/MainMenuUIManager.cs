@@ -152,6 +152,12 @@ public class MainMenuUIManager : MonoBehaviour
 
     private void Awake() { if (Instance == null) Instance = this; else Destroy(this); }
 
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+    }
+
     void Start()
     {
         Time.timeScale = 1f;

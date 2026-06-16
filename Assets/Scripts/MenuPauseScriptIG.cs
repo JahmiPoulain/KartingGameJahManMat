@@ -183,8 +183,8 @@ public class MenuPauseScriptIG : MonoBehaviour
         Time.timeScale = 1f;
         if (depthOfField != null) depthOfField.active = false;
 
-        if (MainMenuUIManager.Instance != null)
-            MainMenuUIManager.Instance.LaunchScene("MainMenu2_0");
+        if (GameSceneManager.Instance != null)
+            GameSceneManager.Instance.ReturnToMainMenu();
         else
             SceneManager.LoadScene("MainMenu2_0");
     }

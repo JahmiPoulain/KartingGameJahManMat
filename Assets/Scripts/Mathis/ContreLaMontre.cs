@@ -169,16 +169,13 @@ public class ContreLaMontre : GameMode
         if (scoreUI != null)
             scoreUI.text = detailScores + $"Total Time: {FormatTime(totalTime)}";
 
-        if (LeaderboardManager.Instance != null)
-        {
-            int totalTimeInMs = Mathf.RoundToInt(totalTime * 1000f);
-            bool isReverse = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted);
+        int totalTimeInMs = Mathf.RoundToInt(totalTime * 1000f);
+        bool isReverse = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted);
 
-            if (isReverse)
-                LeaderboardManager.Instance.SubmitContreLaMontreReverse(totalTimeInMs);
-            else
-                LeaderboardManager.Instance.SubmitContreLaMontreNormal(totalTimeInMs);
-        }
+        if (isReverse)
+            LeaderboardService.EnsureInstance().SubmitContreLaMontreReverse(totalTimeInMs);
+        else
+            LeaderboardService.EnsureInstance().SubmitContreLaMontreNormal(totalTimeInMs);
     }
 
     private void SaveBestLapAndGhostData()

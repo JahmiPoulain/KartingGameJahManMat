@@ -147,6 +147,7 @@ public class LeaderboardService : MonoBehaviour
         if (simulateOfflineMode || isConnected || isStartingSession)
             return;
 
+        LootLockerConfigSanitizer.SanitizeApiKey();
         isStartingSession = true;
 
         LootLockerSDKManager.StartGuestSession(response =>

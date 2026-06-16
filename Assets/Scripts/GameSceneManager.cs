@@ -29,7 +29,12 @@ public class GameSceneManager : MonoBehaviour
     private float rotationSpeed = -360f;
     private List<string> loadedGameplayScenes = new List<string>();
     private bool isTransitioning = false;
+    private bool isStartupTransitionPlaying = false;
     private string pendingGameplaySceneName;
+    private Coroutine startupTransitionCoroutine;
+
+    private const float VideoPrepareTimeout = 5f;
+    private const float VideoStartTimeout = 1f;
 
     private void Awake()
     {
@@ -52,7 +57,7 @@ public class GameSceneManager : MonoBehaviour
             SceneManager.LoadScene(mainMenuSceneName);
         }
 
-        StartCoroutine(PlayVideoFromMiddleOnStart());
+        startupTransitionCoroutine = StartCoroutine(PlayVideoFromMiddleOnStart());
     }
 
     private void CreateTransitionUI()
@@ -120,7 +125,17 @@ public class GameSceneManager : MonoBehaviour
         if (isTransitioning)
         {
             pendingGameplaySceneName = gameplaySceneName;
-            Debug.Log($"Chargement de {gameplaySceneName} mis en attente : transition en cours.");
+
+            if (isStartupTransitionPlaying)
+            {
+                StopStartupTransition();
+                TryConsumePendingGameLoad();
+            }
+            else
+            {
+                Debug.Log($"Chargement de {gameplaySceneName} mis en attente : transition en cours.");
+            }
+
             return;
         }
 
@@ -137,11 +152,7 @@ public class GameSceneManager : MonoBehaviour
 
         loadedGameplayScenes.Clear();
 
-
-        pendingGameplaySceneName = progSceneName;
-
-
-        StartCoroutine(TransitionRoutine(progSceneName,isTransitioning));
+        StartCoroutine(TransitionRoutine(progSceneName, true));
     }
 
     public void ReturnToMainMenu()
@@ -205,6 +216,7 @@ public class GameSceneManager : MonoBehaviour
     private IEnumerator PlayVideoFromMiddleOnStart()
     {
         isTransitioning = true;
+        isStartupTransitionPlaying = true;
         transitionCanvas.gameObject.SetActive(true);
 
         backgroundBlocker.enabled = true;
@@ -212,22 +224,64 @@ public class GameSceneManager : MonoBehaviour
         if (videoPlayer != null && videoPlayer.clip != null)
         {
             videoPlayer.Prepare();
-            while (!videoPlayer.isPrepared) yield return null;
+            float prepareTimer = 0f;
+            while (!videoPlayer.isPrepared && prepareTimer < VideoPrepareTimeout)
+            {
+                prepareTimer += Time.unscaledDeltaTime;
+                yield return null;
+            }
 
-            videoPlayer.time = videoPlayer.length / 2.0;
-            videoPlayer.Play();
+            if (!videoPlayer.isPrepared)
+            {
+                Debug.LogWarning("Vidéo de transition non préparée à temps. Passage direct au menu.");
+            }
+            else
+            {
+                videoPlayer.time = videoPlayer.length / 2.0;
+                videoPlayer.Play();
 
-            while (!videoPlayer.isPlaying) yield return null;
+                float startTimer = 0f;
+                while (!videoPlayer.isPlaying && startTimer < VideoStartTimeout)
+                {
+                    startTimer += Time.unscaledDeltaTime;
+                    yield return null;
+                }
 
-            backgroundBlocker.enabled = false;
+                backgroundBlocker.enabled = false;
 
-            while (videoPlayer.isPlaying) yield return null;
+                while (videoPlayer.isPlaying)
+                    yield return null;
+            }
         }
 
+        startupTransitionCoroutine = null;
         transitionCanvas.gameObject.SetActive(false);
+        isStartupTransitionPlaying = false;
         isTransitioning = false;
 
         TryConsumePendingGameLoad();
+    }
+
+    private void StopStartupTransition()
+    {
+        if (startupTransitionCoroutine != null)
+        {
+            StopCoroutine(startupTransitionCoroutine);
+            startupTransitionCoroutine = null;
+        }
+
+        if (videoPlayer != null)
+            videoPlayer.Stop();
+
+        if (transitionCanvas != null)
+            transitionCanvas.gameObject.SetActive(false);
+
+        if (loadingIcon != null)
+            loadingIcon.gameObject.SetActive(false);
+
+        Application.backgroundLoadingPriority = ThreadPriority.Normal;
+        isStartupTransitionPlaying = false;
+        isTransitioning = false;
     }
 
     private void TryConsumePendingGameLoad()
@@ -245,10 +299,34 @@ public class GameSceneManager : MonoBehaviour
         if (videoPlayer == null || videoPlayer.clip == null) yield break;
 
         videoPlayer.Prepare();
-        while (!videoPlayer.isPrepared) yield return null;
+        float prepareTimer = 0f;
+        while (!videoPlayer.isPrepared && prepareTimer < VideoPrepareTimeout)
+        {
+            prepareTimer += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        if (!videoPlayer.isPrepared)
+        {
+            Debug.LogWarning("Vidéo de transition non préparée à temps. Chargement sans vidéo.");
+            yield break;
+        }
 
         videoPlayer.time = 0;
         videoPlayer.Play();
+
+        float startTimer = 0f;
+        while (!videoPlayer.isPlaying && startTimer < VideoStartTimeout)
+        {
+            startTimer += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        if (!videoPlayer.isPlaying)
+        {
+            Debug.LogWarning("Vidéo de transition non démarrée à temps. Chargement sans vidéo.");
+            yield break;
+        }
 
         double halfDuration = videoPlayer.length / 2.0;
         while (videoPlayer.time < halfDuration && videoPlayer.isPlaying)
