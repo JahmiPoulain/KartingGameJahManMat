@@ -1134,10 +1134,10 @@ public class KartScriptV2 : MonoBehaviour
         if (driftDir == 0 && currentDriftForce != 0)
         {
             Debug.Log(camPivotY);
-            if (camPivotY < camPivot.localEulerAngles.y) { camPivotY += (2f + (3f - camPivotY)) * Time.deltaTime; }
-            else if (camPivotY > camPivot.localEulerAngles.y) { camPivotY -= (2f + (3f - camPivotY)) * Time.deltaTime; }        
+            if (camPivotY < camPivot2.localEulerAngles.y) { camPivotY += (2f + (3f - camPivotY)) * Time.deltaTime; }
+            else if (camPivotY > camPivot2.localEulerAngles.y) { camPivotY -= (2f + (3f - camPivotY)) * Time.deltaTime; }        
         }
-        camPivot.localEulerAngles = new Vector3(camPivot.localEulerAngles.x, camPivotY, camPivotZ);
+        camPivot2.localEulerAngles = new Vector3(camPivot.localEulerAngles.x, camPivotY, camPivotZ);
 
         Vector3 rayOrigin = transform.position + transform.forward * 5f + new Vector3 (currentCamPosCenter.z, currentCamPosCenter.y, 0);
 
