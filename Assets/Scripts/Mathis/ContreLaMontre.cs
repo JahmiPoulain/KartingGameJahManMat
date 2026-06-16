@@ -12,7 +12,7 @@ public struct GhostFrameData
 
 public class ContreLaMontre : GameMode
 {
-
+    [SerializeField] private TextMeshProUGUI currentTimerUI;
     private TextMeshProUGUI scoreUI;
     private TextMeshProUGUI startUI;
 
@@ -39,10 +39,12 @@ public class ContreLaMontre : GameMode
     [SerializeField] private AudioClip turboStartSound;
 
 
+
     public override void Initialize(LapManager lm, KartScriptV2 ks)
     {
         base.Initialize(lm, ks);
         this.MaxLaps = 3;
+        //this.currentTimerUI = lm.ChronoUI;
         if (kartScript != null) kartScript.CanDrive = false;
 
 
