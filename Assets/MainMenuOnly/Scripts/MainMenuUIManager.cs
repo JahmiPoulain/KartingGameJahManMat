@@ -582,7 +582,8 @@ public class MainMenuUIManager : MonoBehaviour
             if (img != null && options[i].buttonTexture != null) img.sprite = options[i].buttonTexture;
             if (txt != null)
             {
-                txt.text = options[i].itemName;
+                txt.text = GetButtonLabel(options[i].itemName);
+                txt.alignment = TextAlignmentOptions.Center;
                 if (options[i].customFont != null) txt.font = options[i].customFont;
             }
             if (options[i].windowToOpen != null) options[i].windowToOpen.SetActive(false);
@@ -590,9 +591,18 @@ public class MainMenuUIManager : MonoBehaviour
         }
     }
 
+    private string GetButtonLabel(string itemName)
+    {
+        string buttonName = itemName.ToLower();
+        if (buttonName.Contains("inverted") || buttonName.Contains("toggle")) return GetInvertedButtonLabel();
+        if (buttonName.Contains("time attack")) return "TIME\nATTACK";
+
+        return itemName;
+    }
+
     private string GetInvertedButtonLabel()
     {
-        return isMapInverted ? "INVERTED (YES)" : "INVERTED (NO)";
+        return isMapInverted ? "INVERTED\n(YES)" : "INVERTED\n(NO)";
     }
 
     private void UpdateInvertedButtonText()
