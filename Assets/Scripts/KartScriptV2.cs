@@ -1195,7 +1195,7 @@ public class KartScriptV2 : MonoBehaviour
                 unsignedCurSpeed = -unsignedCurSpeed;
             }
 
-            bounceForce = Mathf.Clamp(unsignedCurSpeed * 2f, 15f, unsignedCurSpeed);
+            bounceForce = Mathf.Clamp(unsignedCurSpeed * 3f, 25f, unsignedCurSpeed);
             currentSpeed *= 0.2f;
             currentTurboForce *= 0.2f;
         }
@@ -1247,7 +1247,7 @@ public class KartScriptV2 : MonoBehaviour
                 unsignedCurSpeed = -unsignedCurSpeed;
             }
 
-            bounceForce = Mathf.Clamp(unsignedCurSpeed * 2f, 10f, unsignedCurSpeed);
+            bounceForce = Mathf.Clamp(unsignedCurSpeed * 3f, 25f, unsignedCurSpeed);
             currentSpeed *= 0.2f;
 
             outOfBoundsFrames++;
