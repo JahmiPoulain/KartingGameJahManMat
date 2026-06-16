@@ -32821,11 +32821,15 @@ PrefabInstance:
     - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: driftSound
       value: 
-      objectReference: {fileID: 8300000, guid: a30f5551cfda90a43af83cfbf9969f4f, type: 3}
+      objectReference: {fileID: 8300000, guid: 61cadff8229cfa64bb5ff593e5588a26, type: 3}
     - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: raceSpline
       value: 
       objectReference: {fileID: 855718231}
+    - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: bounceSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 671ee5f9d2526fa419e8837cb92f0d38, type: 3}
     - target: {fileID: 800632082475448381, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: audioSourceDrift
       value: 
