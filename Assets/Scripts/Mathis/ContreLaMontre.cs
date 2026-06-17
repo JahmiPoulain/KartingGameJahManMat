@@ -18,30 +18,28 @@ public class ContreLaMontre : GameMode
 
     private void Awake()
     {
-        // Récupération de l'AudioSource principal par défaut
         audioSource = gameObject.GetComponent<AudioSource>();
     }
 
     private void Start()
     {
-        // Nettoyage sécurité : on laisse Initialize et le GameManager gérer le réveil,
-        // mais si besoin de chercher l'UI dynamiquement, décommente les lignes ci-dessous :
-        // startUI = GameObject.Find("CountDownUI")?.GetComponent<TextMeshProUGUI>();
-        // scoreUI = GameObject.Find("ScoreUI")?.GetComponent<TextMeshProUGUI>();
+        // Recherche automatique de secours de l'UI si non assignée
+        if (startUI == null) startUI = GameObject.Find("CountDownUI")?.GetComponent<TextMeshProUGUI>();
+        if (scoreUI == null) scoreUI = GameObject.Find("ScoreUI")?.GetComponent<TextMeshProUGUI>();
     }
 
     public override void Initialize(LapManager lm, KartScriptV2 ks)
     {
         base.Initialize(lm, ks);
-        this.MaxLaps = 3; // Mode Contre-la-montre classique en 3 tours
+        this.MaxLaps = 3; // Le Contre-la-montre officiel se joue sur 3 tours
 
         if (lm != null)
         {
             this.currentTimerUI = lm.ChronoUI;
         }
 
-        startUI = GameObject.Find("CountDownUI")?.GetComponent<TextMeshProUGUI>();
-        scoreUI = GameObject.Find("ScoreUI")?.GetComponent<TextMeshProUGUI>();
+        if (startUI == null) startUI = GameObject.Find("CountDownUI")?.GetComponent<TextMeshProUGUI>();
+        if (scoreUI == null) scoreUI = GameObject.Find("ScoreUI")?.GetComponent<TextMeshProUGUI>();
 
         if (kartScript != null)
             kartScript.CanDrive = false;
@@ -53,7 +51,7 @@ public class ContreLaMontre : GameMode
     {
         if (!raceStarted)
         {
-            // Détection du timing pour le départ Turbo (Appuyer pendant le chiffre "2")
+            // Détection du timing pour le départ Turbo (Pendant l'affichage du chiffre "2")
             if (boostWindow && (Input.GetKeyDown(KeyCode.Space) || Input.GetButtonDown("Accelerate")))
             {
                 playerPressed = true;
@@ -65,15 +63,8 @@ public class ContreLaMontre : GameMode
 
     public override void OnLapCompleted(float lapTime)
     {
-        // Enregistrement et traitement du score
-        int lapTimeInMs = Mathf.RoundToInt(lapTime * 1000f);
-        bool isReverse = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted);
-
-        bool scoreAccepted = isReverse
-            ? LeaderboardService.EnsureInstance().SubmitContreLaMontreReverse(lapTimeInMs)
-            : LeaderboardService.EnsureInstance().SubmitContreLaMontreNormal(lapTimeInMs);
-
-        if (scoreAccepted && lapTime < bestLapTime)
+        // On conserve la détection du record du tour (Personal Best) pour l'affichage de l'UI en course
+        if (lapTime < bestLapTime)
         {
             bestLapTime = lapTime;
             if (scoreUI != null)
@@ -86,10 +77,37 @@ public class ContreLaMontre : GameMode
     public override void CompleteRace()
     {
         raceFinished = true;
+
         if (kartScript != null)
             kartScript.CanDrive = false;
 
         Debug.Log("Course Contre-la-montre terminée !");
+
+        // Récupération de la logique de l'ancien script pour le calcul du score final des 3 tours
+        if (lapManager != null)
+        {
+            float totalRaceTime = 0f;
+
+            // On additionne le temps de chaque tour stocké dans le LapManager
+            for (int i = 0; i < lapManager.LapTimes.Count; i++)
+            {
+                totalRaceTime += lapManager.LapTimes[i];
+                Debug.Log($"Tour {i + 1} : {FormatTime(lapManager.LapTimes[i])}");
+            }
+
+            Debug.Log($"[RESULTAT FINAL] Temps total des 3 tours : {FormatTime(totalRaceTime)}");
+
+            // Conversion du temps total en millisecondes pour le Leaderboard
+            int totalTimeInMs = Mathf.RoundToInt(totalRaceTime * 1000f);
+            bool isReverse = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted);
+
+            // Envoi officiel du temps global de la course (et non pas d'un seul tour) au classement
+            bool scoreAccepted = isReverse
+                ? LeaderboardService.EnsureInstance().SubmitContreLaMontreReverse(totalTimeInMs)
+                : LeaderboardService.EnsureInstance().SubmitContreLaMontreNormal(totalTimeInMs);
+
+            Debug.Log("Score envoyé au Leaderboard. Accepté : " + scoreAccepted);
+        }
     }
 
     private string FormatTime(float time)
@@ -99,10 +117,6 @@ public class ContreLaMontre : GameMode
         return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:00}:{1:00.000}", minutes, seconds);
     }
 
-    public override bool getRaceStarted()
-    {
-        return raceStarted;
-    }
 
     IEnumerator StartCountdown()
     {
@@ -113,11 +127,11 @@ public class ContreLaMontre : GameMode
 
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "2";
-        boostWindow = true; // Fenêtre ouverte pendant le "2"
+        boostWindow = true;
 
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "1";
-        boostWindow = false; // Fermée au "1"
+        boostWindow = false;
 
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "GO!";
@@ -126,14 +140,12 @@ public class ContreLaMontre : GameMode
 
         raceStarted = true;
 
-        // --- APPLICATION DE LA FORCE TURBO DIRECTE ET DU SON ---
+        // --- EXÉCUTION DU BOOST DE DÉPART PROPRE ---
         if (playerPressed && kartScript != null)
         {
-            // On applique le boost au kart
             kartScript.StartTurbo(10f, 2f);
 
-            // Sécurité Audio : Si l'AudioSource principal tourne en boucle (bruit moteur),
-            // on cherche ou on crée un canal secondaire pour ne pas étouffer le SFX
+            // Gestion de l'AudioSource pour ne pas écraser le son du moteur
             if (audioSource == null || audioSource.loop)
             {
                 AudioSource[] allSources = GetComponents<AudioSource>();
@@ -152,7 +164,6 @@ public class ContreLaMontre : GameMode
                 audioSource = gameObject.AddComponent<AudioSource>();
             }
 
-            // Lecture du jingle de boost de départ
             if (audioSource != null && turboStartSound != null)
             {
                 audioSource.loop = false;
