@@ -909,6 +909,7 @@ public class KartScriptV2 : MonoBehaviour
     public void StartTurbo(float force, float time)
     {
         //Debug.Log(force);
+        currentSpeed = maxSpeed;
         force = Mathf.Clamp(force, 0f, 25f);
         time = Mathf.Clamp(time, 0f, 3f);
         turbo = true;
