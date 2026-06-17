@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using TMPro;
 using System.Collections;
 
@@ -12,7 +12,7 @@ public class ContreLaMontre : GameMode
     private bool playerPressed = false;
     private float bestLapTime = float.MaxValue;
 
-    [Header("Audio SFX Boost Départ")]
+    [Header("Audio SFX Boost DÃ©part")]
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip turboStartSound;
 
@@ -23,7 +23,7 @@ public class ContreLaMontre : GameMode
 
     private void Start()
     {
-        // Recherche automatique de secours de l'UI si non assignée
+        // Recherche automatique de secours de l'UI si non assignÃ©e
         if (startUI == null) startUI = GameObject.Find("CountDownUI")?.GetComponent<TextMeshProUGUI>();
         if (scoreUI == null) scoreUI = GameObject.Find("ScoreUI")?.GetComponent<TextMeshProUGUI>();
     }
@@ -51,11 +51,11 @@ public class ContreLaMontre : GameMode
     {
         if (!raceStarted)
         {
-            // Détection du timing pour le départ Turbo (Pendant l'affichage du chiffre "2")
+            // DÃ©tection du timing pour le dÃ©part Turbo (Pendant l'affichage du chiffre "2")
             if (boostWindow && (Input.GetKeyDown(KeyCode.Space) || Input.GetButtonDown("Accelerate")))
             {
                 playerPressed = true;
-                Debug.Log("Timing Turbo Validé !");
+                Debug.Log("Timing Turbo ValidÃ© !");
             }
             return;
         }
@@ -63,7 +63,7 @@ public class ContreLaMontre : GameMode
 
     public override void OnLapCompleted(float lapTime)
     {
-        // On conserve la détection du record du tour (Personal Best) pour l'affichage de l'UI en course
+        // On conserve la dÃ©tection du record du tour (Personal Best) pour l'affichage de l'UI en course
         if (lapTime < bestLapTime)
         {
             bestLapTime = lapTime;
@@ -79,16 +79,20 @@ public class ContreLaMontre : GameMode
         raceFinished = true;
 
         if (kartScript != null)
-            kartScript.CanDrive = false;
+        {
+            kartScript.CanDrive = true;
+            kartScript.GhostMode = true; // â† Ã  rajouter
+        }
 
-        Debug.Log("Course Contre-la-montre terminée !");
 
-        // Récupération de la logique de l'ancien script pour le calcul du score final des 3 tours
+        Debug.Log("Course Contre-la-montre terminÃ©e !");
+
+        // RÃ©cupÃ©ration de la logique de l'ancien script pour le calcul du score final des 3 tours
         if (lapManager != null)
         {
             float totalRaceTime = 0f;
 
-            // On additionne le temps de chaque tour stocké dans le LapManager
+            // On additionne le temps de chaque tour stockÃ© dans le LapManager
             for (int i = 0; i < lapManager.LapTimes.Count; i++)
             {
                 totalRaceTime += lapManager.LapTimes[i];
@@ -106,7 +110,7 @@ public class ContreLaMontre : GameMode
                 ? LeaderboardService.EnsureInstance().SubmitContreLaMontreReverse(totalTimeInMs)
                 : LeaderboardService.EnsureInstance().SubmitContreLaMontreNormal(totalTimeInMs);
 
-            Debug.Log("Score envoyé au Leaderboard. Accepté : " + scoreAccepted);
+            Debug.Log("Score envoyÃ© au Leaderboard. AcceptÃ© : " + scoreAccepted);
         }
     }
 
@@ -140,12 +144,12 @@ public class ContreLaMontre : GameMode
 
         raceStarted = true;
 
-        // --- EXÉCUTION DU BOOST DE DÉPART PROPRE ---
+        // --- EXÃ‰CUTION DU BOOST DE DÃ‰PART PROPRE ---
         if (playerPressed && kartScript != null)
         {
             kartScript.StartTurbo(10f, 2f);
 
-            // Gestion de l'AudioSource pour ne pas écraser le son du moteur
+            // Gestion de l'AudioSource pour ne pas Ã©craser le son du moteur
             if (audioSource == null || audioSource.loop)
             {
                 AudioSource[] allSources = GetComponents<AudioSource>();
