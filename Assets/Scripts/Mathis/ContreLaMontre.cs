@@ -70,8 +70,8 @@ public class ContreLaMontre : GameMode
         bool isReverse = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted);
 
         bool scoreAccepted = isReverse
-            ? LeaderboardService.EnsureInstance().SubmitTimeTrialReverse(lapTimeInMs)
-            : LeaderboardService.EnsureInstance().SubmitTimeTrialNormal(lapTimeInMs);
+            ? LeaderboardService.EnsureInstance().SubmitContreLaMontreReverse(lapTimeInMs)
+            : LeaderboardService.EnsureInstance().SubmitContreLaMontreNormal(lapTimeInMs);
 
         if (scoreAccepted && lapTime < bestLapTime)
         {

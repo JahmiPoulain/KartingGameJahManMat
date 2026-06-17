@@ -137,7 +137,7 @@ public class TimeAttack : GameMode
 
             // On fait apparaître le nouveau fantôme au point de départ du premier nœud enregistré
             spawnedGhostKart = Instantiate(ghostKartPrefab, bestLapPositions[0].position, bestLapPositions[0].rotation);
-            spawnedGhostKart.isGhost = true; // Marqué comme fantôme (intangible + silencieux !)
+            spawnedGhostKart.IsGhost = true; // Marqué comme fantôme (intangible + silencieux !)
             spawnedGhostKart.gameObject.SetActive(true);
         }
     }

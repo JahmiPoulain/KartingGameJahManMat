@@ -194,6 +194,7 @@ public class KartScriptV2 : MonoBehaviour
     public bool GhostMode { get => ghostMode; set => ghostMode = value; }
     public bool CanDrive { get => canDrive; set => canDrive = value; }
     public float SplineProgress { get => splineProgress; set => splineProgress = value; }
+    public bool IsGhost { get => isGhost; set => isGhost = value; }
 
     private void Awake()
     {
@@ -231,7 +232,7 @@ public class KartScriptV2 : MonoBehaviour
             // On fait faire demi-tour au kart immédiatement
             transform.rotation *= Quaternion.Euler(0, 180, 0);
         }
-        if (isGhost)
+        if (IsGhost)
         {
             // 1. Désactive tous les AudioSources pour le rendre totalement silencieux
             AudioSource[] sources = GetComponentsInChildren<AudioSource>();
