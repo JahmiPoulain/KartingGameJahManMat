@@ -30,5 +30,7 @@ public class FloatingAnimation : MonoBehaviour
             }
         }
         transform.localPosition += new Vector3(0, 0, currentSpeed * 0.25f);
+        if (transform.localPosition.z > 0.05f) transform.localPosition = new Vector3(0, 0, 0.05f);
+        else if (transform.localPosition.z < -0.05f) transform.localPosition = new Vector3(0, 0, -0.05f);
     }
 }
