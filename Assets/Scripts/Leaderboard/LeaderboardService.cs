@@ -10,10 +10,10 @@ public class LeaderboardService : MonoBehaviour
     private const string PendingUploadScoreKeyPrefix = "Leaderboard_PendingUploadScore";
     private const string HasPendingUploadKeyPrefix = "Leaderboard_HasPendingUpload";
 
-    private string timeAttackNormalKey = "33908";
-    private string timeAttackReverseKey = "34772";
-    private string contreLaMontreNormalKey = "34773";
-    private string contreLaMontreReverseKey = "34774";
+    private string timeAttackNormalKey = "main_race_01";
+    private string timeAttackReverseKey = "main_race_02";
+    private string contreLaMontreNormalKey = "main_race_03";
+    private string contreLaMontreReverseKey = "main_race_04";
 
     private string currentProfileId = "local";
     private string currentProfileName = "Player";

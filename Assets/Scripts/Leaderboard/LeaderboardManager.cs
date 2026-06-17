@@ -455,11 +455,22 @@ public class LeaderboardManager : MonoBehaviour
         {
             if (!response.success)
             {
-                Debug.LogWarning("Impossible de récupérer le leaderboard LootLocker.");
+                Debug.LogWarning(
+                    $"Impossible de récupérer le leaderboard LootLocker ({leaderboardKey}). " +
+                    $"Status: {response.statusCode}, Request ID: {response.errorData?.request_id ?? "n/a"}."
+                );
 
-                isConnected = false;
+                bool sessionMayBeInvalid = response.statusCode == 0 ||
+                                           response.statusCode == 401 ||
+                                           response.statusCode == 403;
+
+                if (sessionMayBeInvalid)
+                {
+                    isConnected = false;
+                    SyncProfilsOnlineState();
+                }
+
                 isLoading = false;
-                SyncProfilsOnlineState();
 
                 BuildOfflineViewFromLocalSave(true);
 
@@ -950,13 +961,14 @@ public class LeaderboardManager : MonoBehaviour
             return;
 
         string currentMemberId = GetServerMemberIdForProfile(profile);
+        bool isCurrentProfile = profile.Id == GetCurrentPlayerProfileId();
         int existingIndex = leaderboardEntries.FindIndex(entry =>
             entry.MemberId == profile.Id ||
             ArePlayerNamesEquivalent(entry.MemberId, currentMemberId) ||
+            (isCurrentProfile && localPlayerId != 0 && entry.PlayerId == localPlayerId) ||
+            (isCurrentProfile && ArePlayerNamesEquivalent(entry.PlayerName, profile.Name)) ||
             (string.IsNullOrWhiteSpace(entry.MemberId) && entry.IsLocalPlayer && profile.Id == GetCurrentPlayerProfileId())
         );
-
-        bool isCurrentProfile = profile.Id == GetCurrentPlayerProfileId();
 
         if (existingIndex >= 0)
         {
