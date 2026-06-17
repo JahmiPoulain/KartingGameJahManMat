@@ -151,5 +151,29 @@ public class TimeAttack : GameMode
         return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:00}:{1:00.000}", minutes, seconds);
     }
 
-    private void LoadBestScore() { /* ... Ton code de chargement existant ... */ }
+    private void LoadBestScore()
+    {
+        LeaderboardCircuitMode circuitMode = GetCurrentCircuitMode();
+
+        if (LeaderboardService.Instance != null &&
+            LeaderboardService.Instance.TryGetLocalBestScore(LeaderboardGameMode.TimeAttack, circuitMode, out int bestTimeInMs))
+        {
+            bestLapTime = bestTimeInMs / 1000f;
+            if (bestScoreUI != null)
+                bestScoreUI.text = "" + FormatTime(bestLapTime);
+        }
+        else
+        {
+            bestLapTime = float.MaxValue;
+            if (bestScoreUI != null)
+                bestScoreUI.text = "--:--.--";
+        }
+    }
+
+    private LeaderboardCircuitMode GetCurrentCircuitMode()
+    {
+        return InversionCatcher.instance != null && InversionCatcher.instance.Inverted
+            ? LeaderboardCircuitMode.Reverse
+            : LeaderboardCircuitMode.Normal;
+    }
 }
