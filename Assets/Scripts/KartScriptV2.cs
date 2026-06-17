@@ -177,6 +177,7 @@ public class KartScriptV2 : MonoBehaviour
     [SerializeField] [Range(0, 1)] private float splineProgress = 0f;
     [SerializeField] private float ghostSpeed = 15f;
     [SerializeField] [Range(0.005f, 0.05f)] private float lookAheadDistance = 0.01f; // Commence à 0.01 (1% de la piste)
+    [SerializeField] private bool isGhost = false;
 
 
     [Header("SFX")]
@@ -193,6 +194,7 @@ public class KartScriptV2 : MonoBehaviour
     public bool GhostMode { get => ghostMode; set => ghostMode = value; }
     public bool CanDrive { get => canDrive; set => canDrive = value; }
     public float SplineProgress { get => splineProgress; set => splineProgress = value; }
+    public bool IsGhost { get => isGhost; set => isGhost = value; }
 
     private void Awake()
     {
@@ -229,6 +231,22 @@ public class KartScriptV2 : MonoBehaviour
         {
             // On fait faire demi-tour au kart immédiatement
             transform.rotation *= Quaternion.Euler(0, 180, 0);
+        }
+        if (IsGhost)
+        {
+            // 1. Désactive tous les AudioSources pour le rendre totalement silencieux
+            AudioSource[] sources = GetComponentsInChildren<AudioSource>();
+            foreach (AudioSource src in sources)
+            {
+                src.enabled = false;
+            }
+
+            // 2. Rend le fantôme intangible (il passe à travers tout)
+            Collider col = GetComponent<Collider>();
+            if (col != null) col.isTrigger = true;
+
+            Rigidbody ghostRb = GetComponent<Rigidbody>();
+            if (ghostRb != null) ghostRb.isKinematic = true; // Empêche la physique de le pousser
         }
     }
 

@@ -1,14 +1,6 @@
-using UnityEngine;
+Ôªøusing UnityEngine;
 using TMPro;
 using System.Collections;
-using System.Collections.Generic;
-
-[System.Serializable]
-public struct GhostFrameData
-{
-    public float splineProgress;
-    public bool isDrifting;
-}
 
 public class ContreLaMontre : GameMode
 {
@@ -16,201 +8,119 @@ public class ContreLaMontre : GameMode
     private TextMeshProUGUI scoreUI;
     private TextMeshProUGUI startUI;
 
-    bool boostWindow = false;
-    bool playerPressed = false;
-
-    [Header("Ghost Configuration")]
-    [SerializeField] private KartScriptV2 ghostKartPrefab;
-    private KartScriptV2 spawnedGhostKart;
-
-    private List<GhostFrameData> currentLapGhostData = new List<GhostFrameData>();
-    private List<GhostFrameData> bestLapGhostData = new List<GhostFrameData>();
-
-    private bool isRecordingGhost = false;
-    private float recordTimer = 0f;
-    private float recordInterval = 0.1f;
-
-    private int ghostPlaybackIndex = 0;
-    private float playbackTimer = 0f;
-
+    private bool boostWindow = false;
+    private bool playerPressed = false;
     private float bestLapTime = float.MaxValue;
 
+    [Header("Audio SFX Boost D√©part")]
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip turboStartSound;
 
+    private void Awake()
+    {
+        audioSource = gameObject.GetComponent<AudioSource>();
+    }
 
+    private void Start()
+    {
+        // Recherche automatique de secours de l'UI si non assign√©e
+        if (startUI == null) startUI = GameObject.Find("CountDownUI")?.GetComponent<TextMeshProUGUI>();
+        if (scoreUI == null) scoreUI = GameObject.Find("ScoreUI")?.GetComponent<TextMeshProUGUI>();
+    }
 
     public override void Initialize(LapManager lm, KartScriptV2 ks)
     {
         base.Initialize(lm, ks);
-        this.MaxLaps = 3;
-        //this.currentTimerUI = lm.ChronoUI;
-        if (kartScript != null) kartScript.CanDrive = false;
+        this.MaxLaps = 3; // Le Contre-la-montre officiel se joue sur 3 tours
 
-
-
-        startUI = GameObject.Find("CountDownUI")?.GetComponent<TextMeshProUGUI>();
-        scoreUI = GameObject.Find("ScoreUI")?.GetComponent<TextMeshProUGUI>();
-
-        LoadBestLapAndGhostData();
-
-        // Le Ghost spawn dËs le dÈbut de la course s'il y a des donnÈes enregistrÈes
-        if (bestLapGhostData.Count > 0 && ghostKartPrefab != null)
+        if (lm != null)
         {
-            spawnedGhostKart = Instantiate(ghostKartPrefab, kartScript.transform.position, kartScript.transform.rotation);
-            spawnedGhostKart.GhostMode = true;
-            spawnedGhostKart.CanDrive = false; // BloquÈ pendant le dÈcompte
+            this.currentTimerUI = lm.ChronoUI;
         }
+
+        if (startUI == null) startUI = GameObject.Find("CountDownUI")?.GetComponent<TextMeshProUGUI>();
+        if (scoreUI == null) scoreUI = GameObject.Find("ScoreUI")?.GetComponent<TextMeshProUGUI>();
+
+        if (kartScript != null)
+            kartScript.CanDrive = false;
 
         StartCoroutine(StartCountdown());
     }
 
-    void Update()
+    private void Update()
     {
-        // --- DETECTION INPUT DEPART TURBO ---
-        if (boostWindow && !raceStarted)
+        if (!raceStarted)
         {
-
-            if (InputSystemHandler.instance.inputForwardDir >= 1 || Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.UpArrow))
+            // D√©tection du timing pour le d√©part Turbo (Pendant l'affichage du chiffre "2")
+            if (boostWindow && InputSystemHandler.instance.inputForwardDir >= 1|| Input.GetKeyDown(KeyCode.Z)|| Input.GetKeyDown(KeyCode.UpArrow))
             {
                 playerPressed = true;
-                Debug.Log("Turbo timing start validated!");
-
+                Debug.Log("Timing Turbo Valid√© !");
             }
-
-        }
-
-        if (raceStarted && !raceFinished)
-        {
-            // Enregistrement des donnÈes du joueur
-            if (isRecordingGhost)
-            {
-                recordTimer += Time.deltaTime;
-                if (recordTimer >= recordInterval)
-                {
-                    recordTimer = 0f;
-                    GhostFrameData frame;
-                    frame.splineProgress = kartScript.SplineProgress;
-                    frame.isDrifting = kartScript.accelerate && (Mathf.Abs(kartScript.turnDirection) > 0.5f);
-                    currentLapGhostData.Add(frame);
-                }
-            }
-
-            // Lecture et dÈplacement forcÈ du Ghost (Èvite les conflits physiques)
-            if (spawnedGhostKart != null && bestLapGhostData.Count > 0)
-            {
-                playbackTimer += Time.deltaTime;
-                if (playbackTimer >= recordInterval)
-                {
-                    playbackTimer = 0f;
-                    ghostPlaybackIndex++;
-                    if (ghostPlaybackIndex < bestLapGhostData.Count)
-                    {
-                        spawnedGhostKart.SplineProgress = bestLapGhostData[ghostPlaybackIndex].splineProgress;
-
-                        // SÈcuritÈ anti-gravitÈ / physique rÈsiduelle sur le Ghost
-                        Rigidbody ghostRb = spawnedGhostKart.GetComponent<Rigidbody>();
-                        if (ghostRb != null)
-                        {
-                            ghostRb.linearVelocity = Vector3.zero;
-                            ghostRb.angularVelocity = Vector3.zero;
-                        }
-                    }
-                    else
-                    {
-                        ghostPlaybackIndex = 0; // Boucle si le joueur est plus lent que son ghost
-                    }
-                }
-            }
+            return;
         }
     }
 
     public override void OnLapCompleted(float lapTime)
     {
+        // On conserve la d√©tection du record du tour (Personal Best) pour l'affichage de l'UI en course
         if (lapTime < bestLapTime)
         {
             bestLapTime = lapTime;
-            bestLapGhostData = new List<GhostFrameData>(currentLapGhostData);
-            SaveBestLapAndGhostData();
+            if (scoreUI != null)
+            {
+                scoreUI.text = "PB: " + FormatTime(bestLapTime);
+            }
         }
-
-        currentLapGhostData.Clear();
-        recordTimer = 0f;
-        ghostPlaybackIndex = 0;
-        playbackTimer = 0f;
-
-        base.OnLapCompleted(lapTime);
     }
 
     public override void CompleteRace()
     {
-        if (raceFinished) return;
         raceFinished = true;
-
-        isRecordingGhost = false;
-        if (spawnedGhostKart != null) Destroy(spawnedGhostKart.gameObject);
 
         if (kartScript != null)
         {
-            //kartScript.CanDrive = false;
-            kartScript.GhostMode = true;
+            kartScript.CanDrive = true;
+            kartScript.GhostMode = true; // ‚Üê √† rajouter
         }
 
-        float totalTime = 0;
-        string detailScores = "Race Results:\n";
 
-        for (int i = 0; i < lapManager.LapTimes.Count; i++)
+        Debug.Log("Course Contre-la-montre termin√©e !");
+
+        // R√©cup√©ration de la logique de l'ancien script pour le calcul du score final des 3 tours
+        if (lapManager != null)
         {
-            float t = lapManager.LapTimes[i];
-            totalTime += t;
-            detailScores += $"{i + 1}: {FormatTime(t)}\n";
-        }
+            float totalRaceTime = 0f;
 
-        if (scoreUI != null)
-            scoreUI.text = detailScores + $"Total Time: {FormatTime(totalTime)}";
-
-        int totalTimeInMs = Mathf.RoundToInt(totalTime * 1000f);
-        bool isReverse = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted);
-
-        if (isReverse)
-            LeaderboardService.EnsureInstance().SubmitContreLaMontreReverse(totalTimeInMs);
-        else
-            LeaderboardService.EnsureInstance().SubmitContreLaMontreNormal(totalTimeInMs);
-    }
-
-    private void SaveBestLapAndGhostData()
-    {
-        string suffix = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted) ? "_Inverted" : "_Normal";
-        PlayerPrefs.SetFloat("CLM_BestLapTime" + suffix, bestLapTime);
-
-        Wrapper wrapper = new Wrapper { list = bestLapGhostData };
-        string jsonGhost = JsonUtility.ToJson(wrapper);
-        PlayerPrefs.SetString("CLM_GhostData_JSON" + suffix, jsonGhost);
-        PlayerPrefs.Save();
-    }
-
-    private void LoadBestLapAndGhostData()
-    {
-        string suffix = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted) ? "_Inverted" : "_Normal";
-        if (PlayerPrefs.HasKey("CLM_BestLapTime" + suffix))
-        {
-            bestLapTime = PlayerPrefs.GetFloat("CLM_BestLapTime" + suffix);
-            string jsonGhost = PlayerPrefs.GetString("CLM_GhostData_JSON" + suffix);
-            if (!string.IsNullOrEmpty(jsonGhost))
+            // On additionne le temps de chaque tour stock√© dans le LapManager
+            for (int i = 0; i < lapManager.LapTimes.Count; i++)
             {
-                Wrapper wrapper = JsonUtility.FromJson<Wrapper>(jsonGhost);
-                bestLapGhostData = wrapper.list;
+                totalRaceTime += lapManager.LapTimes[i];
+                Debug.Log($"Tour {i + 1} : {FormatTime(lapManager.LapTimes[i])}");
             }
+
+            Debug.Log($"[RESULTAT FINAL] Temps total des 3 tours : {FormatTime(totalRaceTime)}");
+
+            // Conversion du temps total en millisecondes pour le Leaderboard
+            int totalTimeInMs = Mathf.RoundToInt(totalRaceTime * 1000f);
+            bool isReverse = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted);
+
+            // Envoi officiel du temps global de la course (et non pas d'un seul tour) au classement
+            bool scoreAccepted = isReverse
+                ? LeaderboardService.EnsureInstance().SubmitContreLaMontreReverse(totalTimeInMs)
+                : LeaderboardService.EnsureInstance().SubmitContreLaMontreNormal(totalTimeInMs);
+
+            Debug.Log("Score envoy√© au Leaderboard. Accept√© : " + scoreAccepted);
         }
     }
 
     private string FormatTime(float time)
     {
-        return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:00}:{1:00.000}", (int)(time / 60), time % 60);
+        int minutes = (int)(time / 60);
+        float seconds = time % 60;
+        return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:00}:{1:00.000}", minutes, seconds);
     }
 
-    [System.Serializable]
-    private class Wrapper { public List<GhostFrameData> list; }
 
     IEnumerator StartCountdown()
     {
@@ -218,33 +128,52 @@ public class ContreLaMontre : GameMode
 
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "3";
+
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "2";
-        boostWindow = true; // FenÍtre ouverte pendant le "2"
+        boostWindow = true;
 
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "1";
-        boostWindow = false; // FermÈe au "1"
+        boostWindow = false;
 
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "GO!";
 
         if (kartScript != null) kartScript.CanDrive = true;
-        if (spawnedGhostKart != null) spawnedGhostKart.CanDrive = true;
 
         raceStarted = true;
-        isRecordingGhost = true;
 
-        // --- APPLICATION DE LA FORCE TURBO DIRECTE ---
+        // --- EX√âCUTION DU BOOST DE D√âPART PROPRE ---
         if (playerPressed && kartScript != null)
         {
-            // On injecte directement une forte valeur dans la jauge de poussÈe du kart
-            kartScript.StartTurbo(10f,2f);
+            kartScript.StartTurbo(10f, 2f);
+
+            // Gestion de l'AudioSource pour ne pas √©craser le son du moteur
+            if (audioSource == null || audioSource.loop)
+            {
+                AudioSource[] allSources = GetComponents<AudioSource>();
+                foreach (AudioSource src in allSources)
+                {
+                    if (!src.loop)
+                    {
+                        audioSource = src;
+                        break;
+                    }
+                }
+            }
+
+            if (audioSource == null)
+            {
+                audioSource = gameObject.AddComponent<AudioSource>();
+            }
+
             if (audioSource != null && turboStartSound != null)
             {
+                audioSource.loop = false;
+                audioSource.pitch = 1f;
                 audioSource.PlayOneShot(turboStartSound);
             }
-            Debug.Log("Turbo Boost triggered at GO!");
         }
 
         yield return new WaitForSeconds(1);
