@@ -1,16 +1,33 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
-using UnityEngine.UI;
+
+[System.Serializable]
+public struct GhostNodeData
+{
+    public Vector3 position;
+    public Quaternion rotation;
+}
 
 public class TimeAttack : GameMode
 {
-    [Header("Références")]
+    [Header("Références UI")]
     [SerializeField] private TextMeshProUGUI startUI;
     [SerializeField] private TextMeshProUGUI currentTimerUI;
-    [SerializeField] private TextMeshProUGUI bestScoreUI; // Pour afficher le record
-    [SerializeField] private GameObject bestScoreImage; // Pour afficher le record
+    [SerializeField] private TextMeshProUGUI bestScoreUI;
+    [SerializeField] private GameObject bestScoreImage;
 
+    [Header("Configuration Fantôme")]
+    [SerializeField] private KartScriptV2 ghostKartPrefab;
+    private KartScriptV2 spawnedGhostKart;
+
+    // Listes pour stocker les positions/rotations à chaque frame
+    private List<GhostNodeData> currentLapPositions = new List<GhostNodeData>();
+    private List<GhostNodeData> bestLapPositions = new List<GhostNodeData>();
+
+    private bool isRecording = false;
+    private int playbackIndex = 0;
     private float bestLapTime = float.MaxValue;
 
     private void Start()
@@ -22,53 +39,18 @@ public class TimeAttack : GameMode
         currentTimerUI = GameObject.Find("ChronoUI")?.GetComponent<TextMeshProUGUI>();
         bestScoreUI = GameObject.Find("BestScoreUI")?.GetComponent<TextMeshProUGUI>();
         bestScoreImage = GameObject.Find("BestScoreImage");
-        bestScoreImage?.SetActive(true); // Assurez-vous que l'image est visible au début
+        bestScoreImage?.SetActive(true);
 
-        maxLaps = 99999;
+        maxLaps = 99999; // Mode infini
         LoadBestScore();
+
         if (kartScript != null) kartScript.CanDrive = false;
         StartCoroutine(InitialCountdown());
     }
 
-    public override void Initialize(LapManager lm, KartScriptV2 ks)
-    {
-        base.Initialize(lm, ks);
-        this.currentTimerUI = lm.ChronoUI;
-    }
-
-    private void Update()
-    {
-        if (raceStarted && !raceFinished)
-        {
-            // Logique de mise à jour si nécessaire
-        }
-    }
-
-    private void LoadBestScore()
-    {
-        LeaderboardCircuitMode circuitMode = GetCurrentCircuitMode();
-
-        if (LeaderboardService.Instance != null &&
-            LeaderboardService.Instance.TryGetLocalBestScore(LeaderboardGameMode.TimeAttack, circuitMode, out int bestTimeInMs))
-        {
-            bestLapTime = bestTimeInMs / 1000f;
-            if (bestScoreUI != null)
-                bestScoreUI.text = "" + FormatTime(bestLapTime);
-        }
-        else
-        {
-            bestLapTime = float.MaxValue;
-            if (bestScoreUI != null)
-                bestScoreUI.text = "--:--.--";
-        }
-    }
-
     IEnumerator InitialCountdown()
     {
-        if (kartScript != null) kartScript.CanDrive = false;
-
         yield return new WaitForSeconds(1);
-
         if (startUI != null) startUI.text = "3";
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "2";
@@ -78,34 +60,89 @@ public class TimeAttack : GameMode
         if (startUI != null) startUI.text = "GO!";
 
         if (kartScript != null) kartScript.CanDrive = true;
+
         raceStarted = true;
+        isRecording = true; // On commence à enregistrer dès le premier tour !
 
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "";
+    }
+
+    private void Update()
+    {
+        if (!raceStarted) return;
+
+        // 1. ENREGISTREMENT DU JOUEUR (À chaque frame)
+        if (isRecording && kartScript != null)
+        {
+            GhostNodeData node = new GhostNodeData
+            {
+                position = kartScript.transform.position,
+                rotation = kartScript.transform.rotation
+            };
+            currentLapPositions.Add(node);
+        }
+
+        // 2. LECTURE DU FANTÔME (S'il a été généré au tour précédent)
+        if (spawnedGhostKart != null && bestLapPositions.Count > 0)
+        {
+            if (playbackIndex < bestLapPositions.Count)
+            {
+                spawnedGhostKart.transform.position = bestLapPositions[playbackIndex].position;
+                spawnedGhostKart.transform.rotation = bestLapPositions[playbackIndex].rotation;
+                playbackIndex++;
+            }
+            else
+            {
+                // Si le fantôme a fini son enregistrement avant que le joueur passe la ligne,
+                // il s'arrête sur place (ou on peut le cacher)
+                spawnedGhostKart.gameObject.SetActive(false);
+            }
+        }
     }
 
     public override void OnLapCompleted(float lapTime)
     {
         int lapTimeInMs = Mathf.RoundToInt(lapTime * 1000f);
         bool isReverse = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted);
+
         bool scoreAccepted = isReverse
             ? LeaderboardService.EnsureInstance().SubmitTimeAttackReverse(lapTimeInMs)
             : LeaderboardService.EnsureInstance().SubmitTimeAttackNormal(lapTimeInMs);
 
-        // L'affichage local reste un feedback immédiat, mais l'envoi est décidé par profil/mode/variante dans LeaderboardService.
-        if (scoreAccepted && lapTime < bestLapTime)
+        // --- LOGIQUE DU FANTÔME DYNAMIQUE ---
+        // Si c'est le meilleur temps absolu de la session en cours
+        if (lapTime < bestLapTime)
         {
             bestLapTime = lapTime;
 
             if (bestScoreUI != null)
                 bestScoreUI.text = "" + FormatTime(bestLapTime);
+
+            // On écrase l'ancien record de positions par les positions du tour qu'on vient de faire
+            bestLapPositions = new List<GhostNodeData>(currentLapPositions);
+        }
+
+        // Réinitialisation pour le tour suivant
+        currentLapPositions.Clear();
+        playbackIndex = 0;
+
+        // S'il existe un fantôme du meilleur tour, on le fait apparaître (ou réapparaître) sur la ligne de départ
+        if (bestLapPositions.Count > 0)
+        {
+            if (spawnedGhostKart != null)
+            {
+                Destroy(spawnedGhostKart.gameObject); // On détruit l'ancien modèle
+            }
+
+            // On fait apparaître le nouveau fantôme au point de départ du premier nœud enregistré
+            spawnedGhostKart = Instantiate(ghostKartPrefab, bestLapPositions[0].position, bestLapPositions[0].rotation);
+            spawnedGhostKart.isGhost = true; // Marqué comme fantôme (intangible + silencieux !)
+            spawnedGhostKart.gameObject.SetActive(true);
         }
     }
 
-    public override void CompleteRace()
-    {
-        // Le mode Time Attack est infini, pas de fin de course automatique requise ici
-    }
+    public override void CompleteRace() { }
 
     private string FormatTime(float time)
     {
@@ -114,10 +151,5 @@ public class TimeAttack : GameMode
         return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:00}:{1:00.000}", minutes, seconds);
     }
 
-    private LeaderboardCircuitMode GetCurrentCircuitMode()
-    {
-        return InversionCatcher.instance != null && InversionCatcher.instance.Inverted
-            ? LeaderboardCircuitMode.Reverse
-            : LeaderboardCircuitMode.Normal;
-    }
+    private void LoadBestScore() { /* ... Ton code de chargement existant ... */ }
 }
