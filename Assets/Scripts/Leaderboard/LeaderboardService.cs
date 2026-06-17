@@ -17,6 +17,7 @@ public class LeaderboardService : MonoBehaviour
 
     private string currentProfileId = "local";
     private string currentProfileName = "Player";
+    private string connectedProfileId;
 
     private bool simulateOfflineMode;
     private bool isConnected;
@@ -68,6 +69,9 @@ public class LeaderboardService : MonoBehaviour
 
         currentProfileId = string.IsNullOrWhiteSpace(profile.Id) ? "local" : profile.Id;
         currentProfileName = string.IsNullOrWhiteSpace(profile.Name) ? "Player" : profile.Name;
+
+        if (connectedProfileId != currentProfileId)
+            isConnected = false;
     }
 
     public bool SubmitTimeAttackNormal(int timeInMilliseconds)
@@ -144,25 +148,48 @@ public class LeaderboardService : MonoBehaviour
 
     private void StartLootLockerSession()
     {
-        if (simulateOfflineMode || isConnected || isStartingSession)
+        if (simulateOfflineMode || isStartingSession)
+            return;
+
+        if (isConnected && connectedProfileId == currentProfileId)
             return;
 
         LootLockerConfigSanitizer.SanitizeApiKey();
         isStartingSession = true;
 
-        LootLockerSDKManager.StartGuestSession(response =>
+        string requestedProfileId = currentProfileId;
+        string guestIdentifier = GetLootLockerGuestIdentifierForCurrentProfile();
+
+        LootLockerSDKManager.StartGuestSession(guestIdentifier, response =>
         {
             isStartingSession = false;
 
             if (!response.success)
             {
                 isConnected = false;
+                connectedProfileId = string.Empty;
                 Debug.LogWarning("LeaderboardService : impossible de démarrer la session LootLocker.");
                 return;
             }
 
+            if (requestedProfileId != currentProfileId)
+            {
+                isConnected = false;
+                connectedProfileId = string.Empty;
+                StartLootLockerSession();
+                return;
+            }
+
             isConnected = true;
-            TryUploadAllPendingLocalScores();
+            connectedProfileId = currentProfileId;
+
+            LootLockerSDKManager.SetPlayerName(currentProfileName, nameResponse =>
+            {
+                if (!nameResponse.success)
+                    Debug.LogWarning("LeaderboardService : impossible de mettre à jour le nom LootLocker : " + nameResponse.errorData.message);
+
+                TryUploadAllPendingLocalScores();
+            });
         });
     }
 
@@ -179,8 +206,13 @@ public class LeaderboardService : MonoBehaviour
         LeaderboardCircuitMode circuitMode
     )
     {
-        if (simulateOfflineMode || !isConnected || !HasPendingUpload(gameMode, circuitMode))
+        if (simulateOfflineMode ||
+            !isConnected ||
+            connectedProfileId != currentProfileId ||
+            !HasPendingUpload(gameMode, circuitMode))
+        {
             return;
+        }
 
         string leaderboardKey = GetLeaderboardKey(gameMode, circuitMode);
 
@@ -193,7 +225,7 @@ public class LeaderboardService : MonoBehaviour
         int scoreToUpload = GetPendingUploadScore(gameMode, circuitMode);
         string metadata = JsonUtility.ToJson(new ScoreMetadata(currentProfileId, currentProfileName));
 
-        LootLockerSDKManager.SubmitScore(GetServerMemberIdForCurrentProfile(), scoreToUpload, leaderboardKey, metadata, response =>
+        LootLockerSDKManager.SubmitScore(string.Empty, scoreToUpload, leaderboardKey, metadata, response =>
         {
             if (!response.success)
             {
@@ -323,6 +355,13 @@ public class LeaderboardService : MonoBehaviour
     {
         string memberId = currentProfileName.Trim().Replace(" ", "_");
         return string.IsNullOrWhiteSpace(memberId) ? currentProfileId : memberId;
+    }
+
+    private string GetLootLockerGuestIdentifierForCurrentProfile()
+    {
+        return string.IsNullOrWhiteSpace(currentProfileId)
+            ? "local_profile_default"
+            : "local_profile_" + currentProfileId;
     }
 
     private string FormatTime(int milliseconds)
