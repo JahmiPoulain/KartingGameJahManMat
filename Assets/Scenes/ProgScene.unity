@@ -17846,12 +17846,14 @@ MonoBehaviour:
   pivot: {fileID: 220121083}
   aiguille: {fileID: 962462873}
   speedText: {fileID: 0}
-  maxDisplayedSpeedKmh: 110
+  normalMaxDisplayedSpeedKmh: 25
+  turboMaxDisplayedSpeedKmh: 35
   kart: {fileID: 4425871726254386282}
   smoothSpeed: 5
   speedSmooth: 5
   shakeThreshold: 0.98
   shakeAmount: 5
+  speedTextShakeAmountKmh: 2
   shakeFrequency: 25
 --- !u!4 &968857101 stripped
 Transform:
@@ -31315,12 +31317,14 @@ MonoBehaviour:
   pivot: {fileID: 2080252442}
   aiguille: {fileID: 2129625046}
   speedText: {fileID: 57152877}
-  maxDisplayedSpeedKmh: 110
+  normalMaxDisplayedSpeedKmh: 70
+  turboMaxDisplayedSpeedKmh: 80
   kart: {fileID: 4425871726254386282}
   smoothSpeed: 5
   speedSmooth: 5
   shakeThreshold: 0.98
   shakeAmount: 2
+  speedTextShakeAmountKmh: 2
   shakeFrequency: 35
 --- !u!114 &2129625048
 MonoBehaviour:
