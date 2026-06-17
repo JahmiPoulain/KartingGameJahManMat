@@ -18,6 +18,7 @@ public class LeaderboardService : MonoBehaviour
     private string currentProfileId = "local";
     private string currentProfileName = "Player";
     private string connectedProfileId;
+    private string connectedPlayerUlid;
 
     private bool simulateOfflineMode;
     private bool isConnected;
@@ -71,7 +72,10 @@ public class LeaderboardService : MonoBehaviour
         currentProfileName = string.IsNullOrWhiteSpace(profile.Name) ? "Player" : profile.Name;
 
         if (connectedProfileId != currentProfileId)
+        {
             isConnected = false;
+            connectedPlayerUlid = string.Empty;
+        }
     }
 
     public bool SubmitTimeAttackNormal(int timeInMilliseconds)
@@ -168,6 +172,7 @@ public class LeaderboardService : MonoBehaviour
             {
                 isConnected = false;
                 connectedProfileId = string.Empty;
+                connectedPlayerUlid = string.Empty;
                 Debug.LogWarning("LeaderboardService : impossible de démarrer la session LootLocker.");
                 return;
             }
@@ -176,12 +181,14 @@ public class LeaderboardService : MonoBehaviour
             {
                 isConnected = false;
                 connectedProfileId = string.Empty;
+                connectedPlayerUlid = string.Empty;
                 StartLootLockerSession();
                 return;
             }
 
             isConnected = true;
             connectedProfileId = currentProfileId;
+            connectedPlayerUlid = response.player_ulid;
 
             TryUploadAllPendingLocalScores();
         });
@@ -218,8 +225,9 @@ public class LeaderboardService : MonoBehaviour
 
         int scoreToUpload = GetPendingUploadScore(gameMode, circuitMode);
         string metadata = JsonUtility.ToJson(new ScoreMetadata(currentProfileId, currentProfileName));
+        string memberId = GetServerMemberIdForCurrentProfile();
 
-        LootLockerSDKManager.SubmitScore(string.Empty, scoreToUpload, leaderboardKey, metadata, response =>
+        LootLockerSDKManager.SubmitScore(memberId, scoreToUpload, leaderboardKey, metadata, response =>
         {
             if (!response.success)
             {
@@ -236,7 +244,7 @@ public class LeaderboardService : MonoBehaviour
                 $"Score synchronisé avec LootLocker pour {currentProfileName} / {gameMode} / {circuitMode} : " +
                 FormatTime(scoreToUpload)
             );
-        });
+        }, connectedPlayerUlid);
     }
 
     private bool SaveLocalBestScoreIfBetter(

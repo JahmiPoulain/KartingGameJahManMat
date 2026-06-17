@@ -111,6 +111,7 @@ public class LeaderboardManager : MonoBehaviour
     private int localPlayerId;
     private string localPlayerName;
     private string connectedProfileId;
+    private string connectedPlayerUlid;
 
     private Coroutine pendingServerRefresh;
     private Coroutine reconnectCoroutine;
@@ -304,12 +305,26 @@ public class LeaderboardManager : MonoBehaviour
 
         if (Input.GetKeyDown(debugSubmitKey))
         {
-            int randomScore = UnityEngine.Random.Range(minRandomTimeMs, maxRandomTimeMs + 1);
+            int debugScore = CreateDebugSubmitScore();
 
-            Debug.Log($"Score debug envoyé : {FormatTime(randomScore)}");
+            Debug.Log(
+                $"Score debug demandé pour {GetCurrentPlayerProfileName()} / {currentGameMode} / {currentCircuitMode} : " +
+                FormatTime(debugScore)
+            );
 
-            SubmitScoreAndRefresh(randomScore);
+            SubmitScoreAndRefresh(debugScore);
         }
+    }
+
+    private int CreateDebugSubmitScore()
+    {
+        if (!HasLocalBestScore(currentGameMode, currentCircuitMode))
+            return UnityEngine.Random.Range(minRandomTimeMs, maxRandomTimeMs + 1);
+
+        int currentBestScore = GetLocalBestScore(currentGameMode, currentCircuitMode);
+        int improvement = UnityEngine.Random.Range(500, 3000);
+
+        return Mathf.Max(1, currentBestScore - improvement);
     }
 
     // -------------------------------------------------------------------------
@@ -467,6 +482,7 @@ public class LeaderboardManager : MonoBehaviour
                 if (sessionMayBeInvalid)
                 {
                     isConnected = false;
+                    connectedPlayerUlid = string.Empty;
                     SyncProfilsOnlineState();
                 }
 
@@ -602,6 +618,7 @@ public class LeaderboardManager : MonoBehaviour
         {
             isConnected = false;
             isStartingSession = false;
+            connectedPlayerUlid = string.Empty;
             SyncProfilsOnlineState();
 
             Debug.LogWarning("Mode hors ligne simulé actif.");
@@ -633,6 +650,7 @@ public class LeaderboardManager : MonoBehaviour
                 Debug.LogWarning("Impossible de démarrer la session LootLocker.");
 
                 isConnected = false;
+                connectedPlayerUlid = string.Empty;
                 SyncProfilsOnlineState();
                 BuildOfflineViewFromLocalSave(true);
 
@@ -643,6 +661,7 @@ public class LeaderboardManager : MonoBehaviour
             {
                 isConnected = false;
                 connectedProfileId = string.Empty;
+                connectedPlayerUlid = string.Empty;
                 SyncProfilsOnlineState();
                 StartLootLockerSession();
                 return;
@@ -652,6 +671,7 @@ public class LeaderboardManager : MonoBehaviour
             connectedProfileId = profileId;
             SyncProfilsOnlineState();
             localPlayerId = response.player_id;
+            connectedPlayerUlid = response.player_ulid;
 
             localPlayerName = GetCurrentPlayerProfileName();
             FinishConnectedSessionSetup();
@@ -822,8 +842,14 @@ public class LeaderboardManager : MonoBehaviour
 
         int scoreToUpload = GetPendingUploadScore(gameMode, circuitMode, profile.Id);
         string metadata = JsonUtility.ToJson(new ScoreMetadata(profile.Id, profile.Name));
+        string memberId = GetServerMemberIdForProfile(profile);
 
-        LootLockerSDKManager.SubmitScore(string.Empty, scoreToUpload, leaderboardKey, metadata, scoreResponse =>
+        Debug.Log(
+            $"Upload LootLocker : leaderboard={leaderboardKey}, memberId={memberId}, joueur={profile.Name}, " +
+            $"profileId={profile.Id}, score={FormatTime(scoreToUpload)}, metadata={metadata}"
+        );
+
+        LootLockerSDKManager.SubmitScore(memberId, scoreToUpload, leaderboardKey, metadata, scoreResponse =>
         {
             if (!scoreResponse.success)
             {
@@ -849,7 +875,7 @@ public class LeaderboardManager : MonoBehaviour
 
                 pendingServerRefresh = StartCoroutine(RefreshLeaderboardAfterDelay());
             }
-        });
+        }, connectedPlayerUlid);
     }
 
     private IEnumerator RefreshLeaderboardAfterDelay()
@@ -1343,6 +1369,7 @@ public class LeaderboardManager : MonoBehaviour
         LeaderboardService.EnsureInstance().SetCurrentProfile(GetCurrentPlayerProfile());
         isConnected = false;
         connectedProfileId = string.Empty;
+        connectedPlayerUlid = string.Empty;
         UpdateModeLabels();
         BuildOfflineViewFromLocalSave(false);
         StartLootLockerSession();
@@ -1354,6 +1381,7 @@ public class LeaderboardManager : MonoBehaviour
         MarkAllLocalScoresPendingUpload(profile);
         isConnected = false;
         connectedProfileId = string.Empty;
+        connectedPlayerUlid = string.Empty;
         StartLootLockerSession();
 
         RefreshLeaderboard();

@@ -418,14 +418,6 @@ public class ProfilsManager : MonoBehaviour
             return;
         }
 
-        if (isRename &&
-            !string.IsNullOrWhiteSpace(ignoredProfileId) &&
-            ArePlayerNamesEquivalent(playerName, GetProfileName(ignoredProfileId)))
-        {
-            onValidated?.Invoke(true, string.Empty);
-            return;
-        }
-
         if (simulateOfflineMode)
         {
             onValidated?.Invoke(false, "Connexion requise pour vérifier ce nom.");
@@ -471,6 +463,34 @@ public class ProfilsManager : MonoBehaviour
         if (playerProfiles.Count <= 1)
         {
             SetPlayerManagementStatus("Tu dois garder au moins un joueur.");
+            return;
+        }
+
+        if (simulateOfflineMode)
+        {
+            SetPlayerManagementStatus("Connexion requise pour supprimer ce joueur.");
+            return;
+        }
+
+        SetPlayerManagementStatus("Suppression du joueur...");
+
+        ReleaseLootLockerPlayerName(profile, (success, errorMessage) =>
+        {
+            if (!success)
+            {
+                SetPlayerManagementStatus(errorMessage);
+                return;
+            }
+
+            CompleteDeletePlayer(profile);
+        });
+    }
+
+    private void CompleteDeletePlayer(PlayerProfile profile)
+    {
+        if (profile == null || !playerProfiles.Contains(profile))
+        {
+            SetPlayerManagementStatus("Joueur introuvable.");
             return;
         }
 
@@ -560,7 +580,102 @@ public class ProfilsManager : MonoBehaviour
                 return;
             }
 
-            LootLockerSDKManager.SetPlayerName(playerName, nameResponse =>
+            LootLockerSDKManager.LookupPlayerNamesByPlayerNames(new[] { playerName }, lookupResponse =>
+            {
+                if (!lookupResponse.success)
+                {
+                    string message = lookupResponse.errorData != null
+                        ? lookupResponse.errorData.message
+                        : "erreur inconnue";
+
+                    Debug.LogWarning("Impossible de vérifier le nom LootLocker : " + message);
+                    onComplete?.Invoke(false, "Impossible de vérifier ce nom en ligne.");
+                    return;
+                }
+
+                bool nameIsTaken = IsLootLockerPlayerNameTakenByAnotherPlayer(
+                    lookupResponse.players,
+                    playerName,
+                    sessionResponse.player_ulid
+                );
+
+                if (nameIsTaken)
+                {
+                    onComplete?.Invoke(false, "Ce nom est déjà pris en ligne.");
+                    return;
+                }
+
+                LootLockerSDKManager.SetPlayerName(playerName, nameResponse =>
+                {
+                    if (!nameResponse.success)
+                    {
+                        string message = nameResponse.errorData != null
+                            ? nameResponse.errorData.message
+                            : "erreur inconnue";
+
+                        Debug.LogWarning("Impossible de réserver le nom LootLocker : " + message);
+                        onComplete?.Invoke(
+                            false,
+                            nameResponse.statusCode == 409
+                                ? "Ce nom est déjà pris en ligne."
+                                : "Impossible de réserver ce nom en ligne."
+                        );
+                        return;
+                    }
+
+                    onComplete?.Invoke(true, string.Empty);
+                }, sessionResponse.player_ulid);
+            }, sessionResponse.player_ulid);
+        });
+    }
+
+    private bool IsLootLockerPlayerNameTakenByAnotherPlayer(
+        PlayerNameWithIDs[] players,
+        string playerName,
+        string currentPlayerUlid
+    )
+    {
+        if (players == null)
+            return false;
+
+        foreach (PlayerNameWithIDs player in players)
+        {
+            if (player == null || !ArePlayerNamesEquivalent(player.name, playerName))
+                continue;
+
+            if (string.Equals(player.ulid, currentPlayerUlid, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private void ReleaseLootLockerPlayerName(PlayerProfile profile, Action<bool, string> onComplete)
+    {
+        if (profile == null)
+        {
+            onComplete?.Invoke(false, "Joueur introuvable.");
+            return;
+        }
+
+        LootLockerConfigSanitizer.SanitizeApiKey();
+
+        string guestIdentifier = GetLootLockerGuestIdentifierForProfile(profile);
+
+        LootLockerSDKManager.StartGuestSession(guestIdentifier, sessionResponse =>
+        {
+            if (!sessionResponse.success)
+            {
+                Debug.LogWarning("Impossible de libérer le nom LootLocker : session indisponible.");
+                onComplete?.Invoke(false, "Impossible de supprimer ce joueur en ligne.");
+                return;
+            }
+
+            string releasedName = GenerateReleasedLootLockerName(profile);
+
+            LootLockerSDKManager.SetPlayerName(releasedName, nameResponse =>
             {
                 if (!nameResponse.success)
                 {
@@ -568,19 +683,23 @@ public class ProfilsManager : MonoBehaviour
                         ? nameResponse.errorData.message
                         : "erreur inconnue";
 
-                    Debug.LogWarning("Nom LootLocker refusé : " + message);
-                    onComplete?.Invoke(
-                        false,
-                        nameResponse.statusCode == 409
-                            ? "Ce nom est déjà pris en ligne."
-                            : "Impossible de réserver ce nom en ligne."
-                    );
+                    Debug.LogWarning("Impossible de libérer le nom LootLocker : " + message);
+                    onComplete?.Invoke(false, "Impossible de libérer ce nom en ligne.");
                     return;
                 }
 
                 onComplete?.Invoke(true, string.Empty);
             }, sessionResponse.player_ulid);
         });
+    }
+
+    private string GenerateReleasedLootLockerName(PlayerProfile profile)
+    {
+        string profileId = profile != null && !string.IsNullOrWhiteSpace(profile.Id)
+            ? profile.Id
+            : GeneratePlayerProfileId();
+
+        return "deleted_" + profileId;
     }
 
     private string GetReservedNewProfileId(string playerName)
