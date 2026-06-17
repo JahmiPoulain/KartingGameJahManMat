@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using LootLocker.Requests;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,8 +13,6 @@ public class ProfilsManager : MonoBehaviour
 
     private const int MaxPlayerProfiles = 6;
     private const int MaxPlayerNameLength = 12;
-    private const int RemoteNameCheckBatchSize = 100;
-
     private const string PlayerProfilesJsonKey = "Leaderboard_PlayerProfilesJson";
     private const string CurrentPlayerProfileIdKey = "Leaderboard_CurrentPlayerProfileId";
 
@@ -166,6 +162,19 @@ public class ProfilsManager : MonoBehaviour
 
         string playerName = SanitizePlayerName(profile.Name).Replace(" ", "_");
         return string.IsNullOrWhiteSpace(playerName) ? profile.Id : playerName;
+    }
+
+    public string GetLootLockerGuestIdentifierForProfile(PlayerProfile profile)
+    {
+        string profileId = profile != null ? profile.Id : GetCurrentPlayerProfileId();
+        return GetLootLockerGuestIdentifierForProfileId(profileId);
+    }
+
+    public string GetLootLockerGuestIdentifierForProfileId(string profileId)
+    {
+        return string.IsNullOrWhiteSpace(profileId)
+            ? "local_profile_default"
+            : "local_profile_" + profileId;
     }
 
     public bool ArePlayerNamesEquivalent(string left, string right)
@@ -403,67 +412,6 @@ public class ProfilsManager : MonoBehaviour
             return;
         }
 
-        StartCoroutine(ValidatePlayerNameRemotely(playerName, onValidated));
-    }
-
-    private IEnumerator ValidatePlayerNameRemotely(string playerName, Action<bool> onValidated)
-    {
-        if (simulateOfflineMode || !isConnected || leaderboardKeys.Count == 0)
-        {
-            onValidated?.Invoke(true);
-            yield break;
-        }
-
-        foreach (string leaderboardKey in leaderboardKeys)
-        {
-            int offset = 0;
-            bool shouldContinue = true;
-
-            while (shouldContinue)
-            {
-                bool requestDone = false;
-                bool requestSucceeded = false;
-                bool nameExists = false;
-                int itemCount = 0;
-
-                LootLockerSDKManager.GetScoreList(leaderboardKey, RemoteNameCheckBatchSize, offset, response =>
-                {
-                    requestDone = true;
-                    requestSucceeded = response.success;
-
-                    LootLockerLeaderboardMember[] items = response.items ?? Array.Empty<LootLockerLeaderboardMember>();
-                    itemCount = items.Length;
-
-                    foreach (LootLockerLeaderboardMember item in items)
-                    {
-                        if (IsRemotePlayerNameMatch(item, playerName))
-                        {
-                            nameExists = true;
-                            break;
-                        }
-                    }
-                });
-
-                yield return new WaitUntil(() => requestDone);
-
-                if (!requestSucceeded)
-                {
-                    Debug.LogWarning("Impossible de vérifier les profils distants LootLocker.");
-                    onValidated?.Invoke(true);
-                    yield break;
-                }
-
-                if (nameExists)
-                {
-                    onValidated?.Invoke(false);
-                    yield break;
-                }
-
-                shouldContinue = itemCount == RemoteNameCheckBatchSize;
-                offset += itemCount;
-            }
-        }
-
         onValidated?.Invoke(true);
     }
 
@@ -523,40 +471,6 @@ public class ProfilsManager : MonoBehaviour
         PlayerPrefs.Save();
 
         CurrentProfileChanged?.Invoke();
-    }
-
-    private bool IsRemotePlayerNameMatch(LootLockerLeaderboardMember item, string playerName)
-    {
-        ScoreMetadata metadata = GetScoreMetadata(item);
-
-        if (ArePlayerNamesEquivalent(metadata?.ProfileName, playerName))
-            return true;
-
-        if (item.player != null && ArePlayerNamesEquivalent(item.player.name, playerName))
-            return true;
-
-        string memberId = GetLeaderboardMemberId(item);
-        return ArePlayerNamesEquivalent(memberId, playerName);
-    }
-
-    private ScoreMetadata GetScoreMetadata(LootLockerLeaderboardMember item)
-    {
-        if (item == null || string.IsNullOrWhiteSpace(item.metadata))
-            return null;
-
-        try
-        {
-            return JsonUtility.FromJson<ScoreMetadata>(item.metadata);
-        }
-        catch (ArgumentException)
-        {
-            return null;
-        }
-    }
-
-    private string GetLeaderboardMemberId(LootLockerLeaderboardMember item)
-    {
-        return TryGetStringMember(item, "member_id");
     }
 
     private void UpdatePlayerManagementControls()
@@ -644,13 +558,13 @@ public class ProfilsManager : MonoBehaviour
     {
         for (int i = 0; i < 50; i++)
         {
-            string candidate = "Player_" + GetShortCode(Guid.NewGuid().ToString("N"));
+            string candidate = "Joueur_" + GetShortCode(Guid.NewGuid().ToString("N"));
 
             if (!IsPlayerNameAlreadyUsed(candidate))
                 return candidate;
         }
 
-        return "Player_" + UnityEngine.Random.Range(10000, 99999);
+        return "Joueur_" + UnityEngine.Random.Range(10000, 99999);
     }
 
     private void SavePlayerProfiles()
@@ -693,21 +607,4 @@ public class ProfilsManager : MonoBehaviour
         return cleanSource.PadRight(CodeLength, '0').ToUpperInvariant();
     }
 
-    private string TryGetStringMember(object target, string memberName)
-    {
-        if (target == null)
-            return string.Empty;
-
-        Type targetType = target.GetType();
-
-        System.Reflection.PropertyInfo propertyInfo = targetType.GetProperty(memberName);
-        if (propertyInfo != null && propertyInfo.PropertyType == typeof(string))
-            return propertyInfo.GetValue(target) as string ?? string.Empty;
-
-        System.Reflection.FieldInfo fieldInfo = targetType.GetField(memberName);
-        if (fieldInfo != null && fieldInfo.FieldType == typeof(string))
-            return fieldInfo.GetValue(target) as string ?? string.Empty;
-
-        return string.Empty;
-    }
 }

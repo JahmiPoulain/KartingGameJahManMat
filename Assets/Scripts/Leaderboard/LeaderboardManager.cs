@@ -110,6 +110,7 @@ public class LeaderboardManager : MonoBehaviour
 
     private int localPlayerId;
     private string localPlayerName;
+    private string connectedProfileId;
 
     private Coroutine pendingServerRefresh;
     private Coroutine reconnectCoroutine;
@@ -598,13 +599,21 @@ public class LeaderboardManager : MonoBehaviour
             return;
         }
 
-        if (isConnected || isStartingSession)
+        PlayerProfile profile = GetCurrentPlayerProfile();
+        string profileId = profile != null ? profile.Id : GetCurrentPlayerProfileId();
+
+        if (isConnected && connectedProfileId == profileId)
+            return;
+
+        if (isStartingSession)
             return;
 
         LootLockerConfigSanitizer.SanitizeApiKey();
         isStartingSession = true;
 
-        LootLockerSDKManager.StartGuestSession(response =>
+        string guestIdentifier = GetLootLockerGuestIdentifierForProfile(profile);
+
+        LootLockerSDKManager.StartGuestSession(guestIdentifier, response =>
         {
             isStartingSession = false;
 
@@ -619,14 +628,29 @@ public class LeaderboardManager : MonoBehaviour
                 return;
             }
 
+            if (profileId != GetCurrentPlayerProfileId())
+            {
+                isConnected = false;
+                connectedProfileId = string.Empty;
+                SyncProfilsOnlineState();
+                StartLootLockerSession();
+                return;
+            }
+
             isConnected = true;
+            connectedProfileId = profileId;
             SyncProfilsOnlineState();
             localPlayerId = response.player_id;
 
-            // Le nom affiché dans le jeu vient du profil local actif.
-            // On ne dépend pas du nom LootLocker, car SetPlayerName peut être refusé selon la configuration.
             localPlayerName = GetCurrentPlayerProfileName();
-            FinishConnectedSessionSetup();
+
+            LootLockerSDKManager.SetPlayerName(localPlayerName, nameResponse =>
+            {
+                if (!nameResponse.success)
+                    Debug.LogWarning("Impossible de mettre à jour le nom LootLocker : " + nameResponse.errorData.message);
+
+                FinishConnectedSessionSetup();
+            });
         });
     }
 
@@ -739,10 +763,7 @@ public class LeaderboardManager : MonoBehaviour
     {
         foreach (LeaderboardTarget target in GetAllLeaderboardTargets())
         {
-            foreach (PlayerProfile profile in GetProfiles())
-            {
-                TryUploadPendingLocalScore(profile, target.GameMode, target.CircuitMode);
-            }
+            TryUploadPendingLocalScore(GetCurrentPlayerProfile(), target.GameMode, target.CircuitMode);
         }
     }
 
@@ -781,6 +802,9 @@ public class LeaderboardManager : MonoBehaviour
         if (!isConnected)
             return;
 
+        if (profile.Id != GetCurrentPlayerProfileId() || connectedProfileId != profile.Id)
+            return;
+
         if (!HasPendingUpload(gameMode, circuitMode, profile.Id))
             return;
 
@@ -795,7 +819,7 @@ public class LeaderboardManager : MonoBehaviour
         int scoreToUpload = GetPendingUploadScore(gameMode, circuitMode, profile.Id);
         string metadata = JsonUtility.ToJson(new ScoreMetadata(profile.Id, profile.Name));
 
-        LootLockerSDKManager.SubmitScore(GetServerMemberIdForProfile(profile), scoreToUpload, leaderboardKey, metadata, scoreResponse =>
+        LootLockerSDKManager.SubmitScore(string.Empty, scoreToUpload, leaderboardKey, metadata, scoreResponse =>
         {
             if (!scoreResponse.success)
             {
@@ -1312,15 +1336,25 @@ public class LeaderboardManager : MonoBehaviour
     {
         localPlayerName = GetCurrentPlayerProfileName();
         LeaderboardService.EnsureInstance().SetCurrentProfile(GetCurrentPlayerProfile());
+        isConnected = false;
+        connectedProfileId = string.Empty;
         UpdateModeLabels();
-        RefreshLeaderboard();
+        BuildOfflineViewFromLocalSave(false);
+        StartLootLockerSession();
     }
 
     private void OnProfileRenamed(PlayerProfile profile)
     {
         LeaderboardService.EnsureInstance().SetCurrentProfile(GetCurrentPlayerProfile());
         MarkAllLocalScoresPendingUpload(profile);
-        TryUploadAllPendingLocalScores();
+
+        if (profile != null && profile.Id == GetCurrentPlayerProfileId())
+        {
+            isConnected = false;
+            connectedProfileId = string.Empty;
+            StartLootLockerSession();
+        }
+
         RefreshLeaderboard();
     }
 
@@ -1383,6 +1417,14 @@ public class LeaderboardManager : MonoBehaviour
             return profile != null ? profile.Id : string.Empty;
 
         return profilsManager.GetServerMemberIdForProfile(profile);
+    }
+
+    private string GetLootLockerGuestIdentifierForProfile(PlayerProfile profile)
+    {
+        if (profilsManager == null)
+            return profile != null ? "local_profile_" + profile.Id : "local_profile_default";
+
+        return profilsManager.GetLootLockerGuestIdentifierForProfile(profile);
     }
 
     private void DeleteLocalSavesForProfile(string playerProfileId)
