@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using LootLocker.Requests;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -29,6 +30,8 @@ public class ProfilsManager : MonoBehaviour
 
     private string currentPlayerProfileId;
     private string selectedPlayerProfileId;
+    private string reservedNewProfileId;
+    private string reservedNewProfileName;
     private bool isPlayerManagementMode;
     private bool simulateOfflineMode;
     private bool isConnected;
@@ -327,23 +330,28 @@ public class ProfilsManager : MonoBehaviour
         if (string.IsNullOrWhiteSpace(playerName))
         {
             SetPlayerManagementStatus("Nom invalide.");
+            ClearReservedNewProfile();
             return;
         }
 
         if (playerProfiles.Count >= MaxPlayerProfiles)
         {
             SetPlayerManagementStatus($"Maximum {MaxPlayerProfiles} joueurs.");
+            ClearReservedNewProfile();
             return;
         }
 
         if (IsPlayerNameAlreadyUsed(playerName))
         {
             SetPlayerManagementStatus("Ce nom existe déjà.");
+            ClearReservedNewProfile();
             return;
         }
 
-        PlayerProfile profile = new PlayerProfile(GeneratePlayerProfileId(), playerName);
+        string profileId = GetReservedNewProfileId(playerName);
+        PlayerProfile profile = new PlayerProfile(profileId, playerName);
         playerProfiles.Add(profile);
+        ClearReservedNewProfile();
 
         SetCurrentPlayerProfile(profile.Id);
         selectedPlayerProfileId = profile.Id;
@@ -395,24 +403,59 @@ public class ProfilsManager : MonoBehaviour
             CurrentProfileChanged?.Invoke();
     }
 
-    private void ValidatePlayerNameFromPlayerPage(string rawPlayerName, string ignoredProfileId, Action<bool> onValidated)
+    private void ValidatePlayerNameFromPlayerPage(
+        string rawPlayerName,
+        string ignoredProfileId,
+        bool isRename,
+        Action<bool, string> onValidated
+    )
     {
         string playerName = SanitizePlayerName(rawPlayerName);
 
         if (string.IsNullOrWhiteSpace(playerName) || IsPlayerNameAlreadyUsed(playerName, ignoredProfileId))
         {
-            onValidated?.Invoke(false);
+            onValidated?.Invoke(false, "Ce nom existe déjà.");
             return;
         }
 
-        if (!string.IsNullOrWhiteSpace(ignoredProfileId) &&
+        if (isRename &&
+            !string.IsNullOrWhiteSpace(ignoredProfileId) &&
             ArePlayerNamesEquivalent(playerName, GetProfileName(ignoredProfileId)))
         {
-            onValidated?.Invoke(true);
+            onValidated?.Invoke(true, string.Empty);
             return;
         }
 
-        onValidated?.Invoke(true);
+        if (simulateOfflineMode)
+        {
+            onValidated?.Invoke(false, "Connexion requise pour vérifier ce nom.");
+            return;
+        }
+
+        string targetProfileId = isRename ? ignoredProfileId : GeneratePlayerProfileId();
+
+        if (string.IsNullOrWhiteSpace(targetProfileId))
+        {
+            onValidated?.Invoke(false, "Joueur introuvable.");
+            return;
+        }
+
+        ReserveLootLockerPlayerName(targetProfileId, playerName, (isAvailable, errorMessage) =>
+        {
+            if (!isAvailable)
+            {
+                onValidated?.Invoke(false, errorMessage);
+                return;
+            }
+
+            if (!isRename)
+            {
+                reservedNewProfileId = targetProfileId;
+                reservedNewProfileName = playerName;
+            }
+
+            onValidated?.Invoke(true, string.Empty);
+        });
     }
 
     private void DeletePlayerFromPlayerPage(string profileId)
@@ -500,6 +543,61 @@ public class ProfilsManager : MonoBehaviour
         }
 
         return false;
+    }
+
+    private void ReserveLootLockerPlayerName(string profileId, string playerName, Action<bool, string> onComplete)
+    {
+        LootLockerConfigSanitizer.SanitizeApiKey();
+
+        string guestIdentifier = GetLootLockerGuestIdentifierForProfileId(profileId);
+
+        LootLockerSDKManager.StartGuestSession(guestIdentifier, sessionResponse =>
+        {
+            if (!sessionResponse.success)
+            {
+                Debug.LogWarning("Impossible de vérifier le nom LootLocker : session indisponible.");
+                onComplete?.Invoke(false, "Impossible de vérifier ce nom en ligne.");
+                return;
+            }
+
+            LootLockerSDKManager.SetPlayerName(playerName, nameResponse =>
+            {
+                if (!nameResponse.success)
+                {
+                    string message = nameResponse.errorData != null
+                        ? nameResponse.errorData.message
+                        : "erreur inconnue";
+
+                    Debug.LogWarning("Nom LootLocker refusé : " + message);
+                    onComplete?.Invoke(
+                        false,
+                        nameResponse.statusCode == 409
+                            ? "Ce nom est déjà pris en ligne."
+                            : "Impossible de réserver ce nom en ligne."
+                    );
+                    return;
+                }
+
+                onComplete?.Invoke(true, string.Empty);
+            }, sessionResponse.player_ulid);
+        });
+    }
+
+    private string GetReservedNewProfileId(string playerName)
+    {
+        if (!string.IsNullOrWhiteSpace(reservedNewProfileId) &&
+            ArePlayerNamesEquivalent(reservedNewProfileName, playerName))
+        {
+            return reservedNewProfileId;
+        }
+
+        return GeneratePlayerProfileId();
+    }
+
+    private void ClearReservedNewProfile()
+    {
+        reservedNewProfileId = string.Empty;
+        reservedNewProfileName = string.Empty;
     }
 
     private bool HasPlayerProfile(string profileId)

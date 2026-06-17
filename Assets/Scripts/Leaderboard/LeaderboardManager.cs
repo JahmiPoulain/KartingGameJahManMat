@@ -654,14 +654,7 @@ public class LeaderboardManager : MonoBehaviour
             localPlayerId = response.player_id;
 
             localPlayerName = GetCurrentPlayerProfileName();
-
-            LootLockerSDKManager.SetPlayerName(localPlayerName, nameResponse =>
-            {
-                if (!nameResponse.success)
-                    Debug.LogWarning("Impossible de mettre à jour le nom LootLocker : " + nameResponse.errorData.message);
-
-                FinishConnectedSessionSetup();
-            });
+            FinishConnectedSessionSetup();
         });
     }
 
@@ -1359,13 +1352,9 @@ public class LeaderboardManager : MonoBehaviour
     {
         LeaderboardService.EnsureInstance().SetCurrentProfile(GetCurrentPlayerProfile());
         MarkAllLocalScoresPendingUpload(profile);
-
-        if (profile != null && profile.Id == GetCurrentPlayerProfileId())
-        {
-            isConnected = false;
-            connectedProfileId = string.Empty;
-            StartLootLockerSession();
-        }
+        isConnected = false;
+        connectedProfileId = string.Empty;
+        StartLootLockerSession();
 
         RefreshLeaderboard();
     }

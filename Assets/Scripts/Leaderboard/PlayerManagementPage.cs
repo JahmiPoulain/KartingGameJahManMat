@@ -48,7 +48,7 @@ public class PlayerManagementPage : MonoBehaviour
     private Action<string, string> renamePlayerCallback;
     private Action<string> deletePlayerCallback;
     private Action<string> choosePlayerCallback;
-    private Action<string, string, Action<bool>> validatePlayerNameCallback;
+    private Action<string, string, bool, Action<bool, string>> validatePlayerNameCallback;
 
     private string editedPlayerId;
     private string deletedPlayerId;
@@ -94,7 +94,7 @@ public class PlayerManagementPage : MonoBehaviour
         Action<string, string> onRenamePlayer,
         Action<string> onDeletePlayer,
         Action<string> onChoosePlayer,
-        Action<string, string, Action<bool>> onValidatePlayerName
+        Action<string, string, bool, Action<bool, string>> onValidatePlayerName
     )
     {
         addPlayerCallback = onAddPlayer;
@@ -314,13 +314,13 @@ public class PlayerManagementPage : MonoBehaviour
         SetNamePopupWaiting(true);
         SetNamePopupError(checkingProfilesMessage);
 
-        validatePlayerNameCallback.Invoke(playerName, ignoredProfileId, isAvailable =>
+        validatePlayerNameCallback.Invoke(playerName, ignoredProfileId, isRenamePopup, (isAvailable, errorMessage) =>
         {
             SetNamePopupWaiting(false);
 
             if (!isAvailable)
             {
-                SetNamePopupError(duplicateNameError);
+                SetNamePopupError(string.IsNullOrWhiteSpace(errorMessage) ? duplicateNameError : errorMessage);
                 return;
             }
 

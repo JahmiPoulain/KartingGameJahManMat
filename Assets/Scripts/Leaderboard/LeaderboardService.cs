@@ -183,13 +183,7 @@ public class LeaderboardService : MonoBehaviour
             isConnected = true;
             connectedProfileId = currentProfileId;
 
-            LootLockerSDKManager.SetPlayerName(currentProfileName, nameResponse =>
-            {
-                if (!nameResponse.success)
-                    Debug.LogWarning("LeaderboardService : impossible de mettre à jour le nom LootLocker : " + nameResponse.errorData.message);
-
-                TryUploadAllPendingLocalScores();
-            });
+            TryUploadAllPendingLocalScores();
         });
     }
 
