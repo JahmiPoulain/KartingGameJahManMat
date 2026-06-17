@@ -52,7 +52,7 @@ public class ContreLaMontre : GameMode
         if (!raceStarted)
         {
             // Détection du timing pour le départ Turbo (Pendant l'affichage du chiffre "2")
-            if (boostWindow && (Input.GetKeyDown(KeyCode.Space) || Input.GetButtonDown("Accelerate")))
+            if (boostWindow && InputSystemHandler.instance.inputForwardDir >= 1|| Input.GetKeyDown(KeyCode.Z)|| Input.GetKeyDown(KeyCode.UpArrow))
             {
                 playerPressed = true;
                 Debug.Log("Timing Turbo Validé !");
