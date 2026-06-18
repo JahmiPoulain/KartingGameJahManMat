@@ -135,18 +135,28 @@ public class TimeAttack : GameMode
         currentLapPositions.Clear();
         playbackIndex = 0;
 
-        // S'il existe un fantôme du meilleur tour, on le fait apparaître (ou réapparaître) sur la ligne de départ
         if (bestLapPositions.Count > 0)
         {
             if (spawnedGhostKart != null)
+                Destroy(spawnedGhostKart.gameObject);
+
+            GameObject ghostObj = Instantiate(ghostKartPrefab, bestLapPositions[0].position, bestLapPositions[0].rotation);
+            spawnedGhostKart = ghostObj.GetComponent<KartScriptV2>();
+            if (spawnedGhostKart == null)
+                spawnedGhostKart = ghostObj.GetComponentInChildren<KartScriptV2>();
+
+            if (spawnedGhostKart != null)
             {
-                Destroy(spawnedGhostKart.gameObject); // On détruit l'ancien modèle
+                spawnedGhostKart.IsGhost = true;
+                Debug.Log("[Ghost] Spawned successfully!");
+            }
+            else
+            {
+                Debug.LogError("[Ghost] KartScriptV2 not found on ghost prefab!");
             }
 
-            // On fait apparaître le nouveau fantôme au point de départ du premier nœud enregistré
-            spawnedGhostKart = Instantiate(ghostKartPrefab.GetComponent<KartScriptV2>(), bestLapPositions[0].position, bestLapPositions[0].rotation);
-            spawnedGhostKart.IsGhost = true; // Marqué comme fantôme (intangible + silencieux !)
-            spawnedGhostKart.gameObject.SetActive(true);
+            ghostObj.SetActive(true);
+            playbackIndex = 0;
         }
     }
 
