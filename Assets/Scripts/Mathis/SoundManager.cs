@@ -41,6 +41,6 @@ public class SoundManager : MonoBehaviour
     public void PlaySfx2D(AudioClip clip)
     {
         if (sfx2DSource == null || clip == null) return;
-        sfx2DSource.PlayOneShot(clip);
+        sfx2DSource.PlayOneShot(clip , 0.3f);
     }
 }

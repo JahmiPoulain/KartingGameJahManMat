@@ -19,7 +19,7 @@ public class TimeAttack : GameMode
     [SerializeField] private GameObject bestScoreImage;
 
     [Header("Configuration Fantôme")]
-    [SerializeField] private KartScriptV2 ghostKartPrefab;
+    [SerializeField] private GameObject ghostKartPrefab;
     private KartScriptV2 spawnedGhostKart;
 
     [Header("Audio SFX Décompte")]
@@ -144,7 +144,7 @@ public class TimeAttack : GameMode
             }
 
             // On fait apparaître le nouveau fantôme au point de départ du premier nœud enregistré
-            spawnedGhostKart = Instantiate(ghostKartPrefab, bestLapPositions[0].position, bestLapPositions[0].rotation);
+            spawnedGhostKart = Instantiate(ghostKartPrefab.GetComponent<KartScriptV2>(), bestLapPositions[0].position, bestLapPositions[0].rotation);
             spawnedGhostKart.IsGhost = true; // Marqué comme fantôme (intangible + silencieux !)
             spawnedGhostKart.gameObject.SetActive(true);
         }
