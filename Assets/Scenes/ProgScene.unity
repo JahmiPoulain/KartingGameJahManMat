@@ -11349,6 +11349,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: oiseauPrefab
       objectReference: {fileID: 0}
+    - target: {fileID: 8178679762475774554, guid: b532aa7abb1da41469fe728bdcf9e88f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8848255253128882400, guid: b532aa7abb1da41469fe728bdcf9e88f, type: 3}
       propertyPath: m_LocalPosition.x
       value: 365.89188
@@ -25300,7 +25304,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1511558817
 Transform:
   m_ObjectHideFlags: 0
