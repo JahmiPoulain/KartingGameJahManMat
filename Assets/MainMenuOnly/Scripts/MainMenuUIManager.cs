@@ -510,7 +510,7 @@ public class MainMenuUIManager : MonoBehaviour
                     btnText.text = GetInvertedButtonLabel();
                 }
             }
-            else if (selectedName.Contains("ghost") || selectedName.Contains("fantome"))
+            else if (selectedName.Contains("time trial") || selectedName.Contains("contre la montre"))
             {
                 GameManager.Instance().currentMode = GameManager.GameModeType.TimeTrial;
                 LaunchScene("ProgScene"); 

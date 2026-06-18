@@ -15,6 +15,9 @@ public class ContreLaMontre : GameMode
     [Header("Audio SFX Boost Départ")]
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip turboStartSound;
+    [Header("Audio SFX Décompte")]
+    [SerializeField] private AudioClip countdownBeepSound; // Le bip pour 3, 2, 1
+    [SerializeField] private AudioClip countdownGoSound;   // Le jingle pour GO!
 
     private void Awake()
     {
@@ -128,17 +131,21 @@ public class ContreLaMontre : GameMode
 
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "3";
+        if (SoundManager.Instance != null) SoundManager.Instance.PlaySfx2D(countdownBeepSound);
 
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "2";
+        if (SoundManager.Instance != null) SoundManager.Instance.PlaySfx2D(countdownBeepSound);
         boostWindow = true;
 
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "1";
+        if (SoundManager.Instance != null) SoundManager.Instance.PlaySfx2D(countdownBeepSound);
         boostWindow = false;
 
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "GO!";
+        if (SoundManager.Instance != null) SoundManager.Instance.PlaySfx2D(countdownGoSound);
 
         if (kartScript != null) kartScript.CanDrive = true;
 
@@ -149,24 +156,17 @@ public class ContreLaMontre : GameMode
         {
             kartScript.StartTurbo(10f, 2f);
 
-            // Gestion de l'AudioSource pour ne pas écraser le son du moteur
+            // Gestion de l'AudioSource pour le bruit de soufflerie de turbo (sans couper le moteur)
             if (audioSource == null || audioSource.loop)
             {
                 AudioSource[] allSources = GetComponents<AudioSource>();
                 foreach (AudioSource src in allSources)
                 {
-                    if (!src.loop)
-                    {
-                        audioSource = src;
-                        break;
-                    }
+                    if (!src.loop) { audioSource = src; break; }
                 }
             }
 
-            if (audioSource == null)
-            {
-                audioSource = gameObject.AddComponent<AudioSource>();
-            }
+            if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
 
             if (audioSource != null && turboStartSound != null)
             {
