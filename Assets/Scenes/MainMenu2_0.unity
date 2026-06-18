@@ -4471,13 +4471,28 @@ MonoBehaviour:
   invertNavigation: 0
   leaderboardCanvas: {fileID: 1218676192}
   buttonPrefab: {fileID: 8387537317075167882, guid: 5ec7680a76616504bb44751871f58db6, type: 3}
-  customAnglePerOption: 67.5
+  customAnglePerOption: 62.5
   fillFullCircle: 0
   startAngleOffset: 0
   reverseSpawnDirection: 0
   wheelRadius: 13
   wheelRotationSpeed: 7.2
   keepButtonsUpright: 1
+  neighborShrink: 0.6
+  verticalCarousel: 1
+  verticalSpacing: 7
+  horizontalSpacing: 0
+  neighborDepthPerStep: -3.33
+  invertMainScroll: 0
+  invertSettingsScroll: 1
+  invertPlayScroll: 1
+  visibleEachSide: 1
+  carouselLerpSpeed: 8.02
+  volantDegreesPerStep: 51.142
+  volantSpinSpeed: 8
+  mainButtonsOffset: {x: -12.5, y: 0}
+  settingsButtonsOffset: {x: 12.5, y: 0}
+  playButtonsOffset: {x: 12.5, y: 0}
   CameraTransform: {fileID: 271540518}
   Zoffset: -10
   titleScreenPosition: {fileID: 64639838}
