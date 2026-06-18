@@ -1574,6 +1574,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Turbo Booster (4)
       objectReference: {fileID: 0}
+    - target: {fileID: 7545684174185083360, guid: 97be06b2881f28b4a91a1d31361894d3, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7794256034428843845, guid: 97be06b2881f28b4a91a1d31361894d3, type: 3}
       propertyPath: boostTime
       value: 0.22
@@ -33088,6 +33092,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: coconutTreeV1.1 (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 4445675093211917466, guid: 96ac46df755434c2c93d2a73f556f0e9, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6783294967260824097, guid: 96ac46df755434c2c93d2a73f556f0e9, type: 3}
       propertyPath: m_LocalPosition.x
       value: 189.5896
@@ -33465,7 +33473,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5154237314693840931, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 192.5
+      value: 194.8
       objectReference: {fileID: 0}
     - target: {fileID: 5154237314693840931, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: m_LocalPosition.y
@@ -33473,7 +33481,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5154237314693840931, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 524.8
+      value: 524
       objectReference: {fileID: 0}
     - target: {fileID: 5154237314693840931, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: m_LocalRotation.w
