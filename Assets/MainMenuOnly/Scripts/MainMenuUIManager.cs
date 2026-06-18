@@ -78,12 +78,6 @@ public class MainMenuUIManager : MonoBehaviour
     private int lastDirection = 0;
     private bool isHolding = false;
 
-    // Compteurs de crans non bornés : permettent des tours complets continus
-    // (la roue ne "revient" jamais en arrière au passage dernier -> premier bouton).
-    private int mainAccum = 0;
-    private int settingsAccum = 0;
-    private int playAccum = 0;
-
     [Header("--- Transition de Scène ---")]
     public CanvasGroup transitionScreen;
     public float sceneTransitionDuration = 1f;
@@ -444,29 +438,21 @@ public class MainMenuUIManager : MonoBehaviour
 
     private void RotateWheel(int direction)
     {
-        if (currentState == MenuState.MainMenu) { mainAccum += direction; ApplyAccum(MenuState.MainMenu); }
-        else if (currentState == MenuState.OptionsMenu) { settingsAccum += direction; ApplyAccum(MenuState.OptionsMenu); }
-        else if (currentState == MenuState.PlayGameModes) { playAccum += direction; ApplyAccum(MenuState.PlayGameModes); }
-    }
-
-    // Met à jour l'angle cible (non borné -> tours complets continus) et l'index sélectionné (borné).
-    private void ApplyAccum(MenuState wheel)
-    {
         float spawnDirection = reverseSpawnDirection ? -1f : 1f;
-        if (wheel == MenuState.MainMenu)
+        if (currentState == MenuState.MainMenu)
         {
-            currentMainIndex = Mod(mainAccum, mainMenuOptions.Length);
-            targetMainAngle = initialMainAngle + (-mainAccum * customAnglePerOption * spawnDirection);
+            currentMainIndex = (currentMainIndex + direction + mainMenuOptions.Length) % mainMenuOptions.Length;
+            targetMainAngle = initialMainAngle + (-currentMainIndex * customAnglePerOption * spawnDirection);
         }
-        else if (wheel == MenuState.OptionsMenu)
+        else if (currentState == MenuState.OptionsMenu)
         {
-            currentSettingsIndex = Mod(settingsAccum, settingsOptions.Length);
-            targetSettingsAngle = initialSettingsAngle - (-settingsAccum * customAnglePerOption * spawnDirection);
+            currentSettingsIndex = (currentSettingsIndex + direction + settingsOptions.Length) % settingsOptions.Length;
+            targetSettingsAngle = initialSettingsAngle - (-currentSettingsIndex * customAnglePerOption * spawnDirection);
         }
-        else if (wheel == MenuState.PlayGameModes)
+        else if (currentState == MenuState.PlayGameModes)
         {
-            currentPlayIndex = Mod(playAccum, playButtons.Length);
-            targetPlayAngle = InitialPlayAngle - (-playAccum * customAnglePerOption * spawnDirection);
+            currentPlayIndex = (currentPlayIndex + direction + playButtons.Length) % playButtons.Length;
+            targetPlayAngle = InitialPlayAngle - (-currentPlayIndex * customAnglePerOption * spawnDirection);
         }
     }
 
@@ -662,47 +648,45 @@ public class MainMenuUIManager : MonoBehaviour
     private Camera GetCanvasCamera(RectTransform anyButton)
     {
         Canvas canvas = anyButton.GetComponentInParent<Canvas>();
-        if (canvas == null) return null;
+        if (canvas == null) return CameraTransform != null ? CameraTransform.GetComponent<Camera>() : Camera.main;
         canvas = canvas.rootCanvas;
-        return canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+
+        // Overlay -> pas de caméra. Sinon (World Space / Screen Space - Camera) il faut la vraie caméra
+        // qui rend le canvas ; sur un canvas World Space, worldCamera est souvent null -> on prend celle de la scène.
+        if (canvas.renderMode == RenderMode.ScreenSpaceOverlay) return null;
+        if (canvas.worldCamera != null) return canvas.worldCamera;
+        if (CameraTransform != null)
+        {
+            Camera c = CameraTransform.GetComponent<Camera>();
+            if (c != null) return c;
+        }
+        return Camera.main;
     }
 
-    // Recentre la roue active sur le bouton cliqué (par le chemin le plus court) puis valide,
-    // en réutilisant exactement la logique de SelectCurrentWheelOption().
+    // Recentre la roue active sur le bouton cliqué (le Quaternion.Lerp prend déjà le chemin le plus court)
+    // puis valide, en réutilisant exactement la logique de SelectCurrentWheelOption().
     private void OnWheelButtonClicked(int index)
     {
+        float spawnDirection = reverseSpawnDirection ? -1f : 1f;
         if (currentState == MenuState.MainMenu)
         {
-            mainAccum += ShortestStep(mainAccum, index, mainMenuOptions.Length);
-            ApplyAccum(MenuState.MainMenu);
+            currentMainIndex = index;
+            targetMainAngle = initialMainAngle + (-currentMainIndex * customAnglePerOption * spawnDirection);
         }
         else if (currentState == MenuState.OptionsMenu)
         {
-            settingsAccum += ShortestStep(settingsAccum, index, settingsOptions.Length);
-            ApplyAccum(MenuState.OptionsMenu);
+            currentSettingsIndex = index;
+            targetSettingsAngle = initialSettingsAngle - (-currentSettingsIndex * customAnglePerOption * spawnDirection);
         }
         else if (currentState == MenuState.PlayGameModes)
         {
-            playAccum += ShortestStep(playAccum, index, playButtons.Length);
-            ApplyAccum(MenuState.PlayGameModes);
+            currentPlayIndex = index;
+            targetPlayAngle = InitialPlayAngle - (-currentPlayIndex * customAnglePerOption * spawnDirection);
         }
         else return;
 
         SelectCurrentWheelOption();
     }
-
-    // Nombre de crans (signé) pour passer de l'index courant à targetIndex par le plus court chemin.
-    private int ShortestStep(int accum, int targetIndex, int length)
-    {
-        if (length <= 0) return 0;
-        int currentIndex = Mod(accum, length);
-        int diff = targetIndex - currentIndex;
-        if (diff > length / 2) diff -= length;
-        if (diff < -length / 2) diff += length;
-        return diff;
-    }
-
-    private static int Mod(int a, int b) => ((a % b) + b) % b;
 
     private string GetButtonLabel(string itemName)
     {
