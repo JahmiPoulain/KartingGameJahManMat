@@ -3,7 +3,32 @@ guid: 07e2d87a85159654c84a37be79f1dc18
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Branch_1
+    second: {fileID: 2100000, guid: a2cc217bb185e824ca6f16faa9be774f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Branch_2
+    second: {fileID: 2100000, guid: 55721b9143cfb2740afa48a7921197cb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: T_Flat_Circular_Needles
+    second: {fileID: 2100000, guid: f4a8168356c94254fa9db43a88f6cdf3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: T_Flat_Spike_Needles
+    second: {fileID: 2100000, guid: 55119d00508c2994db29c19fab647e6e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: branch_3
+    second: {fileID: 2100000, guid: cee977c0a42b273479f716127b3dd139, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
