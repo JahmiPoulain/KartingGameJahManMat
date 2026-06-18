@@ -21,7 +21,7 @@ public class UIManager2 : MonoBehaviour
     [Header("Input System")]
     [SerializeField] private InputActionReference pauseAction;
 
-    [Header("Navigation (0: Continuer, 1: Quitter)")]
+    [Header("Navigation (0: Continuer, 1: Restart, 2: Quitter)")]
     public Transform pointeur;
     public int index = 0;
     public GameObject[] selectables;
@@ -173,8 +173,8 @@ public class UIManager2 : MonoBehaviour
     {
         float v = Input.GetAxisRaw("Vertical");
 
-        if (Input.GetKeyDown(KeyCode.UpArrow)) MoveSelection(-1);
-        else if (Input.GetKeyDown(KeyCode.DownArrow)) MoveSelection(1);
+        if (Input.GetKeyDown(KeyCode.UpArrow)) { MoveSelection(-1); isVerticalAxisInUse = true; }
+        else if (Input.GetKeyDown(KeyCode.DownArrow)) { MoveSelection(1); isVerticalAxisInUse = true; }
         else if (Mathf.Abs(v) > 0.5f)
         {
             if (!isVerticalAxisInUse)
