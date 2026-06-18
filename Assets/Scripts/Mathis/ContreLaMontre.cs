@@ -70,11 +70,9 @@ public class ContreLaMontre : GameMode
         if (lapTime < bestLapTime)
         {
             bestLapTime = lapTime;
-            if (scoreUI != null)
-            {
-                scoreUI.text = "PB: " + FormatTime(bestLapTime);
-            }
+
         }
+        base.OnLapCompleted(lapTime);
     }
 
     public override void CompleteRace()
@@ -83,38 +81,33 @@ public class ContreLaMontre : GameMode
 
         if (kartScript != null)
         {
-            kartScript.CanDrive = true;
+            
             kartScript.GhostMode = true; // ← à rajouter
         }
 
 
         Debug.Log("Course Contre-la-montre terminée !");
 
-        // Récupération de la logique de l'ancien script pour le calcul du score final des 3 tours
-        if (lapManager != null)
+        float totalTime = 0;
+        string detailScores = "Race Results:\n";
+
+        for (int i = 0; i < lapManager.LapTimes.Count; i++)
         {
-            float totalRaceTime = 0f;
-
-            // On additionne le temps de chaque tour stocké dans le LapManager
-            for (int i = 0; i < lapManager.LapTimes.Count; i++)
-            {
-                totalRaceTime += lapManager.LapTimes[i];
-                Debug.Log($"Tour {i + 1} : {FormatTime(lapManager.LapTimes[i])}");
-            }
-
-            Debug.Log($"[RESULTAT FINAL] Temps total des 3 tours : {FormatTime(totalRaceTime)}");
-
-            // Conversion du temps total en millisecondes pour le Leaderboard
-            int totalTimeInMs = Mathf.RoundToInt(totalRaceTime * 1000f);
-            bool isReverse = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted);
-
-            // Envoi officiel du temps global de la course (et non pas d'un seul tour) au classement
-            bool scoreAccepted = isReverse
-                ? LeaderboardService.EnsureInstance().SubmitContreLaMontreReverse(totalTimeInMs)
-                : LeaderboardService.EnsureInstance().SubmitContreLaMontreNormal(totalTimeInMs);
-
-            Debug.Log("Score envoyé au Leaderboard. Accepté : " + scoreAccepted);
+            float t = lapManager.LapTimes[i];
+            totalTime += t;
+            detailScores += $"{i + 1}: {FormatTime(t)}\n";
         }
+
+        if (scoreUI != null)
+            scoreUI.text = detailScores + $"Total Time: {FormatTime(totalTime)}";
+
+        int totalTimeInMs = Mathf.RoundToInt(totalTime * 1000f);
+        bool isReverse = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted);
+
+        if (isReverse)
+            LeaderboardService.EnsureInstance().SubmitContreLaMontreReverse(totalTimeInMs);
+        else
+            LeaderboardService.EnsureInstance().SubmitContreLaMontreNormal(totalTimeInMs);
     }
 
     private string FormatTime(float time)

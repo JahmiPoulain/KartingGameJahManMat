@@ -25698,8 +25698,8 @@ MonoBehaviour:
   bestScoreUI: {fileID: 94836774}
   bestScoreImage: {fileID: 1124151992}
   ghostKartPrefab: {fileID: 800632082475448381, guid: 522181ca5ac85574bba6e72bf41a228d, type: 3}
-  countdownBeepSound: {fileID: 8300000, guid: 202dc490b29bcb64db1bcb4ff41858ff, type: 3}
-  countdownGoSound: {fileID: 8300000, guid: 17d0b00b4f312764590a877f4612ce88, type: 3}
+  countdownBeepSound: {fileID: 8300000, guid: 68bbe435f6ee6af43bbd728c65810974, type: 3}
+  countdownGoSound: {fileID: 8300000, guid: f592a89cb650609409d13440e7105603, type: 3}
 --- !u!114 &1546263593
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25715,8 +25715,8 @@ MonoBehaviour:
   currentTimerUI: {fileID: 3709806865398118134}
   audioSource: {fileID: 1546263598}
   turboStartSound: {fileID: 8300000, guid: 6c5548068ac88464bb7e73b0f91bf758, type: 3}
-  countdownBeepSound: {fileID: 8300000, guid: 202dc490b29bcb64db1bcb4ff41858ff, type: 3}
-  countdownGoSound: {fileID: 8300000, guid: 17d0b00b4f312764590a877f4612ce88, type: 3}
+  countdownBeepSound: {fileID: 8300000, guid: 68bbe435f6ee6af43bbd728c65810974, type: 3}
+  countdownGoSound: {fileID: 8300000, guid: f592a89cb650609409d13440e7105603, type: 3}
 --- !u!4 &1546263595
 Transform:
   m_ObjectHideFlags: 0
@@ -25771,7 +25771,7 @@ AudioSource:
   m_GameObject: {fileID: 1546263590}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 1662471499088403999, guid: f831029c86ca02447800d506a27777f0, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
@@ -28172,7 +28172,7 @@ AudioSource:
   m_GameObject: {fileID: 1734873070}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 1662471499088403999, guid: f831029c86ca02447800d506a27777f0, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
@@ -33447,6 +33447,10 @@ PrefabInstance:
       propertyPath: 'firstPersonInvisible.Array.data[0]'
       value: 
       objectReference: {fileID: 1116402953}
+    - target: {fileID: 915186796097868692, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: OutputAudioMixerGroup
+      value: 
+      objectReference: {fileID: 1662471499088403999, guid: f831029c86ca02447800d506a27777f0, type: 2}
     - target: {fileID: 1135419537181215704, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: m_Enabled
       value: 0
@@ -33475,6 +33479,10 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4478954606915063589, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: OutputAudioMixerGroup
+      value: 
+      objectReference: {fileID: 1662471499088403999, guid: f831029c86ca02447800d506a27777f0, type: 2}
     - target: {fileID: 5154237314693840931, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: m_LocalPosition.x
       value: 194.8
@@ -33515,6 +33523,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5717645979930630601, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: OutputAudioMixerGroup
+      value: 
+      objectReference: {fileID: 1662471499088403999, guid: f831029c86ca02447800d506a27777f0, type: 2}
     - target: {fileID: 7809375738156829419, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0

@@ -56,12 +56,16 @@ public class TimeAttack : GameMode
     {
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "3";
+        if (SoundManager.Instance != null) SoundManager.Instance.PlaySfx2D(countdownBeepSound);
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "2";
+        if (SoundManager.Instance != null) SoundManager.Instance.PlaySfx2D(countdownBeepSound);
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "1";
+        if (SoundManager.Instance != null) SoundManager.Instance.PlaySfx2D(countdownBeepSound);
         yield return new WaitForSeconds(1);
         if (startUI != null) startUI.text = "GO!";
+        if (SoundManager.Instance != null) SoundManager.Instance.PlaySfx2D(countdownGoSound);
 
         if (kartScript != null) kartScript.CanDrive = true;
 
