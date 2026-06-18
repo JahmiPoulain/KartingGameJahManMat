@@ -112,6 +112,10 @@ public class MainMenuUIManager : MonoBehaviour
     public float scrollStepCooldown = 0.15f;
     private float nextScrollTime = 0f;
 
+    [Tooltip("Durée de maintien (en secondes) avant que les boutons disparaissent. Plus grand = il faut maintenir plus longtemps.")]
+    public float hideButtonsHoldDelay = 0.6f;
+    private float holdStartTime = 0f;
+
     private float nextActionTime = 0f;
     private float currentRepeatInterval;
     private int lastDirection = 0;
@@ -584,16 +588,19 @@ public class MainMenuUIManager : MonoBehaviour
                     lastDirection = currentDir;
                     isHolding = true;
                     isAutoRepeating = false;   // simple appui : les boutons restent visibles
+                    holdStartTime = Time.unscaledTime;
                     currentRepeatInterval = initialRepeatDelay;
                     nextActionTime = Time.unscaledTime + initialRepeatDelay;
                 }
                 else if (Time.unscaledTime >= nextActionTime)
                 {
                     inputDirection = currentDir;
-                    isAutoRepeating = true;    // maintien : on passe en défilement rapide (boutons masqués)
                     currentRepeatInterval = Mathf.Max(minRepeatInterval, currentRepeatInterval - accelerationFactor);
                     nextActionTime = Time.unscaledTime + currentRepeatInterval;
                 }
+
+                // On ne masque les boutons qu'après un vrai maintien prolongé (et pas juste un appui un peu long).
+                if (Time.unscaledTime - holdStartTime >= hideButtonsHoldDelay) isAutoRepeating = true;
             }
             else { isHolding = false; isAutoRepeating = false; lastDirection = 0; }
 
