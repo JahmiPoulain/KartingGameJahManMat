@@ -34,6 +34,9 @@ public class TimeAttack : GameMode
     private int playbackIndex = 0;
     private float bestLapTime = float.MaxValue;
 
+    [System.Serializable]
+    private class GhostWrapper { public List<GhostNodeData> list; }
+
     private void Start()
     {
         lapManager = FindFirstObjectByType<LapManager>();
@@ -47,6 +50,7 @@ public class TimeAttack : GameMode
 
         maxLaps = 99999; // Mode infini
         LoadBestScore();
+        LoadGhostData(); // Charge et spawn le ghost du meilleur tour précédent
 
         if (kartScript != null) kartScript.CanDrive = false;
         StartCoroutine(InitialCountdown());
@@ -119,7 +123,6 @@ public class TimeAttack : GameMode
             : LeaderboardService.EnsureInstance().SubmitTimeAttackNormal(lapTimeInMs);
 
         // --- LOGIQUE DU FANTÔME DYNAMIQUE ---
-        // Si c'est le meilleur temps absolu de la session en cours
         if (lapTime < bestLapTime)
         {
             bestLapTime = lapTime;
@@ -127,37 +130,16 @@ public class TimeAttack : GameMode
             if (bestScoreUI != null)
                 bestScoreUI.text = "" + FormatTime(bestLapTime);
 
-            // On écrase l'ancien record de positions par les positions du tour qu'on vient de faire
             bestLapPositions = new List<GhostNodeData>(currentLapPositions);
+            SaveGhostData(); // Sauvegarde le ghost du nouveau record
         }
 
         // Réinitialisation pour le tour suivant
         currentLapPositions.Clear();
         playbackIndex = 0;
 
-        if (bestLapPositions.Count > 0)
-        {
-            if (spawnedGhostKart != null)
-                Destroy(spawnedGhostKart.gameObject);
-
-            GameObject ghostObj = Instantiate(ghostKartPrefab, bestLapPositions[0].position, bestLapPositions[0].rotation);
-            spawnedGhostKart = ghostObj.GetComponent<KartScriptV2>();
-            if (spawnedGhostKart == null)
-                spawnedGhostKart = ghostObj.GetComponentInChildren<KartScriptV2>();
-
-            if (spawnedGhostKart != null)
-            {
-                spawnedGhostKart.IsGhost = true;
-                Debug.Log("[Ghost] Spawned successfully!");
-            }
-            else
-            {
-                Debug.LogError("[Ghost] KartScriptV2 not found on ghost prefab!");
-            }
-
-            ghostObj.SetActive(true);
-            playbackIndex = 0;
-        }
+        // Spawn ou respawn le ghost au début de la ligne
+        SpawnGhost();
     }
 
     public override void CompleteRace() { }
@@ -186,6 +168,54 @@ public class TimeAttack : GameMode
             if (bestScoreUI != null)
                 bestScoreUI.text = "--:--.--";
         }
+    }
+
+    private void SaveGhostData()
+    {
+        string key = "TA_GhostData" + GetSuffix();
+        GhostWrapper wrapper = new GhostWrapper { list = bestLapPositions };
+        PlayerPrefs.SetString(key, JsonUtility.ToJson(wrapper));
+        PlayerPrefs.Save();
+    }
+
+    private void LoadGhostData()
+    {
+        string key = "TA_GhostData" + GetSuffix();
+        if (!PlayerPrefs.HasKey(key)) return;
+
+        string json = PlayerPrefs.GetString(key);
+        if (string.IsNullOrEmpty(json)) return;
+
+        GhostWrapper wrapper = JsonUtility.FromJson<GhostWrapper>(json);
+        if (wrapper?.list != null && wrapper.list.Count > 0)
+        {
+            bestLapPositions = wrapper.list;
+            SpawnGhost();
+        }
+    }
+
+    private void SpawnGhost()
+    {
+        if (bestLapPositions.Count == 0 || ghostKartPrefab == null) return;
+
+        if (spawnedGhostKart != null)
+            Destroy(spawnedGhostKart.gameObject);
+
+        GameObject ghostObj = Instantiate(ghostKartPrefab, bestLapPositions[0].position, bestLapPositions[0].rotation);
+        spawnedGhostKart = ghostObj.GetComponent<KartScriptV2>();
+        if (spawnedGhostKart == null)
+            spawnedGhostKart = ghostObj.GetComponentInChildren<KartScriptV2>();
+
+        if (spawnedGhostKart != null)
+            spawnedGhostKart.IsGhost = true;
+
+        playbackIndex = 0;
+        ghostObj.SetActive(true);
+    }
+
+    private string GetSuffix()
+    {
+        return (InversionCatcher.instance != null && InversionCatcher.instance.Inverted) ? "_Inverted" : "_Normal";
     }
 
     private LeaderboardCircuitMode GetCurrentCircuitMode()
