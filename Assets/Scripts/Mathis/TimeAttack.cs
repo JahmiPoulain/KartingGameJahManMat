@@ -22,6 +22,10 @@ public class TimeAttack : GameMode
     [SerializeField] private KartScriptV2 ghostKartPrefab;
     private KartScriptV2 spawnedGhostKart;
 
+    [Header("Audio SFX Décompte")]
+    [SerializeField] private AudioClip countdownBeepSound; // Le bip pour 3, 2, 1
+    [SerializeField] private AudioClip countdownGoSound;   // Le jingle pour GO!
+
     // Listes pour stocker les positions/rotations à chaque frame
     private List<GhostNodeData> currentLapPositions = new List<GhostNodeData>();
     private List<GhostNodeData> bestLapPositions = new List<GhostNodeData>();

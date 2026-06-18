@@ -37,10 +37,10 @@ public class SoundManager : MonoBehaviour
     }
 
     // Permet de déclencher un effet sonore 2D depuis n'importe où (ex: Checkpoint, Compte à rebours)
-    public void PlaySFX2D(AudioClip clip)
+    // Dans SoundManager.cs (assure-toi que cette méthode est publique)
+    public void PlaySfx2D(AudioClip clip)
     {
         if (sfx2DSource == null || clip == null) return;
-        sfx2DSource.outputAudioMixerGroup = sfxGroup;
         sfx2DSource.PlayOneShot(clip);
     }
 }
