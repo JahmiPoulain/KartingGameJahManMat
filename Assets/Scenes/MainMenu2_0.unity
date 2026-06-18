@@ -1805,7 +1805,7 @@ AudioSource:
   m_GameObject: {fileID: 222409013}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 3855799305051819891, guid: f831029c86ca02447800d506a27777f0, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: 3b888e5fd8e130640b18f527fbaa570f, type: 3}
   m_PlayOnAwake: 1
@@ -4665,6 +4665,7 @@ MonoBehaviour:
   minRepeatInterval: 0.12
   accelerationFactor: 0.1
   scrollStepCooldown: 0.15
+  hideButtonsHoldDelay: 0.6
   transitionScreen: {fileID: 0}
   sceneTransitionDuration: 1
   titleScreenPanel: {fileID: 64639837}
