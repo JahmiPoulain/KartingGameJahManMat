@@ -4519,6 +4519,7 @@ MonoBehaviour:
   initialRepeatDelay: 0.4
   minRepeatInterval: 0.12
   accelerationFactor: 0.1
+  scrollStepCooldown: 0.15
   transitionScreen: {fileID: 0}
   sceneTransitionDuration: 1
   titleScreenPanel: {fileID: 64639837}
@@ -9761,7 +9762,7 @@ VideoPlayer:
   m_PlayOnAwake: 1
   m_SkipOnDrop: 1
   m_Looping: 1
-  m_WaitForFirstFrame: 0
+  m_WaitForFirstFrame: 1
   m_FrameReadyEventEnabled: 0
   m_VideoShaders: []
 --- !u!212 &798513549
