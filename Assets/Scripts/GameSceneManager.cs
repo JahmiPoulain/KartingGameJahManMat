@@ -145,6 +145,7 @@ public class GameSceneManager : MonoBehaviour
 
 
 
+
     public void RestartRace(string progSceneName)
     {
         if (isTransitioning) return;
@@ -152,7 +153,11 @@ public class GameSceneManager : MonoBehaviour
 
         loadedGameplayScenes.Clear();
 
-        StartCoroutine(TransitionRoutine(progSceneName, true));
+
+        pendingGameplaySceneName = progSceneName;
+
+
+        StartCoroutine(TransitionRoutine(progSceneName,isTransitioning));
     }
 
     public void ReturnToMainMenu()
