@@ -69,10 +69,20 @@ public class MainMenuUIManager : MonoBehaviour
     public float minRepeatInterval = 0.1f;
     public float accelerationFactor = 0.02f;
 
+    [Tooltip("Délai minimum entre deux crans de molette (plus grand = molette moins sensible).")]
+    public float scrollStepCooldown = 0.15f;
+    private float nextScrollTime = 0f;
+
     private float nextActionTime = 0f;
     private float currentRepeatInterval;
     private int lastDirection = 0;
     private bool isHolding = false;
+
+    // Compteurs de crans non bornés : permettent des tours complets continus
+    // (la roue ne "revient" jamais en arrière au passage dernier -> premier bouton).
+    private int mainAccum = 0;
+    private int settingsAccum = 0;
+    private int playAccum = 0;
 
     [Header("--- Transition de Scène ---")]
     public CanvasGroup transitionScreen;
@@ -389,7 +399,15 @@ public class MainMenuUIManager : MonoBehaviour
             float scroll = Input.GetAxis("Mouse ScrollWheel");
             float combinedInput = Mathf.Abs(v) > Mathf.Abs(h) ? v : h;
 
-            if (Mathf.Abs(scroll) > 0.01f) inputDirection = scroll > 0 ? -1 : 1;
+            if (Mathf.Abs(scroll) > 0.01f)
+            {
+                // Cooldown : on ignore les crans de molette trop rapprochés (molette moins sensible).
+                if (Time.unscaledTime >= nextScrollTime)
+                {
+                    inputDirection = scroll > 0 ? -1 : 1;
+                    nextScrollTime = Time.unscaledTime + scrollStepCooldown;
+                }
+            }
             else if (Mathf.Abs(combinedInput) > 0.6f)
             {
                 int currentDir = combinedInput > 0 ? -1 : 1;
@@ -417,6 +435,8 @@ public class MainMenuUIManager : MonoBehaviour
             }
 
             if (Input.GetButtonDown("Submit") || Input.GetKeyDown(KeyCode.Return)) SelectCurrentWheelOption();
+
+            HandleMouseClick();
         }
 
         if (Input.GetButtonDown("Cancel") || Input.GetKeyDown(KeyCode.Escape)) GoBack();
@@ -424,21 +444,29 @@ public class MainMenuUIManager : MonoBehaviour
 
     private void RotateWheel(int direction)
     {
+        if (currentState == MenuState.MainMenu) { mainAccum += direction; ApplyAccum(MenuState.MainMenu); }
+        else if (currentState == MenuState.OptionsMenu) { settingsAccum += direction; ApplyAccum(MenuState.OptionsMenu); }
+        else if (currentState == MenuState.PlayGameModes) { playAccum += direction; ApplyAccum(MenuState.PlayGameModes); }
+    }
+
+    // Met à jour l'angle cible (non borné -> tours complets continus) et l'index sélectionné (borné).
+    private void ApplyAccum(MenuState wheel)
+    {
         float spawnDirection = reverseSpawnDirection ? -1f : 1f;
-        if (currentState == MenuState.MainMenu)
+        if (wheel == MenuState.MainMenu)
         {
-            currentMainIndex = (currentMainIndex + direction + mainMenuOptions.Length) % mainMenuOptions.Length;
-            targetMainAngle = initialMainAngle + (-currentMainIndex * customAnglePerOption * spawnDirection);
+            currentMainIndex = Mod(mainAccum, mainMenuOptions.Length);
+            targetMainAngle = initialMainAngle + (-mainAccum * customAnglePerOption * spawnDirection);
         }
-        else if (currentState == MenuState.OptionsMenu)
+        else if (wheel == MenuState.OptionsMenu)
         {
-            currentSettingsIndex = (currentSettingsIndex + direction + settingsOptions.Length) % settingsOptions.Length;
-            targetSettingsAngle = initialSettingsAngle - (-currentSettingsIndex * customAnglePerOption * spawnDirection);
+            currentSettingsIndex = Mod(settingsAccum, settingsOptions.Length);
+            targetSettingsAngle = initialSettingsAngle - (-settingsAccum * customAnglePerOption * spawnDirection);
         }
-        else if (currentState == MenuState.PlayGameModes)
+        else if (wheel == MenuState.PlayGameModes)
         {
-            currentPlayIndex = (currentPlayIndex + direction + playButtons.Length) % playButtons.Length;
-            targetPlayAngle = InitialPlayAngle - (-currentPlayIndex * customAnglePerOption * spawnDirection);
+            currentPlayIndex = Mod(playAccum, playButtons.Length);
+            targetPlayAngle = InitialPlayAngle - (-playAccum * customAnglePerOption * spawnDirection);
         }
     }
 
@@ -596,6 +624,85 @@ public class MainMenuUIManager : MonoBehaviour
             generatedList.Add(rectT);
         }
     }
+
+    // ----- Clic souris (détection manuelle, cohérente avec l'Input legacy du reste du script) -----
+
+    private void HandleMouseClick()
+    {
+        if (!Input.GetMouseButtonDown(0)) return;
+
+        List<RectTransform> buttons;
+        if (currentState == MenuState.MainMenu) buttons = mainButtonsGenerated;
+        else if (currentState == MenuState.OptionsMenu) buttons = settingsButtonsGenerated;
+        else if (currentState == MenuState.PlayGameModes) buttons = playButtonsGenerated;
+        else return;
+
+        if (buttons.Count == 0) return;
+
+        Camera cam = GetCanvasCamera(buttons[0]);
+        Vector2 mousePos = Input.mousePosition;
+
+        int hitIndex = -1;
+        float bestDist = float.MaxValue;
+        for (int i = 0; i < buttons.Count; i++)
+        {
+            RectTransform rt = buttons[i];
+            if (rt == null || !rt.gameObject.activeInHierarchy) continue;
+            if (!RectTransformUtility.RectangleContainsScreenPoint(rt, mousePos, cam)) continue;
+
+            // En cas de chevauchement, on garde le bouton dont le centre est le plus proche du curseur.
+            Vector2 screenCenter = RectTransformUtility.WorldToScreenPoint(cam, rt.position);
+            float d = (screenCenter - mousePos).sqrMagnitude;
+            if (d < bestDist) { bestDist = d; hitIndex = i; }
+        }
+
+        if (hitIndex >= 0) OnWheelButtonClicked(hitIndex);
+    }
+
+    private Camera GetCanvasCamera(RectTransform anyButton)
+    {
+        Canvas canvas = anyButton.GetComponentInParent<Canvas>();
+        if (canvas == null) return null;
+        canvas = canvas.rootCanvas;
+        return canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+    }
+
+    // Recentre la roue active sur le bouton cliqué (par le chemin le plus court) puis valide,
+    // en réutilisant exactement la logique de SelectCurrentWheelOption().
+    private void OnWheelButtonClicked(int index)
+    {
+        if (currentState == MenuState.MainMenu)
+        {
+            mainAccum += ShortestStep(mainAccum, index, mainMenuOptions.Length);
+            ApplyAccum(MenuState.MainMenu);
+        }
+        else if (currentState == MenuState.OptionsMenu)
+        {
+            settingsAccum += ShortestStep(settingsAccum, index, settingsOptions.Length);
+            ApplyAccum(MenuState.OptionsMenu);
+        }
+        else if (currentState == MenuState.PlayGameModes)
+        {
+            playAccum += ShortestStep(playAccum, index, playButtons.Length);
+            ApplyAccum(MenuState.PlayGameModes);
+        }
+        else return;
+
+        SelectCurrentWheelOption();
+    }
+
+    // Nombre de crans (signé) pour passer de l'index courant à targetIndex par le plus court chemin.
+    private int ShortestStep(int accum, int targetIndex, int length)
+    {
+        if (length <= 0) return 0;
+        int currentIndex = Mod(accum, length);
+        int diff = targetIndex - currentIndex;
+        if (diff > length / 2) diff -= length;
+        if (diff < -length / 2) diff += length;
+        return diff;
+    }
+
+    private static int Mod(int a, int b) => ((a % b) + b) % b;
 
     private string GetButtonLabel(string itemName)
     {
