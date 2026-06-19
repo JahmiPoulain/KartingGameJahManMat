@@ -5,7 +5,7 @@ public class WingWiggleAnimation : MonoBehaviour
    // [SerializeField] bool rightWing;
     [SerializeField] float speed;
     bool goUp;
-    float maxOffset = 0.05f;
+    float maxOffset = 2f;
     float rngOffsetTarget;
     float offset;
     [SerializeField] Transform rightWing;
@@ -24,30 +24,31 @@ public class WingWiggleAnimation : MonoBehaviour
 
     void WiggleWing()
     {
-        //speed = KartScriptV2.instance.flightSpeed * 6f;
-            if (goUp)
+        if (transform.localScale.x <= 0)
+        {
+            accel = 0;
+            offset = 0;
+        }
+        if (goUp)
+        {
+            offset += (speed) * Time.deltaTime;
+            if (offset > maxOffset)
             {
-                accel += speed * Time.deltaTime;
-                if (offset > maxOffset)
-                {
-                    goUp = false;
-                    //rngOffsetTarget = Random.Range(0.3f, maxOffset);
-                }
+                goUp = false;
             }
-            else
+        }
+        else
+        {
+            offset -= (speed) * Time.deltaTime;
+            if (offset < -maxOffset)
             {
-                accel -= speed * Time.deltaTime;
-                // offset -= speed * Time.deltaTime;
-                if (offset < -maxOffset)
-                {
-                    goUp = true;
-                    //rngOffsetTarget = Random.Range(0.3f, maxOffset);
-                }
+                goUp = true;               
             }
-        offset += (accel) * Time.deltaTime;
-        leftWing.localEulerAngles = new Vector3(0, 0, -offset);
-        rightWing.localEulerAngles = new Vector3( 0, 0, offset);
-        //offset = Mathf.PingPong(Time.time * 80f, maxOffset);
-       // transform.localEulerAngles = new Vector3( +offset, -90, 90);
+        }
+
+        accel += offset * 40f * Time.deltaTime;
+        leftWing.localEulerAngles = new Vector3(0, 0, -accel - 20);
+        rightWing.localEulerAngles = new Vector3( 0, 0, accel + 20);
+        Debug.Log(offset);
     }
 }
