@@ -10,16 +10,16 @@ using UnityEngine.EventSystems;
 [System.Serializable]
 public class WheelItem
 {
-    public string itemName = "Nouveau Bouton";
+    public string itemName = "New Button";
     public Sprite buttonTexture;
 
-    [Header("--- Texte & Police ---")]
+    [Header("Text & Font")]
     public TMP_FontAsset customFont;
 
     public GameObject windowToOpen;
 
-    [Header("--- Personnalisation ---")]
-    [Tooltip("Laisse à 0,0 pour utiliser la taille par défaut du prefab.")]
+    [Header("Customization")]
+    [Tooltip("Leave at 0,0 to use the prefab's default size.")]
     public Vector2 customSize = Vector2.zero;
 }
 
@@ -27,19 +27,19 @@ public class MainMenuUIManager : MonoBehaviour
 {
     public enum MenuState { TitleScreen, MainMenu, PlayGameModes, OptionsMenu, SubWindowOpen, Loading }
 
-    [Header("--- États & Navigation ---")]
+    [Header("State & Navigation")]
     public MenuState currentState = MenuState.TitleScreen;
-    [Tooltip("Coche ça si tu trouves que Haut/Bas fait tourner la roue dans le mauvais sens !")]
+    [Tooltip("Check this if Up/Down spins the wheel the wrong way.")]
     public bool invertNavigation = false;
 
     [SerializeField] private GameObject leaderboardCanvas;
 
     private static bool hasSeenTitleScreen = false;
 
-    [Header("--- Configuration Générale des Roues ---")]
+    [Header("Wheels - General")]
     public GameObject buttonPrefab;
     public float customAnglePerOption = 45f;
-    [Tooltip("Coché : répartit les boutons sur 360° (rotation continue infinie, mais étale les boutons tout autour). Décoché (par défaut) : garde ton arc avec l'angle ci-dessus.")]
+    [Tooltip("On: spread buttons over 360 (endless rotation, buttons go all around). Off (default): keep the arc using the angle above.")]
     public bool fillFullCircle = false;
     public float startAngleOffset = 0f;
     public bool reverseSpawnDirection = false;
@@ -47,52 +47,56 @@ public class MainMenuUIManager : MonoBehaviour
     public float wheelRotationSpeed = 10f;
     public bool keepButtonsUpright = true;
 
-    [Tooltip("Taille des boutons voisins = normalScale * shrink^distance (0.7 = chaque cran 30% plus petit que le précédent). 1 = tous les voisins à normalScale.")]
+    [Tooltip("Neighbor size = normalScale * shrink^distance (0.7 = each step 30% smaller). 1 = all neighbors at normalScale.")]
     public float neighborShrink = 0.7f;
 
-    [Header("--- Picker Vertical (boutons empilés + volant qui tourne) ---")]
-    [Tooltip("Boutons en liste verticale (précédent en haut, suivant en bas, plus petits) ET le volant 'wheel' continue de tourner. Décoché = ancienne roue en arc.")]
+    [Header("Vertical Picker")]
+    [Tooltip("Stacked button list (previous on top, next below, smaller) while the steering wheel keeps spinning. Off = old arc wheel.")]
     public bool verticalCarousel = true;
-    [Tooltip("Espacement vertical entre deux boutons (mode vertical uniquement).")]
+    [Tooltip("Vertical spacing between buttons.")]
     public float verticalSpacing = 7f;
-    [Tooltip("Espacement horizontal (gauche/droite) entre deux boutons. 0 = boutons empilés droits. Indépendant du reste.")]
+    [Tooltip("Horizontal (left/right) spacing between buttons. 0 = straight stack.")]
     public float horizontalSpacing = 0f;
-    [Tooltip("Recul en profondeur (Z) des voisins selon leur éloignement : plus un bouton est loin du centre, plus il part en arrière -> galbe rond façon volant. 0 = tout à plat.")]
+    [Tooltip("Depth (Z) push of neighbors by distance: farther buttons go further back for a round, wheel-like silhouette. 0 = flat.")]
     public float neighborDepthPerStep = 0f;
 
-    [Tooltip("Inverse le sens de défilement vertical (si descendre fait monter les boutons). Un réglage par roue.")]
+    [Tooltip("Invert the vertical scroll direction, per wheel (if Down makes buttons go up).")]
     public bool invertMainScroll = false;
     public bool invertSettingsScroll = true;
     public bool invertPlayScroll = true;
-    [Tooltip("Nombre de boutons visibles de chaque côté du sélectionné (le reste est masqué).")]
+    [Tooltip("Number of buttons visible on each side of the selected one (rest is hidden).")]
     public int visibleEachSide = 1;
-    [Tooltip("Vitesse d'animation du défilement vertical.")]
+    [Tooltip("Vertical scroll animation speed.")]
     public float carouselLerpSpeed = 10f;
-    [Tooltip("Rotation du volant ('wheel') par cran de navigation, en degrés.")]
+    [Tooltip("Steering wheel rotation per navigation step, in degrees.")]
     public float volantDegreesPerStep = 20f;
-    [Tooltip("Vitesse de rotation du volant.")]
+    [Tooltip("Steering wheel rotation speed.")]
     public float volantSpinSpeed = 8f;
+    [Tooltip("Invert the steering wheel spin direction, per wheel.")]
+    public bool invertMainVolant = false;
+    public bool invertSettingsVolant = false;
+    public bool invertPlayVolant = false;
 
-    [Header("--- Décalage des boutons par roue (X = gauche/droite, Y = haut/bas) ---")]
-    [Tooltip("Décale les boutons de la roue Menu principal. X négatif = vers la gauche.")]
+    [Header("Per-Wheel Button Offset (X = left/right, Y = up/down)")]
+    [Tooltip("Offset for the Main menu wheel buttons. Negative X = left.")]
     public Vector2 mainButtonsOffset = Vector2.zero;
-    [Tooltip("Décale les boutons de la roue Options. X positif = vers la droite.")]
+    [Tooltip("Offset for the Options wheel buttons. Positive X = right.")]
     public Vector2 settingsButtonsOffset = Vector2.zero;
-    [Tooltip("Décale les boutons de la roue Play. X positif = vers la droite.")]
+    [Tooltip("Offset for the Play wheel buttons. Positive X = right.")]
     public Vector2 playButtonsOffset = Vector2.zero;
 
     private Transform mainVolant, settingsVolant, playVolant;
     private Quaternion mainVolantBase, settingsVolantBase, playVolantBase;
 
-    [Header("--- Mouvement Caméra/Écran ---")]
+    [Header("Camera Movement")]
     public Transform CameraTransform;
     public float Zoffset = 10;
     public Transform titleScreenPosition;
     public Transform mainMenuPosition;
     public Transform optionsPosition;
 
-    [Header("--- Transition Dynamique ---")]
-    [Tooltip("Crée une courbe qui monte à 1.1 puis redescend à 1.0 pour l'effet d'élan !")]
+    [Header("Dynamic Transition")]
+    [Tooltip("Curve rising to 1.1 then back to 1.0 for a momentum effect.")]
     public AnimationCurve transitionCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
     public float transitionDuration = 0.8f;
 
@@ -103,16 +107,16 @@ public class MainMenuUIManager : MonoBehaviour
     private Quaternion targetRot;
     private bool isTransitioning = false;
 
-    [Header("--- Navigation Avancée ---")]
+    [Header("Advanced Navigation")]
     public float initialRepeatDelay = 0.4f;
     public float minRepeatInterval = 0.1f;
     public float accelerationFactor = 0.02f;
 
-    [Tooltip("Délai minimum entre deux crans de molette (plus grand = molette moins sensible).")]
+    [Tooltip("Minimum delay between two scroll steps (higher = less sensitive wheel).")]
     public float scrollStepCooldown = 0.15f;
     private float nextScrollTime = 0f;
 
-    [Tooltip("Durée de maintien (en secondes) avant que les boutons disparaissent. Plus grand = il faut maintenir plus longtemps.")]
+    [Tooltip("Hold time (seconds) before buttons hide. Higher = must hold longer.")]
     public float hideButtonsHoldDelay = 0.6f;
     private float holdStartTime = 0f;
 
@@ -120,29 +124,27 @@ public class MainMenuUIManager : MonoBehaviour
     private float currentRepeatInterval;
     private int lastDirection = 0;
     private bool isHolding = false;
-    private bool isAutoRepeating = false;   // true quand la touche est maintenue (défilement rapide -> boutons masqués)
+    private bool isAutoRepeating = false;
 
-    // Angle entre deux boutons, calculé par roue (360/nb si fillFullCircle, sinon customAnglePerOption).
     private float mainAnglePer, settingsAnglePer, playAnglePer;
-    // Compteurs de crans non bornés -> rotation continue/infinie (drift-free car les boutons font 360°).
     private int mainAccum = 0, settingsAccum = 0, playAccum = 0;
 
-    [Header("--- Transition de Scène ---")]
+    [Header("Scene Transition")]
     public CanvasGroup transitionScreen;
     public float sceneTransitionDuration = 1f;
 
     public static MainMenuUIManager Instance;
 
-    [Header("--- UI Panels ---")]
+    [Header("UI Panels")]
     public GameObject titleScreenPanel;
     public GameObject roze;
 
-    [Header("--- Effets Visuels (Hover) ---")]
+    [Header("Hover Visuals")]
     public float selectedScale = 1.3f;
     public float normalScale = 1.0f;
     public float scaleAnimSpeed = 12f;
 
-    [Header("--- Roue Menu Principal ---")]
+    [Header("Main Menu Wheel")]
     public RectTransform mainWheelRect;
     public WheelItem[] mainMenuOptions;
     private int currentMainIndex = 0;
@@ -150,7 +152,7 @@ public class MainMenuUIManager : MonoBehaviour
     private float initialMainAngle = 0f;
     private List<RectTransform> mainButtonsGenerated = new List<RectTransform>();
 
-    [Header("--- Roue Paramètres (Settings) ---")]
+    [Header("Settings Wheel")]
     public RectTransform settingsWheelRect;
     public WheelItem[] settingsOptions;
     private int currentSettingsIndex = 0;
@@ -158,7 +160,7 @@ public class MainMenuUIManager : MonoBehaviour
     private float initialSettingsAngle = 0f;
     private List<RectTransform> settingsButtonsGenerated = new List<RectTransform>();
 
-    [Header("--- Roue Play ---")]
+    [Header("Play Wheel")]
     public RectTransform playWheelRect;
     public WheelItem[] playButtons;
     private int currentPlayIndex = 0;
@@ -166,26 +168,26 @@ public class MainMenuUIManager : MonoBehaviour
     private float InitialPlayAngle = 0f;
     private List<RectTransform> playButtonsGenerated = new List<RectTransform>();
 
-    [Header("--- Positions Hors-Écran (À la main) ---")]
-    [Tooltip("Coordonnées X/Y quand la roue est masquée (ex: X = -1500 pour la mettre à gauche toute)")]
+    [Header("Off-Screen Positions")]
+    [Tooltip("X/Y coordinates when the wheel is hidden (e.g. X = -1500 to push it fully left).")]
     public Vector2 mainWheelInactivePos;
     public Vector2 settingsWheelInactivePos;
     public Vector2 playWheelInactivePos;
 
-    [Tooltip("Vitesse de glissement de la roue")]
+    [Tooltip("Wheel slide speed.")]
     public float wheelMoveSpeed = 8f;
 
     private Vector2 mainWheelActivePos;
     private Vector2 settingsWheelActivePos;
     private Vector2 playWheelActivePos;
 
-    [Header("--- Paramètres Audio ---")]
+    [Header("Audio")]
     public AudioMixer mainAudioMixer;
     public int masterVol = 10;
     public int musicVol = 10;
     public int sfxVol = 10;
 
-    [Header("--- Paramètres de Jeu (Play) ---")]
+    [Header("Gameplay")]
     public bool isMapInverted = false;
 
     public string controlsSaveKey = ("Controles");
@@ -193,10 +195,10 @@ public class MainMenuUIManager : MonoBehaviour
     private GameObject currentActiveWindow = null;
     private MenuState stateBeforeSubWindow = MenuState.MainMenu;
 
-    [Header("--- Paramètres Vidéo ---")]
+    [Header("Video")]
     public string[] resolutions = { "1920x1080", "1600x900", "1280x720", "800x600" };
     public int[] fpsValues = { 30, 60, 120, -1 };
-    public string[] fpsLabels = { "30", "60", "120", "Illimité" };
+    public string[] fpsLabels = { "30", "60", "120", "Unlimited" };
 
     [HideInInspector] public int currentResIndex = 0;
     [HideInInspector] public int currentFpsIndex = 1;
@@ -227,7 +229,6 @@ public class MainMenuUIManager : MonoBehaviour
         targetSettingsAngle = initialSettingsAngle;
         targetPlayAngle = InitialPlayAngle;
 
-        // Le volant visuel est l'objet "wheel" déjà présent sous chaque conteneur (avant qu'on génère les boutons).
         mainVolant = FindVolant(mainWheelRect);
         settingsVolant = FindVolant(settingsWheelRect);
         playVolant = FindVolant(playWheelRect);
@@ -246,7 +247,6 @@ public class MainMenuUIManager : MonoBehaviour
 
         if (verticalCarousel)
         {
-            // Roues droites dès le départ pour que le picker vertical soit bien d'aplomb.
             if (mainWheelRect != null) mainWheelRect.localRotation = Quaternion.identity;
             if (settingsWheelRect != null) settingsWheelRect.localRotation = Quaternion.identity;
             if (playWheelRect != null) playWheelRect.localRotation = Quaternion.identity;
@@ -395,8 +395,6 @@ public class MainMenuUIManager : MonoBehaviour
 
     private void UpdateWheelsRotation()
     {
-        // En mode picker vertical, les roues ne tournent pas : on les garde droites,
-        // ce sont les boutons qui se positionnent verticalement.
         if (verticalCarousel)
         {
             if (mainWheelRect != null) mainWheelRect.localRotation = Quaternion.Lerp(mainWheelRect.localRotation, Quaternion.identity, Time.deltaTime * wheelRotationSpeed);
@@ -424,21 +422,17 @@ public class MainMenuUIManager : MonoBehaviour
         }
     }
 
-    // ----- Picker vertical : sélectionné gros au centre, voisins plus petits au-dessus/en-dessous -----
-
     private void UpdateVerticalCarousels()
     {
         UpdateVerticalCarousel(mainButtonsGenerated, currentMainIndex, mainButtonsOffset, invertMainScroll);
         UpdateVerticalCarousel(settingsButtonsGenerated, currentSettingsIndex, settingsButtonsOffset, invertSettingsScroll);
         UpdateVerticalCarousel(playButtonsGenerated, currentPlayIndex, playButtonsOffset, invertPlayScroll);
 
-        // Le volant continue de tourner (autour de son axe) en fonction de la navigation.
-        SpinVolant(mainVolant, mainVolantBase, mainAccum);
-        SpinVolant(settingsVolant, settingsVolantBase, settingsAccum);
-        SpinVolant(playVolant, playVolantBase, playAccum);
+        SpinVolant(mainVolant, mainVolantBase, mainAccum, invertMainVolant);
+        SpinVolant(settingsVolant, settingsVolantBase, settingsAccum, invertSettingsVolant);
+        SpinVolant(playVolant, playVolantBase, playAccum, invertPlayVolant);
     }
 
-    // Cherche l'objet "wheel" (le volant) déjà présent sous un conteneur de roue.
     private Transform FindVolant(RectTransform wheelParent)
     {
         if (wheelParent == null) return null;
@@ -447,11 +441,11 @@ public class MainMenuUIManager : MonoBehaviour
         return null;
     }
 
-    // Fait tourner le volant autour de son axe (Y local) proportionnellement au nombre de crans parcourus.
-    private void SpinVolant(Transform volant, Quaternion baseRot, int accum)
+    private void SpinVolant(Transform volant, Quaternion baseRot, int accum, bool invert)
     {
         if (volant == null) return;
-        Quaternion target = baseRot * Quaternion.Euler(0f, -accum * volantDegreesPerStep, 0f);
+        float dir = invert ? -1f : 1f;
+        Quaternion target = baseRot * Quaternion.Euler(0f, -accum * volantDegreesPerStep * dir, 0f);
         volant.localRotation = Quaternion.Slerp(volant.localRotation, target, Time.deltaTime * volantSpinSpeed);
     }
 
@@ -467,20 +461,15 @@ public class MainMenuUIManager : MonoBehaviour
             RectTransform rt = buttons[i];
             if (rt == null) continue;
 
-            int off = SignedOffset(i - selectedIndex, n);   // 0 = sélectionné, -1 = au-dessus, +1 = en-dessous
+            int off = SignedOffset(i - selectedIndex, n);
             int dist = Mathf.Abs(off);
             bool visible = dist <= visibleEachSide;
 
             Vector2 targetPos = buttonsOffset + new Vector2(off * horizontalSpacing, -off * verticalSpacing * ySign);
             float targetScale = visible ? ((off == 0) ? selectedScale : normalScale * Mathf.Pow(neighborShrink, dist)) : 0f;
 
-            // Pendant un maintien (défilement rapide), on cache TOUS les boutons : seul le volant tourne,
-            // l'index continue de défiler, et les boutons réapparaissent au relâchement.
             if (isAutoRepeating) targetScale = 0f;
 
-            // Détection du bouclage : si le bouton doit faire un grand saut (passer du haut au bas ou inverse),
-            // on le téléporte INVISIBLE de l'autre côté au lieu de lui faire traverser l'écran.
-            // Sinon, il glisse normalement (et continue de glisser même en sortant avant de s'effacer).
             Vector2 step = new Vector2(horizontalSpacing, verticalSpacing);
             float stepMag = step.magnitude;
             bool wrapping = stepMag > 0.001f && Vector2.Distance(rt.anchoredPosition, targetPos) > stepMag * 1.5f;
@@ -496,17 +485,15 @@ public class MainMenuUIManager : MonoBehaviour
                 rt.localScale = Vector3.Lerp(rt.localScale, Vector3.one * targetScale, Time.deltaTime * carouselLerpSpeed);
             }
 
-            // Recul en Z des voisins (silhouette ronde) : la position X/Y vient d'être posée, on n'ajuste que la profondeur.
             float targetZ = Mathf.Abs(off) * neighborDepthPerStep;
             Vector3 lp = rt.localPosition;
             lp.z = Mathf.Lerp(lp.z, targetZ, Time.deltaTime * carouselLerpSpeed);
             rt.localPosition = lp;
 
-            rt.localRotation = Quaternion.identity;   // les boutons restent horizontaux
+            rt.localRotation = Quaternion.identity;
         }
     }
 
-    // Décalage signé de delta ramené dans [-n/2, n/2] (pour savoir de combien de crans un bouton est éloigné du centre).
     private int SignedOffset(int delta, int n)
     {
         if (n <= 0) return 0;
@@ -572,7 +559,6 @@ public class MainMenuUIManager : MonoBehaviour
 
             if (Mathf.Abs(scroll) > 0.01f)
             {
-                // Cooldown : on ignore les crans de molette trop rapprochés (molette moins sensible).
                 if (Time.unscaledTime >= nextScrollTime)
                 {
                     inputDirection = scroll > 0 ? -1 : 1;
@@ -587,7 +573,7 @@ public class MainMenuUIManager : MonoBehaviour
                     inputDirection = currentDir;
                     lastDirection = currentDir;
                     isHolding = true;
-                    isAutoRepeating = false;   // simple appui : les boutons restent visibles
+                    isAutoRepeating = false;
                     holdStartTime = Time.unscaledTime;
                     currentRepeatInterval = initialRepeatDelay;
                     nextActionTime = Time.unscaledTime + initialRepeatDelay;
@@ -599,7 +585,6 @@ public class MainMenuUIManager : MonoBehaviour
                     nextActionTime = Time.unscaledTime + currentRepeatInterval;
                 }
 
-                // On ne masque les boutons qu'après un vrai maintien prolongé (et pas juste un appui un peu long).
                 if (Time.unscaledTime - holdStartTime >= hideButtonsHoldDelay) isAutoRepeating = true;
             }
             else { isHolding = false; isAutoRepeating = false; lastDirection = 0; }
@@ -618,7 +603,6 @@ public class MainMenuUIManager : MonoBehaviour
         if (Input.GetButtonDown("Cancel") || Input.GetKeyDown(KeyCode.Escape)) GoBack();
     }
 
-    // Espacement angulaire d'une roue : 360/nb pour un cercle complet (rotation continue), sinon l'angle fixe.
     private float AnglePer(int count) => (fillFullCircle && count > 0) ? 360f / count : customAnglePerOption;
 
     private static int Mod(int a, int b) => b <= 0 ? 0 : ((a % b) + b) % b;
@@ -630,8 +614,6 @@ public class MainMenuUIManager : MonoBehaviour
         else if (currentState == MenuState.PlayGameModes) { playAccum += direction; ApplyPlayWheel(); }
     }
 
-    // Met à jour l'angle cible (à partir du compteur non borné -> tours complets continus) et l'index sélectionné.
-    // En mode arc (fillFullCircle off), on borne le compteur pour éviter toute dérive.
     private void ApplyMainWheel()
     {
         if (!fillFullCircle && !verticalCarousel) mainAccum = Mod(mainAccum, mainMenuOptions.Length);
@@ -656,7 +638,6 @@ public class MainMenuUIManager : MonoBehaviour
         targetPlayAngle = InitialPlayAngle - (-playAccum * playAnglePer * spawnDirection);
     }
 
-    // Nombre de crans (signé) pour rejoindre targetIndex par le plus court chemin (utilisé au clic souris).
     private int ShortestStep(int accum, int targetIndex, int length)
     {
         if (length <= 0) return 0;
@@ -712,7 +693,7 @@ public class MainMenuUIManager : MonoBehaviour
             {
                 isMapInverted = !isMapInverted;
                 InversionCatcher.instance.CatchInversion(isMapInverted);
-                Debug.Log("Map inversée est maintenant sur : " + isMapInverted);
+                Debug.Log("Map inverted is now: " + isMapInverted);
 
                 TextMeshProUGUI btnText = playButtonsGenerated[currentPlayIndex].GetComponentInChildren<TextMeshProUGUI>();
                 if (btnText != null)
@@ -821,8 +802,6 @@ public class MainMenuUIManager : MonoBehaviour
         }
     }
 
-    // ----- Clic souris (détection manuelle, cohérente avec l'Input legacy du reste du script) -----
-
     private void HandleMouseClick()
     {
         if (!Input.GetMouseButtonDown(0)) return;
@@ -846,7 +825,6 @@ public class MainMenuUIManager : MonoBehaviour
             if (rt == null || !rt.gameObject.activeInHierarchy) continue;
             if (!RectTransformUtility.RectangleContainsScreenPoint(rt, mousePos, cam)) continue;
 
-            // En cas de chevauchement, on garde le bouton dont le centre est le plus proche du curseur.
             Vector2 screenCenter = RectTransformUtility.WorldToScreenPoint(cam, rt.position);
             float d = (screenCenter - mousePos).sqrMagnitude;
             if (d < bestDist) { bestDist = d; hitIndex = i; }
@@ -861,8 +839,6 @@ public class MainMenuUIManager : MonoBehaviour
         if (canvas == null) return CameraTransform != null ? CameraTransform.GetComponent<Camera>() : Camera.main;
         canvas = canvas.rootCanvas;
 
-        // Overlay -> pas de caméra. Sinon (World Space / Screen Space - Camera) il faut la vraie caméra
-        // qui rend le canvas ; sur un canvas World Space, worldCamera est souvent null -> on prend celle de la scène.
         if (canvas.renderMode == RenderMode.ScreenSpaceOverlay) return null;
         if (canvas.worldCamera != null) return canvas.worldCamera;
         if (CameraTransform != null)
@@ -873,8 +849,6 @@ public class MainMenuUIManager : MonoBehaviour
         return Camera.main;
     }
 
-    // Recentre la roue active sur le bouton cliqué par le plus court chemin, puis valide
-    // en réutilisant exactement la logique de SelectCurrentWheelOption().
     private void OnWheelButtonClicked(int index)
     {
         if (currentState == MenuState.MainMenu) { mainAccum += ShortestStep(mainAccum, index, mainMenuOptions.Length); ApplyMainWheel(); }
@@ -921,8 +895,6 @@ public class MainMenuUIManager : MonoBehaviour
         ApplyWheelScales(playButtonsGenerated, currentPlayIndex, currentState == MenuState.PlayGameModes);
     }
 
-    // Taille dégressive : le bouton sélectionné est gros (selectedScale), ses voisins de plus en plus petits
-    // selon leur éloignement (normalScale * neighborShrink^distance) -> les "prochains" boutons paraissent plus petits.
     private void ApplyWheelScales(List<RectTransform> buttons, int selectedIndex, bool isActiveState)
     {
         int n = buttons.Count;
@@ -969,7 +941,7 @@ public class MainMenuUIManager : MonoBehaviour
             return;
         }
 
-        Debug.LogWarning($"GameSceneManager absent. Chargement direct de {sceneName} depuis le menu.");
+        Debug.LogWarning($"GameSceneManager missing. Loading {sceneName} directly from the menu.");
         StartCoroutine(TransitionAndLoad(sceneName));
     }
     private IEnumerator TransitionAndLoad(string sceneName)

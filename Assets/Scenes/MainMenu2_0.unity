@@ -4613,12 +4613,15 @@ MonoBehaviour:
   horizontalSpacing: 0
   neighborDepthPerStep: -3.33
   invertMainScroll: 0
-  invertSettingsScroll: 1
-  invertPlayScroll: 1
+  invertSettingsScroll: 0
+  invertPlayScroll: 0
   visibleEachSide: 1
   carouselLerpSpeed: 8.02
   volantDegreesPerStep: 51.142
   volantSpinSpeed: 8
+  invertMainVolant: 0
+  invertSettingsVolant: 1
+  invertPlayVolant: 1
   mainButtonsOffset: {x: -12.5, y: 0}
   settingsButtonsOffset: {x: 12.5, y: 0}
   playButtonsOffset: {x: 12.5, y: 0}
