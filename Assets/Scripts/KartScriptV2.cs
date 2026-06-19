@@ -204,7 +204,8 @@ public class KartScriptV2 : MonoBehaviour
         }
         else
         {
-            Destroy(gameObject);
+            if (!IsGhost) // ← le ghost ne se détruit pas
+                Destroy(gameObject);
         }
 
 

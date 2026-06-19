@@ -19,8 +19,7 @@ public class TimeAttack : GameMode
     [SerializeField] private GameObject bestScoreImage;
 
     [Header("Configuration Fantôme")]
-    [SerializeField] private GameObject ghostKartPrefab;
-    private KartScriptV2 spawnedGhostKart;
+    [SerializeField] private KartScriptV2 ghostKart;
 
     [Header("Audio SFX Décompte")]
     [SerializeField] private AudioClip countdownBeepSound; // Le bip pour 3, 2, 1
@@ -40,7 +39,9 @@ public class TimeAttack : GameMode
     private void Start()
     {
         lapManager = FindFirstObjectByType<LapManager>();
-        Initialize(lapManager, FindFirstObjectByType<KartScriptV2>());
+        KartScriptV2 found = FindFirstObjectByType<KartScriptV2>();
+        Debug.Log($"[TimeAttack] kartScript trouvé : {found.gameObject.name}");
+        Initialize(lapManager, found);
 
         startUI = GameObject.Find("CountDownUI")?.GetComponent<TextMeshProUGUI>();
         currentTimerUI = GameObject.Find("ChronoUI")?.GetComponent<TextMeshProUGUI>();
@@ -96,19 +97,19 @@ public class TimeAttack : GameMode
         }
 
         // 2. LECTURE DU FANTÔME (S'il a été généré au tour précédent)
-        if (spawnedGhostKart != null && bestLapPositions.Count > 0)
+        if (ghostKart != null && bestLapPositions.Count > 0)
         {
             if (playbackIndex < bestLapPositions.Count)
             {
-                spawnedGhostKart.transform.position = bestLapPositions[playbackIndex].position;
-                spawnedGhostKart.transform.rotation = bestLapPositions[playbackIndex].rotation;
+                ghostKart.transform.position = bestLapPositions[playbackIndex].position;
+                ghostKart.transform.rotation = bestLapPositions[playbackIndex].rotation;
                 playbackIndex++;
             }
             else
             {
                 // Si le fantôme a fini son enregistrement avant que le joueur passe la ligne,
                 // il s'arrête sur place (ou on peut le cacher)
-                spawnedGhostKart.gameObject.SetActive(false);
+                ghostKart.gameObject.SetActive(false);
             }
         }
     }
@@ -196,21 +197,15 @@ public class TimeAttack : GameMode
 
     private void SpawnGhost()
     {
-        if (bestLapPositions.Count == 0 || ghostKartPrefab == null) return;
+        if (bestLapPositions.Count == 0 || ghostKart == null) return;
 
-        if (spawnedGhostKart != null)
-            Destroy(spawnedGhostKart.gameObject);
-
-        GameObject ghostObj = Instantiate(ghostKartPrefab, bestLapPositions[0].position, bestLapPositions[0].rotation);
-        spawnedGhostKart = ghostObj.GetComponent<KartScriptV2>();
-        if (spawnedGhostKart == null)
-            spawnedGhostKart = ghostObj.GetComponentInChildren<KartScriptV2>();
-
-        if (spawnedGhostKart != null)
-            spawnedGhostKart.IsGhost = true;
-
+        ghostKart.gameObject.SetActive(false);
+        ghostKart.enabled = false; // empêche Awake/Start de KartScriptV2
+        ghostKart.transform.position = bestLapPositions[0].position;
+        ghostKart.transform.rotation = bestLapPositions[0].rotation;
+        ghostKart.IsGhost = true;
+        ghostKart.gameObject.SetActive(true);
         playbackIndex = 0;
-        ghostObj.SetActive(true);
     }
 
     private string GetSuffix()
