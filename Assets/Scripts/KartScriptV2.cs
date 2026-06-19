@@ -253,7 +253,7 @@ public class KartScriptV2 : MonoBehaviour
     void Update()
     {
 #if UNITY_EDITOR
-        if (Input.GetKeyDown(KeyCode.Space)) { Debug.Break(); }
+        if (Input.GetKeyDown(KeyCode.R)) { Debug.Break(); }
 #endif
         //Debug.Log(CanDrive);
         if (CanDrive == false)
