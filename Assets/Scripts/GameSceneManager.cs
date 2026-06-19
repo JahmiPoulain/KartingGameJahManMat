@@ -150,14 +150,52 @@ public class GameSceneManager : MonoBehaviour
     {
         if (isTransitioning) return;
 
+        StartCoroutine(RestartRoutine(progSceneName));
+    }
+
+    private IEnumerator RestartRoutine(string progSceneName)
+    {
+        isTransitioning = true;
+        Application.backgroundLoadingPriority = ThreadPriority.Low;
+
+        transitionCanvas.gameObject.SetActive(true);
+        backgroundBlocker.enabled = false;
+
+        yield return StartCoroutine(PlayVideoUntilMiddle());
+
+        Coroutine spinCoroutine = null;
+        if (loadingIcon != null)
+        {
+            loadingIcon.gameObject.SetActive(true);
+            spinCoroutine = StartCoroutine(SpinIconRoutine());
+        }
+
+        // On décharge les scènes de jeu actuelles pour repartir d'un état propre
+        if (IsSceneLoaded(progSceneName))
+            yield return SceneManager.UnloadSceneAsync(progSceneName);
+        if (IsSceneLoaded(graphSceneName))
+            yield return SceneManager.UnloadSceneAsync(graphSceneName);
 
         loadedGameplayScenes.Clear();
 
+        // On recharge le duo GraphScene + progScene, sans repasser par le menu
+        yield return StartCoroutine(LoadAdditiveScene(graphSceneName));
+        yield return StartCoroutine(LoadAdditiveScene(progSceneName));
 
-        pendingGameplaySceneName = progSceneName;
+        Scene sceneToActivate = SceneManager.GetSceneByName(progSceneName);
+        if (sceneToActivate.IsValid() && sceneToActivate.isLoaded)
+            SceneManager.SetActiveScene(sceneToActivate);
 
+        if (spinCoroutine != null) StopCoroutine(spinCoroutine);
+        if (loadingIcon != null) loadingIcon.gameObject.SetActive(false);
 
-        StartCoroutine(TransitionRoutine(progSceneName,isTransitioning));
+        yield return StartCoroutine(FinishVideoRoutine());
+
+        transitionCanvas.gameObject.SetActive(false);
+        Application.backgroundLoadingPriority = ThreadPriority.Normal;
+        isTransitioning = false;
+
+        TryConsumePendingGameLoad();
     }
 
     public void ReturnToMainMenu()
