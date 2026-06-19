@@ -195,6 +195,7 @@ public class KartScriptV2 : MonoBehaviour
     public bool CanDrive { get => canDrive; set => canDrive = value; }
     public float SplineProgress { get => splineProgress; set => splineProgress = value; }
     public bool IsGhost { get => isGhost; set => isGhost = value; }
+    public GliderAnimation Glider { get => glider; set => glider = value; }
 
     private void Awake()
     {
@@ -305,7 +306,7 @@ public class KartScriptV2 : MonoBehaviour
 
         if (outOfBounds)
         {
-            glider.activate = false;
+            Glider.activate = false;
             currentSpeed = 0f;
             currentTurboForce = 0f;
             bounceForce = 0f;
@@ -324,7 +325,7 @@ public class KartScriptV2 : MonoBehaviour
             }
 
             groundedCoyoteTimer = 0.3f;
-            glider.activate = false;
+            Glider.activate = false;
             transform.Rotate(0, currentTurnSpeed + currentDriftForce, 0);
             rb.linearVelocity = (preOrientation.transform.forward * (currentSpeed + currentTurboForce) + bounceDirection * bounceForce) + Vector3.down * (0.1f + currentFallSpeed);
         }
@@ -405,7 +406,7 @@ public class KartScriptV2 : MonoBehaviour
     }
     private void HandleGliderFlight()
     {
-        glider.activate = true;
+        Glider.activate = true;
 
         if (flightDir.eulerAngles.x > 0f && flightDir.eulerAngles.x < 180f)
         {
@@ -550,7 +551,7 @@ public class KartScriptV2 : MonoBehaviour
     public void StopFlight()
     {
         isFlying = false;
-        glider.activate = false;
+        Glider.activate = false;
         flightSpeed = 0f;
     }
 
@@ -1560,43 +1561,5 @@ public class KartScriptV2 : MonoBehaviour
     }
 }
 
-    /*void GhostDrive()
-    {
-        if (currentWaypoint == null)
-        {
-            currentWaypoint = firstWaypoint;
-            return;
-        }
 
-        Vector3 dir = currentWaypoint.position - transform.position;
-
-        float angle = Vector3.SignedAngle(transform.forward, dir, Vector3.up);
-        Debug.Log(angle);
-        if (angle < -5f)
-        {
-            turnDirection = -1;
-            inputGlideTurn = -1;
-        }
-        else if (angle > 5f)
-        {
-            turnDirection = 1;
-            inputGlideTurn = 1;
-        }
-        else
-        {
-            turnDirection = 0;
-            inputGlideTurn = 0;
-        }
-
-        //turnDirection = Mathf.Clamp(angle / 30f, -1f, 1f);
-        if (!isFlying) forwardDirection = 1f;
-        else forwardDirection = 0f;
-
-        if (dir.sqrMagnitude < 70f)
-        {
-            Debug.Log(currentWaypoint);
-            currentWaypoint = currentWaypoint.GetComponent<Waypoints>().nextWaypoint;
-            Debug.Log(currentWaypoint);
-        }
-    }*/
 

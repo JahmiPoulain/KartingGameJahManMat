@@ -48,10 +48,11 @@ public class LapManager : MonoBehaviour
     {
         if (other.CompareTag("Player") && !_isChecking)
         {
+            KartScriptV2 kart = other.GetComponent<KartScriptV2>();
+            if (kart != null && kart.IsGhost) return; // ignore le ghost
+
             if (checkpointManager.NextIndex > checkpointManager.TotalCheckpointCount)
-            {
                 CompleteLap();
-            }
         }
     }
 

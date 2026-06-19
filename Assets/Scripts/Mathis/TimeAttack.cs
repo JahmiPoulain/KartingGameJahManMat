@@ -8,6 +8,7 @@ public struct GhostNodeData
 {
     public Vector3 position;
     public Quaternion rotation;
+    public bool gliderActive; // ← ajout
 }
 
 public class TimeAttack : GameMode
@@ -91,7 +92,9 @@ public class TimeAttack : GameMode
             GhostNodeData node = new GhostNodeData
             {
                 position = kartScript.transform.position,
-                rotation = kartScript.transform.rotation
+                rotation = kartScript.transform.rotation,
+                gliderActive = kartScript.Glider.activate
+
             };
             currentLapPositions.Add(node);
         }
@@ -103,6 +106,8 @@ public class TimeAttack : GameMode
             {
                 ghostKart.transform.position = bestLapPositions[playbackIndex].position;
                 ghostKart.transform.rotation = bestLapPositions[playbackIndex].rotation;
+                ghostKart.Glider.activate = bestLapPositions[playbackIndex].gliderActive;
+
                 playbackIndex++;
             }
             else
