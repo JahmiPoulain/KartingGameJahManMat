@@ -6,7 +6,6 @@ public class WingWiggleAnimation : MonoBehaviour
     [SerializeField] float speed;
     bool goUp;
     float maxOffset = 2f;
-    float rngOffsetTarget;
     float offset;
     [SerializeField] Transform rightWing;
     [SerializeField] Transform leftWing;
@@ -28,6 +27,9 @@ public class WingWiggleAnimation : MonoBehaviour
         {
             accel = 0;
             offset = 0;
+            leftWing.localEulerAngles = new Vector3(0, 0, 0);
+            rightWing.localEulerAngles = new Vector3(0, 0, 0);
+            goUp = false;
         }
         if (goUp)
         {

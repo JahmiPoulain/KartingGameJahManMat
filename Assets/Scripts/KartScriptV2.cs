@@ -1053,17 +1053,14 @@ public class KartScriptV2 : MonoBehaviour
 
         float nextTotalSpeed = visKartXRot + -currentTurboForce * 0.5f;
         nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -(maxSpeed), maxSpeed + 2f);
-        groundNormalT.transform.rotation = Quaternion.LookRotation(Vector3.Cross(transform.right, groundNormal), groundNormal); // oriente le y vers le haut de la normale et le x vers l'avant du kart ( 2 semaines de galère )
+        groundNormalT.transform.rotation = Quaternion.LookRotation(Vector3.Cross(transform.right, groundNormal), groundNormal); // oriente le y vers le haut de la normale et le x vers l'avant du kart ( 2 semaines de galère avant meme les cours sur le produit vectoriel)
         preOrientation.localRotation = Quaternion.RotateTowards(preOrientation.localRotation, groundNormalT.localRotation, 120f * Time.deltaTime);
         Quaternion rotTarget = Quaternion.Euler(nextTotalSpeed * 0.8f, 0, visKartZRot);
-       // if (InputSystemHandler.instance.inputCameraMode)
-        //{
-            visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 40f * Time.deltaTime);
-       // }
-        //else
-       // {
-            
-        //}
+        if (!InputSystemHandler.instance.inputCameraMode)
+        {
+            rotTarget = Quaternion.Euler(Vector3.zero);            
+        }
+        visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 40f * Time.deltaTime);
 
         cocot.localRotation = Quaternion.Slerp(cocot.localRotation, Quaternion.Euler(nextTotalSpeed * 0.3f - 90, visKartZRot * 1.2f, 0), 0.5f);
         creteAccelZ += Mathf.Abs(visKartZRot);
@@ -1102,49 +1099,45 @@ public class KartScriptV2 : MonoBehaviour
         }
     }
 
-   /* float IncrementTowardsValue(float currentValue, float targetValue, float increment)
-    {
-        //Debug.Log(currentValue + " " + targetValue + " " + increment);
-        if (currentValue > targetValue)
-        {
-            //Debug.Log("plus grang");
-            currentValue -= increment;
-            if (currentValue < targetValue)
-            {
-                //Debug.Log("<");
-                return targetValue;
-            }
-        }
-        else if (currentValue < targetValue)
-        {
-            //Debug.Log("plus ptit");
-            currentValue += increment;
-            if (currentValue > targetValue)
-            {
-                //Debug.Log(">");
-                return targetValue;
-            }
-        }
-        //Debug.Log(currentValue);
-        return currentValue;
-    }*/
+    /* float IncrementTowardsValue(float currentValue, float targetValue, float increment)
+     {
+         //Debug.Log(currentValue + " " + targetValue + " " + increment);
+         if (currentValue > targetValue)
+         {
+             //Debug.Log("plus grang");
+             currentValue -= increment;
+             if (currentValue < targetValue)
+             {
+                 //Debug.Log("<");
+                 return targetValue;
+             }
+         }
+         else if (currentValue < targetValue)
+         {
+             //Debug.Log("plus ptit");
+             currentValue += increment;
+             if (currentValue > targetValue)
+             {
+                 //Debug.Log(">");
+                 return targetValue;
+             }
+         }
+         //Debug.Log(currentValue);
+         return currentValue;
+     }*/
     void HandleCameraTransform()
     {
+        float camPivotX = visualKartBody.transform.localEulerAngles.x;
         if (InputSystemHandler.instance.inputCameraMode)
-         {
-            currentCamPosCenter = thirdPersonCamPos;
-         }
-         else
-         {
-            currentCamPosCenter = firstPersonCamPos;           
-         }
-        if (!InputSystemHandler.instance.inputCameraMode)
         {
-            if (currentCamPosCenter == firstPersonCamPos)
-            {
-
-            }
+            currentCamPosCenter = thirdPersonCamPos;
+            camPivotX = 0f;
         }
+        else
+        {
+            currentCamPosCenter = firstPersonCamPos;
+        }
+        
         float driftForce = Mathf.Clamp(currentDriftForce, -1f, 1f);
 
         if (driftForce < 0)
@@ -1157,7 +1150,8 @@ public class KartScriptV2 : MonoBehaviour
         Vector3 targetDir = Vector3.down * cameraZoneUp + (transform.forward + (transform.right * currentTurnSpeed * Mathf.Clamp(currentDriftForce, -1f, 1f) * 0.05f)).normalized;
         float rotSpeed = 0.1f + (camPivot.forward - targetDir).magnitude * 2f; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-        if (!isFlying)
+        
+        if (!isFlying || !InputSystemHandler.instance.inputCameraMode)
         {
             // faire tanguer le pivot avec les virages
             camPivot.forward = Vector3.RotateTowards(camPivot.forward, targetDir, Time.deltaTime, 0.0f);
@@ -1178,21 +1172,31 @@ public class KartScriptV2 : MonoBehaviour
             camPivotY *= -5f;
             if (driftDir == 0 && currentDriftForce != 0)
             {
-                if (camPivotY < camPivot2.localEulerAngles.y) { camPivotY += (3f + (3f - camPivotY)) * Time.deltaTime; }
-                else if (camPivotY > camPivot2.localEulerAngles.y) { camPivotY -= (3f + (3f - camPivotY)) * Time.deltaTime; }
+                if (camPivotY < camPivot2.localEulerAngles.y) { camPivotY += (3f + (3f - camPivotY)) * Time.deltaTime; if (camPivotZ >= camPivot2.localEulerAngles.y) camPivotZ = camPivot2.localEulerAngles.y; }
+                else if (camPivotY > camPivot2.localEulerAngles.y) { camPivotY -= (3f + (3f - camPivotY)) * Time.deltaTime; if (camPivotZ <= camPivot2.localEulerAngles.y) camPivotZ = camPivot2.localEulerAngles.y; }
             }
         }
         else
         {
             // si on vole on annule tout
-            if (camPivotY < 0) { camPivotY += (3f + (3f - camPivotY)) * Time.deltaTime; }
-            else if (camPivotY > 0) { camPivotY -= (3f + (3f - camPivotY)) * Time.deltaTime; }
+            if (camPivotY < 0f) 
+            { 
+                camPivotY += (3f + (3f - camPivotY)) * Time.deltaTime;
+                if (camPivotY >= 0f) camPivotY = 0f;
+            }
+            else if (camPivotY > 0f) 
+            { 
+                camPivotY -= (3f + (3f - camPivotY)) * Time.deltaTime;
+                if (camPivotY <= 0f) camPivotY = 0f;
+            }
 
-            if (camPivotZ < 0) { camPivotZ += (3f + (3f - camPivotZ)) * Time.deltaTime; }
-            else if (camPivotZ > 0) { camPivotZ -= (3f + (3f - camPivotZ)) * Time.deltaTime; }
+            if (camPivotZ < 0) { camPivotZ += (3f + (3f - camPivotZ)) * Time.deltaTime; if (camPivotZ >= 0f) camPivotZ = 0f; }
+            else if (camPivotZ > 0) { camPivotZ -= (3f + (3f - camPivotZ)) * Time.deltaTime; if (camPivotZ <= 0f) camPivotZ = 0f; }
         }
-        camPivot2.localEulerAngles = new Vector3(camPivot.localEulerAngles.x, camPivotY, camPivotZ);
 
+        camPivot2.localEulerAngles = new Vector3(camPivotX, camPivotY, camPivotZ);
+
+        
         Vector3 rayOrigin = transform.position + transform.forward * 5f + new Vector3 (currentCamPosCenter.z, currentCamPosCenter.y, 0);
 
         Vector3 rayDirToCam = playerCamera.transform.position - rayOrigin;
@@ -1203,7 +1207,10 @@ public class KartScriptV2 : MonoBehaviour
             camCollisionCompensation = new Vector3(0, 0, rayDirToCam.x).normalized * (hit.distance - 5f);
         }
 
+        if (!InputSystemHandler.instance.inputCameraMode) camCollisionCompensation = Vector3.zero;
+
         Vector3 nextDir = playerCamera.transform.localPosition - (currentCamPosCenter + camCollisionCompensation);
+
         if (nextDir.sqrMagnitude > 0.005f)
         {
             playerCamera.transform.localPosition = Vector3.Lerp(playerCamera.transform.localPosition, currentCamPosCenter + camCollisionCompensation, 8f * Time.deltaTime);
@@ -1329,11 +1336,8 @@ public class KartScriptV2 : MonoBehaviour
     private void OnCollisionExit(Collision collision)
     {
         // quand on quitte le sol
-
-        //Debug.Log("QUITTE LE SOL 11111111111111111111111111111111111111111111111111111111111111111");
         if (collision.gameObject.layer == 7)
         {
-            //Debug.Log("QUITTE LE SOL");
             grounded = false;
             airSpeed = currentSpeed;
             flightSpeed = currentSpeed;
