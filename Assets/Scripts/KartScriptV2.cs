@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Splines;
 
@@ -146,6 +147,8 @@ public class KartScriptV2 : MonoBehaviour
     float currentTargetWindForce;
     float currentWindForce;
     Vector3 currentWindDir;
+    [SerializeField] Transform normalModeWindTarget;
+    [SerializeField] Transform reverseModeWindTarget;
 
     [Header("Respawn Points")]
     public List<Transform> respawnPoints;
@@ -402,6 +405,19 @@ public class KartScriptV2 : MonoBehaviour
         {
             currentTargetWindForce = 0f;
         }*/
+        if (currentWindForce <= 0 || transform.position.x < normalModeWindTarget.position.x) return;
+        Vector3 goalDir = (normalModeWindTarget.position - transform.position).normalized;
+        float dot = Vector3.Dot(new Vector3(goalDir.x, 0, goalDir.z), new Vector3(transform.right.x, 0, transform.right.z));
+        Debug.Log(dot);
+        if (dot > 0)
+        { 
+            transform.localEulerAngles += new Vector3(0, currentWindForce * 2f * Time.fixedDeltaTime, 0);
+        }
+        else if (dot < 0)
+        {
+            transform.localEulerAngles -= new Vector3(0, currentWindForce * 2f * Time.fixedDeltaTime, 0);
+        }
+        
 
     }
     private void HandleGliderFlight()

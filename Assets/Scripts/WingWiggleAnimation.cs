@@ -49,6 +49,6 @@ public class WingWiggleAnimation : MonoBehaviour
         accel += offset * 40f * Time.deltaTime;
         leftWing.localEulerAngles = new Vector3(0, 0, -accel - 20);
         rightWing.localEulerAngles = new Vector3( 0, 0, accel + 20);
-        Debug.Log(offset);
+        //Debug.Log(offset);
     }
 }
