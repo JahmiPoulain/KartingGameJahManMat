@@ -4,10 +4,28 @@ using UnityEngine;
 public class ChronoScript : MonoBehaviour
 {
     private GameMode gameMode;
-    [SerializeField] private TextMeshProUGUI chronoUI;
+    [SerializeField] private TextMeshProUGUI ttChronoUI;
+    [SerializeField] private TextMeshProUGUI taChronoUI;
+    private TextMeshProUGUI chronoUI;
+
     [SerializeField] private LapManager lapManager;
     private float delta = 0f;
     public float CurrentTime => delta;
+
+    private void Start()
+    {
+        // Au lieu de FindFirstObjectByType, on récupère le mode validé et configuré par le GameManager
+        gameMode = FindFirstObjectByType<ContreLaMontre>();
+        if (gameMode == null || !gameMode.enabled)
+            gameMode = FindFirstObjectByType<TimeAttack>();
+        if (gameMode == null) return;
+        // On choisit l'UI à afficher selon le mode de jeu actif
+        if (gameMode is ContreLaMontre)
+            chronoUI = ttChronoUI;
+        else if (gameMode is TimeAttack)
+            chronoUI = taChronoUI;
+    }
+
 
     void Update()
     {
