@@ -208,7 +208,15 @@ public class TimeAttack : GameMode
         if (bestLapPositions.Count == 0 || ghostKart == null) return;
 
         ghostKart.gameObject.SetActive(false);
-        ghostKart.enabled = false; // empêche Awake/Start de KartScriptV2
+        ghostKart.enabled = false;
+
+        // Désactive la caméra du ghost pour qu'elle ne prenne pas le contrôle
+        Camera ghostCam = ghostKart.GetComponentInChildren<Camera>(true);
+        if (ghostCam != null) ghostCam.gameObject.SetActive(false);
+
+        // Désactive aussi le playerCamera référencé dans KartScriptV2
+        if (ghostKart.playerCamera != null) ghostKart.playerCamera.SetActive(false);
+
         ghostKart.transform.position = bestLapPositions[0].position;
         ghostKart.transform.rotation = bestLapPositions[0].rotation;
         ghostKart.IsGhost = true;
