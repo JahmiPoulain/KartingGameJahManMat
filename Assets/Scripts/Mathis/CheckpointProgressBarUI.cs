@@ -281,6 +281,6 @@ public class CheckpointProgressBarUI : MonoBehaviour
     {
         string suffix = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted)
             ? "_Inverted" : "_Normal";
-        return $"BestCheckpointTime_{checkpointIndex}{suffix}";
+        return ActiveProfileBridge.Key($"BestCheckpointTime_{checkpointIndex}{suffix}");
     }
 }

@@ -252,6 +252,7 @@ public class ProfilsManager : MonoBehaviour
 
         selectedPlayerProfileId = currentPlayerProfileId;
 
+        ActiveProfileBridge.Instance?.SetProfile(currentPlayerProfileId);
         SavePlayerProfiles();
     }
 
@@ -526,12 +527,13 @@ public class ProfilsManager : MonoBehaviour
 
     private void SetCurrentPlayerProfile(string profileId)
     {
-        if (!HasPlayerProfile(profileId))
-            return;
+        if (!HasPlayerProfile(profileId)) return;
 
         currentPlayerProfileId = profileId;
         PlayerPrefs.SetString(CurrentPlayerProfileIdKey, currentPlayerProfileId);
         PlayerPrefs.Save();
+
+        ActiveProfileBridge.Instance?.SetProfile(currentPlayerProfileId);
 
         CurrentProfileChanged?.Invoke();
     }
