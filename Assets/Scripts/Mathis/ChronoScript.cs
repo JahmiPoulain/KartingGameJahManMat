@@ -14,16 +14,13 @@ public class ChronoScript : MonoBehaviour
 
     private void Start()
     {
-        // Au lieu de FindFirstObjectByType, on récupère le mode validé et configuré par le GameManager
-        gameMode = FindFirstObjectByType<ContreLaMontre>();
-        if (gameMode == null || !gameMode.enabled)
-            gameMode = FindFirstObjectByType<TimeAttack>();
-        if (gameMode == null) return;
+
         // On choisit l'UI à afficher selon le mode de jeu actif
-        if (gameMode is ContreLaMontre)
+        if (GameManager.Instance().currentMode == GameManager.GameModeType.TimeTrial)
             chronoUI = ttChronoUI;
-        else if (gameMode is TimeAttack)
+        else if (GameManager.Instance().currentMode  == GameManager.GameModeType.TimeAttack)
             chronoUI = taChronoUI;
+
     }
 
 
