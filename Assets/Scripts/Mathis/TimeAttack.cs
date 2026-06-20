@@ -34,6 +34,9 @@ public class TimeAttack : GameMode
     private int playbackIndex = 0;
     private float bestLapTime = float.MaxValue;
 
+    private float recordTimer = 0f;
+    private float recordInterval = 0.05f;
+
     [System.Serializable]
     private class GhostWrapper { public List<GhostNodeData> list; }
 
@@ -92,14 +95,17 @@ public class TimeAttack : GameMode
         // 1. ENREGISTREMENT DU JOUEUR (À chaque frame)
         if (isRecording && kartScript != null)
         {
-            GhostNodeData node = new GhostNodeData
+            recordTimer += Time.deltaTime;
+            if (recordTimer >= recordInterval)
             {
-                position = kartScript.transform.position,
-                rotation = kartScript.transform.rotation,
-                gliderActive = kartScript.Glider.activate
-
-            };
-            currentLapPositions.Add(node);
+                recordTimer = 0f;
+                currentLapPositions.Add(new GhostNodeData
+                {
+                    position = kartScript.transform.position,
+                    rotation = kartScript.transform.rotation,
+                    gliderActive = kartScript.Glider.activate
+                });
+            }
         }
 
         // 2. LECTURE DU FANTÔME (S'il a été généré au tour précédent)
