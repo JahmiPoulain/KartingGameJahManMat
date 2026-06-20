@@ -84,17 +84,16 @@ public class CheckpointProgressBarUI : MonoBehaviour
     private void Update()
     {
 
-        if (smoothSpeed <= 0f)
+        if (Mathf.Abs(currentProgress - targetProgress) < 0.001f)
         {
             currentProgress = targetProgress;
+            ApplyProgress(currentProgress);
+            return;
         }
-        else
-        {
-            currentProgress = Mathf.Lerp(currentProgress, targetProgress, Time.deltaTime * smoothSpeed);
-        }
-
+        currentProgress = Mathf.Lerp(currentProgress, targetProgress, Time.deltaTime * smoothSpeed);
         ApplyProgress(currentProgress);
     }
+
 
     // ─────────────────────────────────────────────
     //  Public API
