@@ -40,8 +40,11 @@ public class TimeAttack : GameMode
     private void Start()
     {
         lapManager = FindFirstObjectByType<LapManager>();
-        KartScriptV2 found = FindFirstObjectByType<KartScriptV2>();
-        Debug.Log($"[TimeAttack] kartScript trouvé : {found.gameObject.name}");
+        KartScriptV2 found = null;
+        foreach (var k in FindObjectsByType<KartScriptV2>(FindObjectsSortMode.None))
+        {
+            if (k != ghostKart) { found = k; break; }
+        }
         Initialize(lapManager, found);
 
         startUI = GameObject.Find("CountDownUI")?.GetComponent<TextMeshProUGUI>();
@@ -215,7 +218,9 @@ public class TimeAttack : GameMode
 
     private string GetSuffix()
     {
-        return (InversionCatcher.instance != null && InversionCatcher.instance.Inverted) ? "_Inverted" : "_Normal";
+        string dir = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted)
+            ? "_Inverted" : "_Normal";
+        return ActiveProfileBridge.Key(dir);
     }
 
     private LeaderboardCircuitMode GetCurrentCircuitMode()
