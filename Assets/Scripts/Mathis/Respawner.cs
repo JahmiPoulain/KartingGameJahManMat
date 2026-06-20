@@ -82,7 +82,7 @@ public class Respawner : MonoBehaviour
 
         if (dir.sqrMagnitude < 0.1f)
         {
-            Debug.Log("retour effectué");
+            //Debug.Log("retour effectué");
             kartScriptV2.GetComponent<SphereCollider>().enabled = true;
             //respawnBubble.localScale += Vector3.one;
             kartScriptV2.CanDrive = true;
@@ -93,18 +93,18 @@ public class Respawner : MonoBehaviour
 
         IEnumerator BlowUpBubble()
         {
-            Debug.Log("B");
+            //Debug.Log("B");
             yield return null;
             if (respawnBubble.localScale.x < 4f)
             {
-                Debug.Log(respawnBubble.localScale.x + "      1");
+                //Debug.Log(respawnBubble.localScale.x + "      1");
                 respawnBubble.position = kartTransform.position;
                 respawnBubble.localScale += Vector3.one * 22f * Time.deltaTime;
                 StartCoroutine(BlowUpBubble());
             }
             else
             {
-                Debug.Log(respawnBubble.localScale.x + "      2");
+                //Debug.Log(respawnBubble.localScale.x + "      2");
                 respawnBubble.localScale = Vector3.zero;
             }
         }
