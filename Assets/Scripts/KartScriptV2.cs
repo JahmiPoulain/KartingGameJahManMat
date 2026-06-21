@@ -1157,6 +1157,15 @@ public class KartScriptV2 : MonoBehaviour
         Vector3 targetDir = Vector3.down * cameraZoneUp + (transform.forward + (transform.right * currentTurnSpeed * Mathf.Clamp(currentDriftForce, -1f, 1f) * 0.05f)).normalized;
         float rotSpeed = 0.1f + (camPivot.forward - targetDir).magnitude * 2f; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+        float camPivYSpeed = 20f;
+       // if (camPivotY > 0)
+       // {
+            camPivYSpeed = camPivYSpeed - Mathf.Abs(camPivotY);
+        //}
+       // else if (camPivotY < 0)
+       // {
+        //    camPivYSpeed = camPivYSpeed + camPivotY;
+        //}
 
         if (!isFlying)
         {
@@ -1164,25 +1173,47 @@ public class KartScriptV2 : MonoBehaviour
             {
                 // faire tanguer le pivot avec les virages
                 camPivot.forward = Vector3.RotateTowards(camPivot.forward, targetDir, Time.deltaTime, 0.0f);
-                if (camPivotZ < currentTurnSpeed && driftDir == 0) camPivotZ += (2f + (3f - currentTurnSpeed)) * Time.deltaTime;
-                else if (camPivotZ > currentTurnSpeed && driftDir == 0) camPivotZ -= (2f + (3f - currentTurnSpeed)) * Time.deltaTime;
+
+                float multTurnSpeed = currentTurnSpeed * 16f;
+
+
+                if (camPivotZ < currentTurnSpeed && driftDir == 0) { camPivotZ += (2f + (3f - currentTurnSpeed)) * Time.deltaTime; }
+                else if (camPivotZ > currentTurnSpeed && driftDir == 0) { camPivotZ -= (2f + (3f - currentTurnSpeed)) * Time.deltaTime; }
                 else if (driftDir < 0) { camPivotZ -= (2f + (3f - camPivotZ)) * Time.deltaTime; }
                 else if (driftDir > 0) { camPivotZ += (2f + (3f - camPivotZ)) * Time.deltaTime; }
 
                 camPivotZ = Mathf.Clamp(camPivotZ, -3f, 3f);
 
+                //Debug.Log(multTurnSpeed);
                 // faire tourner en y la cam pendant virages
-                if (camPivotY < currentTurnSpeed && driftDir == 0) camPivotY += (2f + (3f - currentTurnSpeed)) * Time.deltaTime;
-                else if (camPivotY > currentTurnSpeed && driftDir == 0) camPivotY -= (2f + (3f - currentTurnSpeed)) * Time.deltaTime;
-                else if (driftDir < 0) { camPivotY -= (2f + (3f - camPivotY)) * Time.deltaTime; }
-                else if (driftDir > 0) { camPivotY += (2f + (3f - camPivotY)) * Time.deltaTime; }
+                if (camPivotY < multTurnSpeed && driftDir == 0)
+                {
+                    camPivotY += (camPivYSpeed) * Time.deltaTime;
+                    if (camPivotY > multTurnSpeed) camPivotY = multTurnSpeed;
+                }
+                else if (camPivotY > multTurnSpeed && driftDir == 0)
+                {
+                    camPivotY -= (camPivYSpeed) * Time.deltaTime;
+                    if (camPivotY < multTurnSpeed) camPivotY = multTurnSpeed;
+                }
+                else if (driftDir < 0) { camPivotY -= (camPivYSpeed) * Time.deltaTime; }
+                else if (driftDir > 0) { camPivotY += (camPivYSpeed) * Time.deltaTime; }
+                /*else
+                {
+                    if (camPivotY > 0)
+                    { camPivotY -= (2f + (3f - camPivotY)) * Time.deltaTime; if (camPivotY < 0) camPivotY = 0; }
+                    else if (camPivotY < 0)
+                    { camPivotY += (2f + (3f - camPivotY)) * Time.deltaTime; if (camPivotY > 0) camPivotY = 0; }
+                  
+                }*/
+                //camPivotY *= -5f;
+                //camPivotY = - camPivotY;
+                camPivotY = Mathf.Clamp(camPivotY, -10f, 10f);
 
-                camPivotY = Mathf.Clamp(camPivotZ, -10f, 10f);
-                camPivotY *= -5f;
                 if (driftDir == 0 && currentDriftForce != 0)
                 {
-                    if (camPivotY < camPivot2.localEulerAngles.y) { camPivotY += (3f + (3f - camPivotY)) * Time.deltaTime; if (camPivotZ >= camPivot2.localEulerAngles.y) camPivotZ = camPivot2.localEulerAngles.y; }
-                    else if (camPivotY > camPivot2.localEulerAngles.y) { camPivotY -= (3f + (3f - camPivotY)) * Time.deltaTime; if (camPivotZ <= camPivot2.localEulerAngles.y) camPivotZ = camPivot2.localEulerAngles.y; }
+                    if (camPivotY < camPivot2.localEulerAngles.y) { camPivotY += (camPivYSpeed) * Time.deltaTime; if (camPivotY >= camPivot2.localEulerAngles.y) camPivotY = camPivot2.localEulerAngles.y; }
+                    else if (camPivotY > camPivot2.localEulerAngles.y) { camPivotY -= (camPivYSpeed) * Time.deltaTime; if (camPivotY <= camPivot2.localEulerAngles.y) camPivotY = camPivot2.localEulerAngles.y; }
                 }
             }
             else
@@ -1190,12 +1221,12 @@ public class KartScriptV2 : MonoBehaviour
                 camPivot.forward = Vector3.RotateTowards(camPivot.forward, transform.forward, Time.deltaTime, 0.0f);
                 if (camPivotY < 0f)
                 {
-                    camPivotY += (3f + (3f - camPivotY)) * Time.deltaTime;
+                    camPivotY += (camPivYSpeed) * Time.deltaTime;
                     if (camPivotY >= 0f) camPivotY = 0f;
                 }
                 else if (camPivotY > 0f)
                 {
-                    camPivotY -= (3f + (3f - camPivotY)) * Time.deltaTime;
+                    camPivotY -= (camPivYSpeed) * Time.deltaTime;
                     if (camPivotY <= 0f) camPivotY = 0f;
                 }
             }
@@ -1207,15 +1238,15 @@ public class KartScriptV2 : MonoBehaviour
             // en 3eme personne
             if (camPivotY < 0f)
             {
-                camPivotY += (3f + (3f - camPivotY)) * Time.deltaTime;
+                camPivotY += (camPivYSpeed) * Time.deltaTime;
                 if (camPivotY >= 0f) camPivotY = 0f;
             }
             else if (camPivotY > 0f)
             {
-                camPivotY -= (3f + (3f - camPivotY)) * Time.deltaTime;
+                camPivotY -= (camPivYSpeed) * Time.deltaTime;
                 if (camPivotY <= 0f) camPivotY = 0f;
             }
-        
+
             //Debug.Log(camPivotY + " into 3eme pers");
             // en premiere
             if (!InputSystemHandler.instance.inputCameraMode)
@@ -1226,13 +1257,13 @@ public class KartScriptV2 : MonoBehaviour
             }
             else// en 3eme personne
             {
-               
+
                 if (camPivotZ < 0) { camPivotZ += (3f + (3f - camPivotZ)) * Time.deltaTime; if (camPivotZ >= 0f) camPivotZ = 0f; }
                 else if (camPivotZ > 0) { camPivotZ -= (3f + (3f - camPivotZ)) * Time.deltaTime; if (camPivotZ <= 0f) camPivotZ = 0f; }
             }
         }
 
-        camPivot2.localEulerAngles = new Vector3(camPivotX, camPivotY, camPivotZ);
+        camPivot2.localEulerAngles = new Vector3(camPivotX, -camPivotY, camPivotZ);
 
         
         Vector3 rayOrigin = transform.position + transform.forward * 5f + new Vector3 (currentCamPosCenter.z, currentCamPosCenter.y, 0);
