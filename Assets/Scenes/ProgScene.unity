@@ -6776,7 +6776,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!199 &474674002
 ParticleSystemRenderer:
   serializedVersion: 6
@@ -81293,8 +81293,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   musicSource: {fileID: 1734873074}
   sfx2DSource: {fileID: 1734873073}
-  musicGroup: {fileID: 0}
-  sfxGroup: {fileID: 0}
+  musicGroup: {fileID: 3855799305051819891, guid: f831029c86ca02447800d506a27777f0, type: 2}
+  sfxGroup: {fileID: 1662471499088403999, guid: f831029c86ca02447800d506a27777f0, type: 2}
 --- !u!82 &1734873073
 AudioSource:
   m_ObjectHideFlags: 0
@@ -81308,7 +81308,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
-  m_Volume: 1
+  m_Volume: 0.5
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -81405,7 +81405,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
-  m_Volume: 1
+  m_Volume: 0.5
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -102142,6 +102142,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1612196682}
     - target: {fileID: 915186796097868692, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: m_Volume
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 915186796097868692, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: OutputAudioMixerGroup
       value: 
       objectReference: {fileID: 1662471499088403999, guid: f831029c86ca02447800d506a27777f0, type: 2}
@@ -102186,6 +102190,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4478954606915063589, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: m_Volume
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4478954606915063589, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: OutputAudioMixerGroup
       value: 
       objectReference: {fileID: 1662471499088403999, guid: f831029c86ca02447800d506a27777f0, type: 2}
@@ -102228,6 +102236,10 @@ PrefabInstance:
     - target: {fileID: 5154237314693840931, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5717645979930630601, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
+      propertyPath: m_Volume
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 5717645979930630601, guid: 16cfe744d0b758346a9e6a612d2d9591, type: 3}
       propertyPath: OutputAudioMixerGroup
