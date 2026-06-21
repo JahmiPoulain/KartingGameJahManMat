@@ -405,10 +405,17 @@ public class KartScriptV2 : MonoBehaviour
         {
             currentTargetWindForce = 0f;
         }*/
-        if (currentWindForce <= 0 || transform.position.x < normalModeWindTarget.position.x) return;
-        Vector3 goalDir = (normalModeWindTarget.position - transform.position).normalized;
+        Transform windTarget = reverseModeWindTarget;
+        if (normalModeWindTarget.transform.root.gameObject.activeSelf)
+        {
+            windTarget = normalModeWindTarget;
+            Debug.Log("ACTIVE");
+            if (currentWindForce <= 0 || transform.position.x < normalModeWindTarget.position.x) return;
+        }
+        else if (currentWindForce <= 0) return;
+        Vector3 goalDir = (windTarget.position - transform.position).normalized;
         float dot = Vector3.Dot(new Vector3(goalDir.x, 0, goalDir.z), new Vector3(transform.right.x, 0, transform.right.z));
-        Debug.Log(dot);
+        //Debug.Log(dot);
         if (dot > 0)
         { 
             transform.localEulerAngles += new Vector3(0, currentWindForce * 2f * Time.fixedDeltaTime, 0);
