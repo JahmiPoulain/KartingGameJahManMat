@@ -869,7 +869,7 @@ public class KartScriptV2 : MonoBehaviour
 
 
                 float targetVolume = Mathf.Lerp(0.7f, 1.0f, driftTurboGauge / gaugeToActivateTurbo);
-                audioSourceDrift.volume = Mathf.Lerp(audioSourceDrift.volume, targetVolume, 5f * Time.deltaTime);
+                audioSourceDrift.volume = Mathf.Lerp(audioSourceDrift.volume, targetVolume, 5f * Time.deltaTime) / 2f;
             }
             else
             {
@@ -1649,6 +1649,3 @@ public class KartScriptV2 : MonoBehaviour
         }
     }
 }
-
-
-
