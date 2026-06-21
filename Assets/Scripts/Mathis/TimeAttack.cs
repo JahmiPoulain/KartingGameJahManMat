@@ -36,6 +36,7 @@ public class TimeAttack : GameMode
 
     private float recordTimer = 0f;
     private float recordInterval = 0.05f;
+    private float playBackTimer = 0f;   
 
     [System.Serializable]
     private class GhostWrapper { public List<GhostNodeData> list; }
@@ -111,19 +112,21 @@ public class TimeAttack : GameMode
         // 2. LECTURE DU FANTÔME (S'il a été généré au tour précédent)
         if (ghostKart != null && bestLapPositions.Count > 0)
         {
-            if (playbackIndex < bestLapPositions.Count)
+            playBackTimer += Time.deltaTime;
+            if (playBackTimer >= recordInterval)
             {
-                ghostKart.transform.position = bestLapPositions[playbackIndex].position;
-                ghostKart.transform.rotation = bestLapPositions[playbackIndex].rotation;
-                ghostKart.Glider.activate = bestLapPositions[playbackIndex].gliderActive;
-
-                playbackIndex++;
-            }
-            else
-            {
-                // Si le fantôme a fini son enregistrement avant que le joueur passe la ligne,
-                // il s'arrête sur place (ou on peut le cacher)
-                ghostKart.gameObject.SetActive(false);
+                playBackTimer = 0f;
+                if (playbackIndex < bestLapPositions.Count)
+                {
+                    ghostKart.transform.position = bestLapPositions[playbackIndex].position;
+                    ghostKart.transform.rotation = bestLapPositions[playbackIndex].rotation;
+                    ghostKart.Glider.activate = bestLapPositions[playbackIndex].gliderActive;
+                    playbackIndex++;
+                }
+                else
+                {
+                    ghostKart.gameObject.SetActive(false);
+                }
             }
         }
     }
