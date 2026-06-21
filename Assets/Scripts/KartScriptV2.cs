@@ -1157,7 +1157,7 @@ public class KartScriptV2 : MonoBehaviour
         Vector3 targetDir = Vector3.down * cameraZoneUp + (transform.forward + (transform.right * currentTurnSpeed * Mathf.Clamp(currentDriftForce, -1f, 1f) * 0.05f)).normalized;
         float rotSpeed = 0.1f + (camPivot.forward - targetDir).magnitude * 2f; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-        float camPivYSpeed = 20f;
+        float camPivYSpeed = 30f;
        // if (camPivotY > 0)
        // {
             camPivYSpeed = camPivYSpeed - Mathf.Abs(camPivotY);
@@ -1359,7 +1359,7 @@ public class KartScriptV2 : MonoBehaviour
     {
         if (other.gameObject.layer == 10)
         {
-            cameraZoneUp = 0.32f;
+            cameraZoneUp = 0.20f;
         }
     }
     private void OnTriggerExit(Collider other)
