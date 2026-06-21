@@ -9,7 +9,7 @@ public class SoundManager : MonoBehaviour
     [SerializeField] private AudioSource musicSource; // Pour la musique de fond (Loop)
     [SerializeField] private AudioSource sfx2DSource;  // Pour les sons d'ambiance 2D (Chrono, Jingles)
 
-    [Header("Mixer Group (pour lier à tes options)")]
+    [Header("Mixer Group (pour lier ï¿½ tes options)")]
     [SerializeField] private AudioMixerGroup musicGroup;
     [SerializeField] private AudioMixerGroup sfxGroup;
 
@@ -18,7 +18,7 @@ public class SoundManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // Reste actif d'une scène à l'autre
+            DontDestroyOnLoad(gameObject); // Reste actif d'une scï¿½ne ï¿½ l'autre
         }
         else
         {
@@ -33,11 +33,12 @@ public class SoundManager : MonoBehaviour
         musicSource.clip = clip;
         musicSource.outputAudioMixerGroup = musicGroup;
         musicSource.loop = true;
+        musicSource.volume = 0f;
         musicSource.Play();
     }
 
-    // Permet de déclencher un effet sonore 2D depuis n'importe où (ex: Checkpoint, Compte à rebours)
-    // Dans SoundManager.cs (assure-toi que cette méthode est publique)
+    // Permet de dï¿½clencher un effet sonore 2D depuis n'importe oï¿½ (ex: Checkpoint, Compte ï¿½ rebours)
+    // Dans SoundManager.cs (assure-toi que cette mï¿½thode est publique)
     public void PlaySfx2D(AudioClip clip)
     {
         if (sfx2DSource == null || clip == null) return;

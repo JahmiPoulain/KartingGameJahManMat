@@ -869,7 +869,7 @@ public class KartScriptV2 : MonoBehaviour
 
 
                 float targetVolume = Mathf.Lerp(0.7f, 1.0f, driftTurboGauge / gaugeToActivateTurbo);
-                audioSourceDrift.volume = Mathf.Lerp(audioSourceDrift.volume, targetVolume, 5f * Time.deltaTime) / 2f;
+                audioSourceDrift.volume = Mathf.Lerp(audioSourceDrift.volume, targetVolume, 5f * Time.deltaTime) / 1.75f;
             }
             else
             {
@@ -878,7 +878,7 @@ public class KartScriptV2 : MonoBehaviour
                 {
 
                     audioSourceDrift.pitch = 1f;
-                    audioSourceDrift.volume = 1f;
+                    //audioSourceDrift.volume = 1f;
                     audioSourceDrift.Stop();
                 }
             }
@@ -1463,7 +1463,7 @@ public class KartScriptV2 : MonoBehaviour
                 audioSourceMotor.pitch = Random.Range(0.60f, 0.70f);
 
 
-                audioSourceMotor.volume = Mathf.Lerp(0.01f, 0.03f, speedRatio);
+                audioSourceMotor.volume = Mathf.Lerp(0.01f, 0.03f, speedRatio) / 1.7f;
 
 
                 audioSourceMotor.PlayOneShot(bubbleSound);
