@@ -3,7 +3,27 @@ guid: 9fdf13c52a867394f80ce3e1e503aef9
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material.012
+    second: {fileID: 2100000, guid: 0b35978a685bc48d2b9637d37d123a5b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material.020
+    second: {fileID: 2100000, guid: bbbfb1d5d5a5048149c79a66092561c7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Oiseau rose
+    second: {fileID: 2100000, guid: 4303fb534915b4cb5ba2148ad5e75601, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: "oiseau bleu fon\xE7\xE9"
+    second: {fileID: 2100000, guid: a125183f9a7d44f1f8cddb9b83b0a20d, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

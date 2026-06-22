@@ -7,6 +7,7 @@ public class CheckpointManager : MonoBehaviour
     [SerializeField] private KartScriptV2 kartScript;
     [SerializeField] private Checkpoint[] checkpoints;
 
+
     private int nextIndex = 1;
 
     private Vector3 newPos;
@@ -26,6 +27,8 @@ public class CheckpointManager : MonoBehaviour
 
     private void Awake()
     {
+
+ 
         // On s'assure que tous les checkpoints sont actifs au départ
         if (lapManager != null && checkpoints != null)
         {

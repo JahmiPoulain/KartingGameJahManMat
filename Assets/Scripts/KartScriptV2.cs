@@ -1590,7 +1590,7 @@ public class KartScriptV2 : MonoBehaviour
         float targetProgress;
 
         // On utilise MainMenuUIManager.Instance.isMapInverted au lieu de l'ancien script de mode
-        bool isInverted = (MainMenuUIManager.Instance != null && MainMenuUIManager.Instance.isMapInverted);
+        bool isInverted = (InversionCatcher.instance != null && InversionCatcher.instance.Inverted);
 
         if (isInverted)
         {
