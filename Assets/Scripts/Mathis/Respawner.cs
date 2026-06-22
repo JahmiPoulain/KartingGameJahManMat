@@ -6,12 +6,19 @@ public class Respawner : MonoBehaviour
     [SerializeField] private Transform kartTransform;
     [SerializeField] private CheckpointManager checkPointManager;
     [SerializeField] private KartScriptV2 kartScriptV2;
+    [SerializeField] private AudioClip bubblePopSound;
+    private AudioSource audioSource;
 
     Vector3 dir;
 
     private bool isOffTrack = false;
 
     public bool IsOffTrack { get => isOffTrack; set => isOffTrack = value; }
+
+    private void Awake()
+    {
+        audioSource = GetComponent<AudioSource>();
+    }
 
     [SerializeField] private Transform respawnBubble;
     // Update is called once per frame
@@ -106,6 +113,7 @@ public class Respawner : MonoBehaviour
             {
                 //Debug.Log(respawnBubble.localScale.x + "      2");
                 respawnBubble.localScale = Vector3.zero;
+                audioSource.PlayOneShot(bubblePopSound);
             }
         }
     }
