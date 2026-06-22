@@ -1555,9 +1555,9 @@ public class KartScriptV2 : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        Gizmos.color = Color.red;
-        Gizmos.DrawRay(groundRayOrigin.position, Vector3.down * 0.5f);
-        Gizmos.DrawRay(transform.position + transform.forward * 5f + new Vector3(currentCamPosCenter.z, currentCamPosCenter.y, 0), playerCamera.transform.position - transform.position + transform.forward * 5f + new Vector3(currentCamPosCenter.z, currentCamPosCenter.y, 0));
+        //Gizmos.color = Color.red;
+        //Gizmos.DrawRay(groundRayOrigin.position, Vector3.down * 0.5f);
+        //Gizmos.DrawRay(transform.position + transform.forward * 5f + new Vector3(currentCamPosCenter.z, currentCamPosCenter.y, 0), playerCamera.transform.position - transform.position + transform.forward * 5f + new Vector3(currentCamPosCenter.z, currentCamPosCenter.y, 0));
     }
 
     void GhostDrive()
