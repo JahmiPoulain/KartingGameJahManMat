@@ -33,6 +33,8 @@ public class PnjVibes : MonoBehaviour
     private Rigidbody[] ragdollRigidbodies;
     private Collider[] ragdollColliders;
 
+    private bool IsIdle = false;
+
     void Start()
     {
         // add constraint to the rigid body to avoid any glitch thins and stuff shity butty physics.
@@ -49,6 +51,18 @@ public class PnjVibes : MonoBehaviour
         mainRigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
 
         DisableRagdoll();
+
+
+        if (points.Length == 0)
+        {
+            IsIdle = true;
+
+            foreach (Rigidbody rb in ragdollRigidbodies)
+            {
+                rb.isKinematic = true;
+            }
+
+        }
     }
 
     void Update()
@@ -57,7 +71,7 @@ public class PnjVibes : MonoBehaviour
         if (isRagdoll) return;
 
         // Aucun point : on ne bouge pas, on reste en idle calme.
-        if (points.Length == 0)
+        if (IsIdle)
         {
             ApplyIdleAnimation();
             return;
