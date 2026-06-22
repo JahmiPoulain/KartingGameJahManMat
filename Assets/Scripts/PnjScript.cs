@@ -13,6 +13,11 @@ public class PnjVibes : MonoBehaviour
     public float bounceSpeed = 10f;
     public float tiltAmount = 15f;
 
+    [Header("Param�tres du Idle (Calme)")]
+    public float idleBounceForce = 0.1f;
+    public float idleBounceSpeed = 2f;
+    public float idleTiltAmount = 3f;
+
     [Header("Param�tres d'Impact (Ragdoll)")]
     public float impactForce = 20f;
     public float explosionRadius = 3f;
@@ -48,13 +53,27 @@ public class PnjVibes : MonoBehaviour
 
     void Update()
     {
-        if (isRagdoll || points.Length == 0) return;
+        // En ragdoll : la physique s'occupe de tout, on ne touche a rien.
+        if (isRagdoll) return;
 
-        MoveAndRotate();
-        ApplyFunnyAnimation();
+        // Aucun point : on ne bouge pas, on reste en idle calme.
+        if (points.Length == 0)
+        {
+            ApplyIdleAnimation();
+            return;
+        }
+
+        bool arrived = MoveAndRotate();
+
+        // Un seul point et on est arrive : on reste sur place en idle.
+        if (points.Length == 1 && arrived)
+            ApplyIdleAnimation();
+        else
+            ApplyFunnyAnimation();
     }
 
-    void MoveAndRotate()
+    // Retourne true si on est arrive au point courant.
+    bool MoveAndRotate()
     {
         Vector3 targetPos = points[currentPointIndex].position;
         Vector3 flatTarget = new Vector3(targetPos.x, transform.position.y, targetPos.z);
@@ -68,11 +87,16 @@ public class PnjVibes : MonoBehaviour
 
         transform.position = Vector3.MoveTowards(transform.position, flatTarget, speed * Time.deltaTime);
 
-        if (Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z),
-                             new Vector3(flatTarget.x, 0, flatTarget.z)) < arrivalDistance)
+        bool arrived = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z),
+                                        new Vector3(flatTarget.x, 0, flatTarget.z)) < arrivalDistance;
+
+        // Avec plusieurs points on passe au suivant ; avec un seul on reste dessus.
+        if (arrived && points.Length > 1)
         {
             currentPointIndex = (currentPointIndex + 1) % points.Length;
         }
+
+        return arrived;
     }
 
     void ApplyFunnyAnimation()
@@ -81,6 +105,18 @@ public class PnjVibes : MonoBehaviour
 
         float hopY = Mathf.Abs(Mathf.Sin(hopTimer)) * bounceForce;
         float tiltZ = Mathf.Sin(hopTimer) * tiltAmount;
+
+        transform.GetChild(0).localPosition = new Vector3(0, hopY, 0);
+        transform.GetChild(0).localRotation = Quaternion.Euler(0, 0, tiltZ);
+    }
+
+    // Version calme de l'animation : leger balancement / respiration sur place.
+    void ApplyIdleAnimation()
+    {
+        hopTimer += Time.deltaTime * idleBounceSpeed;
+
+        float hopY = Mathf.Abs(Mathf.Sin(hopTimer)) * idleBounceForce;
+        float tiltZ = Mathf.Sin(hopTimer) * idleTiltAmount;
 
         transform.GetChild(0).localPosition = new Vector3(0, hopY, 0);
         transform.GetChild(0).localRotation = Quaternion.Euler(0, 0, tiltZ);
