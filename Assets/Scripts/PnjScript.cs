@@ -23,9 +23,22 @@ public class PnjVibes : MonoBehaviour
     public float explosionRadius = 3f;
     public float upwardModifier = 1.5f;
 
+    [Header("Param�tres du Break Dance (custom)")]
+    // Vitesse de rotation sur le cr�ne (degr�s par seconde).
+    public float breakSpinSpeed = 540f;
+    // Inclinaison du corps quand il tourne sur la t�te (180 = compl�tement renvers�).
+    public float breakFlipAngle = 180f;
+    // Petit balancement/vacillement pendant la toupie.
+    public float breakWobbleAmount = 10f;
+    public float breakWobbleSpeed = 6f;
+    // Hauteur � laquelle le corps se soul�ve pendant le break dance.
+    public float breakLiftHeight = 0.3f;
+
     private int currentPointIndex = 0;
     private Vector3 meshOffset;
     private float hopTimer;
+    private float breakSpinAngle;
+    private float breakWobbleTimer;
 
     private bool isRagdoll = false;
     private Rigidbody mainRigidbody;
@@ -34,6 +47,10 @@ public class PnjVibes : MonoBehaviour
     private Collider[] ragdollColliders;
 
     private bool IsIdle = false;
+
+    [SerializeField]
+    private bool isBreakDancing = false;
+    
 
     void Start()
     {
@@ -69,6 +86,14 @@ public class PnjVibes : MonoBehaviour
             // pas forcement le premier de la liste.
             currentPointIndex = GetClosestPointIndex();
         }
+
+        if (isBreakDancing)
+        {
+            foreach (Rigidbody rb in ragdollRigidbodies)
+            {
+                rb.isKinematic = true;
+            }
+        }
     }
 
     // Retourne l'index du point le plus proche de la position actuelle du PNJ.
@@ -96,6 +121,13 @@ public class PnjVibes : MonoBehaviour
     {
         // En ragdoll : la physique s'occupe de tout, on ne touche a rien.
         if (isRagdoll) return;
+
+        // Break dance : il tourne sur son cr�ne, prioritaire sur tout le reste.
+        if (isBreakDancing)
+        {
+            ApplyBreakDanceAnimation();
+            return;
+        }
 
         // Aucun point : on ne bouge pas, on reste en idle calme.
         if (IsIdle)
@@ -149,6 +181,24 @@ public class PnjVibes : MonoBehaviour
 
         transform.GetChild(0).localPosition = new Vector3(0, hopY, 0);
         transform.GetChild(0).localRotation = Quaternion.Euler(0, 0, tiltZ);
+    }
+
+    // Break dance : le corps se renverse et tourne sur son cr�ne comme une toupie.
+    void ApplyBreakDanceAnimation()
+    {
+        // Rotation continue autour de l'axe vertical (la toupie sur la t�te).
+        breakSpinAngle += breakSpinSpeed * Time.deltaTime;
+        breakWobbleTimer += Time.deltaTime * breakWobbleSpeed;
+
+        // Petit vacillement pour que �a ait l'air vivant et pas robotique.
+        float wobble = Mathf.Sin(breakWobbleTimer) * breakWobbleAmount;
+
+        // On soul�ve un peu le corps pendant qu'il tourne.
+        float lift = breakLiftHeight;
+
+        transform.GetChild(0).localPosition = new Vector3(0, lift, 0);
+        // X = renvers� sur la t�te (breakFlipAngle), Y = la toupie, Z = vacillement.
+        transform.GetChild(0).localRotation = Quaternion.Euler(breakFlipAngle, breakSpinAngle, wobble);
     }
 
     // Version calme de l'animation : leger balancement / respiration sur place.
