@@ -1754,7 +1754,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7545684174185083360, guid: 97be06b2881f28b4a91a1d31361894d3, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7794256034428843845, guid: 97be06b2881f28b4a91a1d31361894d3, type: 3}
       propertyPath: boostTime
@@ -80021,6 +80021,33 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 97be06b2881f28b4a91a1d31361894d3, type: 3}
+--- !u!1 &1721178045 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 60d5ff0d17d428842bd1570440210653, type: 3}
+  m_PrefabInstance: {fileID: 1798457091}
+  m_PrefabAsset: {fileID: 0}
+--- !u!64 &1721178049
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1721178045}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -9166634998389530402, guid: 60d5ff0d17d428842bd1570440210653, type: 3}
 --- !u!1001 &1721325811
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -80872,11 +80899,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 60d5ff0d17d428842bd1570440210653, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 369.76
+      value: 372.35
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 60d5ff0d17d428842bd1570440210653, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.25
+      value: -0.58
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 60d5ff0d17d428842bd1570440210653, type: 3}
       propertyPath: m_LocalPosition.z
@@ -80914,10 +80941,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: "chaiseMairieAjust\xE9e"
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 60d5ff0d17d428842bd1570440210653, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 60d5ff0d17d428842bd1570440210653, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1721178049}
   m_SourcePrefab: {fileID: 100100000, guid: 60d5ff0d17d428842bd1570440210653, type: 3}
 --- !u!4 &1807618857 stripped
 Transform:
