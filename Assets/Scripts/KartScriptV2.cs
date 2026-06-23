@@ -1562,10 +1562,33 @@ public class KartScriptV2 : MonoBehaviour
 
     void GhostDrive()
     {
-        if (raceSpline == null)
+        if (raceSpline == null) { Debug.LogWarning("RaceSpline manquante sur le Kart !"); return; }
+
+        // ── GESTION DU VOL ──────────────────────────────────────────
+        if (isFlying)
         {
-            Debug.LogWarning("RaceSpline manquante sur le Kart !");
-            return;
+            // Stabilise le nez vers l'horizon pour éviter la chute libre
+            if (flightDir != null)
+            {
+                float noseAngle = flightDir.localEulerAngles.x;
+                // Convertit l'angle en -180/+180
+                if (noseAngle > 180f) noseAngle -= 360f;
+
+                // Si le nez plonge vers le bas, on tire vers le haut
+                if (noseAngle > 5f)
+                    inputGlideUpDown = -1f;
+                // Si le nez pointe trop haut, on relâche
+                else if (noseAngle < -5f)
+                    inputGlideUpDown = 1f;
+                else
+                    inputGlideUpDown = 0f;
+            }
+
+            // Suit la spline horizontalement pendant le vol
+            inputGlideTurn = turnDirection;
+            accelerate = true;
+            forwardDirection = 1f;
+            return; // On court-circuite le reste de GhostDrive pendant le vol
         }
 
         float splineLength = raceSpline.CalculateLength();
