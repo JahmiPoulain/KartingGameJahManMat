@@ -63,6 +63,33 @@ public class PnjVibes : MonoBehaviour
             }
 
         }
+        else
+        {
+            // On demarre la boucle par le point le plus proche du PNJ,
+            // pas forcement le premier de la liste.
+            currentPointIndex = GetClosestPointIndex();
+        }
+    }
+
+    // Retourne l'index du point le plus proche de la position actuelle du PNJ.
+    int GetClosestPointIndex()
+    {
+        int closestIndex = 0;
+        float closestSqrDistance = Mathf.Infinity;
+
+        for (int i = 0; i < points.Length; i++)
+        {
+            if (points[i] == null) continue;
+
+            float sqrDistance = (points[i].position - transform.position).sqrMagnitude;
+            if (sqrDistance < closestSqrDistance)
+            {
+                closestSqrDistance = sqrDistance;
+                closestIndex = i;
+            }
+        }
+
+        return closestIndex;
     }
 
     void Update()
