@@ -34,11 +34,30 @@ public class PnjVibes : MonoBehaviour
     // Hauteur � laquelle le corps se soul�ve pendant le break dance.
     public float breakLiftHeight = 0.3f;
 
+    [Header("Param�tres du Bourr� (Drunk)")]
+    // Vitesse d'avance (plus lent que la normale, il tra�ne).
+    public float drunkSpeed = 2f;
+    // Vitesse de rotation : faible = il tourne mollement, en retard sur la direction.
+    public float drunkRotationSpeed = 3f;
+    // Force du serpentin lat�ral (il zigzague autour du chemin vers le point).
+    public float drunkSwayAmount = 1.5f;
+    // Fr�quence du titubement (lent = grandes embard�es, rapide = tremblote).
+    public float drunkSwaySpeed = 1.5f;
+    // De combien de degr�s son regard part de travers par rapport � la vraie direction.
+    public float drunkHeadingWobble = 45f;
+    // Inclinaison max du corps qui tangue dans tous les sens.
+    public float drunkBodyTilt = 25f;
+    // Sautillement irr�gulier vertical.
+    public float drunkBobSpeed = 4f;
+    public float drunkBobHeight = 0.15f;
+
     private int currentPointIndex = 0;
     private Vector3 meshOffset;
     private float hopTimer;
     private float breakSpinAngle;
     private float breakWobbleTimer;
+    // Graine al�atoire propre � ce PNJ pour que chaque bourr� titube diff�remment.
+    private float drunkSeed;
 
     private bool isRagdoll = false;
     private Rigidbody mainRigidbody;
@@ -50,6 +69,9 @@ public class PnjVibes : MonoBehaviour
 
     [SerializeField]
     private bool isBreakDancing = false;
+
+    [SerializeField]
+    private bool isDrunk = false; // Rotate et sorient vers des endroit aleatoire (vers les direction donner par moi là les points) genre il est bourré genre.
     
 
     void Start()
@@ -58,6 +80,9 @@ public class PnjVibes : MonoBehaviour
 
         
         meshOffset = transform.position;
+
+        // Chaque bourr� a sa propre graine pour ne pas tituber tous pareil.
+        drunkSeed = Random.value * 100f;
 
         mainRigidbody = GetComponent<Rigidbody>();
         mainCollider = GetComponent<Collider>();
@@ -136,6 +161,14 @@ public class PnjVibes : MonoBehaviour
             return;
         }
 
+        // Bourr� : il va globalement vers les points mais titube, zigzague et tangue.
+        if (isDrunk)
+        {
+            MoveAndRotateDrunk();
+            ApplyDrunkAnimation();
+            return;
+        }
+
         bool arrived = MoveAndRotate();
 
         // Un seul point et on est arrive : on reste sur place en idle.
@@ -170,6 +203,64 @@ public class PnjVibes : MonoBehaviour
         }
 
         return arrived;
+    }
+
+    // Version bourr�e du d�placement : il rejoint quand m�me le point demand�,
+    // mais en serpentant, en visant de travers et en tournant mollement.
+    void MoveAndRotateDrunk()
+    {
+        Vector3 targetPos = points[currentPointIndex].position;
+        Vector3 flatTarget = new Vector3(targetPos.x, transform.position.y, targetPos.z);
+
+        Vector3 direction = (flatTarget - transform.position).normalized;
+
+        // Bruit de Perlin -> -1..1, lisse, pour un titubement organique (pas saccad�).
+        float swayNoise = (Mathf.PerlinNoise(Time.time * drunkSwaySpeed + drunkSeed, drunkSeed) - 0.5f) * 2f;
+
+        if (direction != Vector3.zero)
+        {
+            // Son regard part de travers de la vraie direction (il vise mal).
+            Quaternion drunkRot = Quaternion.Euler(0, swayNoise * drunkHeadingWobble, 0);
+            Quaternion targetRotation = Quaternion.LookRotation(drunkRot * direction);
+            // Rotation lente : il r�agit en retard, l'air pas net.
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, drunkRotationSpeed * Time.deltaTime);
+        }
+
+        // Vitesse irr�guli�re : il acc�l�re et ralentit n'importe comment.
+        float speedNoise = Mathf.PerlinNoise(Time.time * drunkSwaySpeed * 0.5f, drunkSeed + 10f);
+        float currentSpeed = drunkSpeed * Mathf.Lerp(0.35f, 1f, speedNoise);
+
+        // On avance vers la cible (garantit qu'il finit par arriver)...
+        transform.position = Vector3.MoveTowards(transform.position, flatTarget, currentSpeed * Time.deltaTime);
+
+        // ...mais on ajoute un zigzag lat�ral perpendiculaire au chemin (le serpentin).
+        Vector3 sideways = new Vector3(-direction.z, 0, direction.x);
+        transform.position += sideways * swayNoise * drunkSwayAmount * Time.deltaTime;
+
+        bool arrived = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z),
+                                        new Vector3(flatTarget.x, 0, flatTarget.z)) < arrivalDistance;
+
+        if (arrived && points.Length > 1)
+        {
+            currentPointIndex = (currentPointIndex + 1) % points.Length;
+        }
+    }
+
+    // Le corps tangue dans tous les sens et sautille de fa�on irr�guli�re.
+    void ApplyDrunkAnimation()
+    {
+        // Deux bruits d�cal�s pour incliner le corps en X et en Z ind�pendamment.
+        float tiltNoiseX = (Mathf.PerlinNoise(Time.time * drunkBobSpeed * 0.5f + drunkSeed, 0f) - 0.5f) * 2f;
+        float tiltNoiseZ = (Mathf.PerlinNoise(0f, Time.time * drunkBobSpeed * 0.5f + drunkSeed) - 0.5f) * 2f;
+
+        float tiltX = tiltNoiseX * drunkBodyTilt;
+        float tiltZ = tiltNoiseZ * drunkBodyTilt;
+
+        // Sautillement vertical avec une fr�quence l�g�rement modul�e par le bruit.
+        float bobY = Mathf.Abs(Mathf.Sin(Time.time * drunkBobSpeed + tiltNoiseX)) * drunkBobHeight;
+
+        transform.GetChild(0).localPosition = new Vector3(0, bobY, 0);
+        transform.GetChild(0).localRotation = Quaternion.Euler(tiltX, 0, tiltZ);
     }
 
     void ApplyFunnyAnimation()
