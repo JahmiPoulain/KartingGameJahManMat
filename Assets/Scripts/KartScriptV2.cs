@@ -1218,6 +1218,7 @@ public class KartScriptV2 : MonoBehaviour
             }
             else
             {
+               // Debug.Log("     ELSE     " + camPivotY);
                 camPivot.forward = Vector3.RotateTowards(camPivot.forward, transform.forward, Time.deltaTime, 0.0f);
                 if (camPivotY < 0f)
                 {
@@ -1228,6 +1229,17 @@ public class KartScriptV2 : MonoBehaviour
                 {
                     camPivotY -= (camPivYSpeed) * Time.deltaTime;
                     if (camPivotY <= 0f) camPivotY = 0f;
+                }
+
+                if (camPivotZ < 0f)
+                {
+                    camPivotZ += 10f * Time.deltaTime;
+                    if (camPivotZ >= 0f) camPivotZ = 0f;
+                }
+                else if (camPivotZ > 0f)
+                {
+                    camPivotZ -= 10f * Time.deltaTime;
+                    if (camPivotZ <= 0f) camPivotZ = 0f;
                 }
             }
         }
