@@ -143,6 +143,8 @@ public class KartScriptV2 : MonoBehaviour
     [SerializeField] GliderAnimation glider;
     // visual flight
     private float visualFlightRotSpeedZ;
+
+    float wasFlyingCoyoteTimer;
     [Header("Wind")]
     float currentTargetWindForce;
     float currentWindForce;
@@ -995,13 +997,14 @@ public class KartScriptV2 : MonoBehaviour
 
     void HandleVisualKartBody()
     {
-       /* if (!InputSystemHandler.instance.inputCameraMode)
-        {
-            visualKartBody.transform.forward = transform.forward;
-            return; 
-        }*/
+        /* if (!InputSystemHandler.instance.inputCameraMode)
+         {
+             visualKartBody.transform.forward = transform.forward;
+             return; 
+         }*/
         if (isFlying && !grounded)
         {
+            wasFlyingCoyoteTimer = 0.2f;
             visualKartBody.transform.forward = flightDir.forward;
             visualKartBody.transform.localEulerAngles = new Vector3(visualKartBody.transform.localEulerAngles.x, visualKartBody.transform.localEulerAngles.y, -currentFlightTurnForce * 32f);
             return;
@@ -1061,14 +1064,25 @@ public class KartScriptV2 : MonoBehaviour
         float nextTotalSpeed = visKartXRot + -currentTurboForce * 0.5f;
         nextTotalSpeed = Mathf.Clamp(nextTotalSpeed, -(maxSpeed), maxSpeed + 2f);
         groundNormalT.transform.rotation = Quaternion.LookRotation(Vector3.Cross(transform.right, groundNormal), groundNormal); // oriente le y vers le haut de la normale et le x vers l'avant du kart ( 2 semaines de galère avant meme les cours sur le produit vectoriel)
+
+
         preOrientation.localRotation = Quaternion.RotateTowards(preOrientation.localRotation, groundNormalT.localRotation, 120f * Time.deltaTime);
+
         Quaternion rotTarget = Quaternion.Euler(nextTotalSpeed * 0.8f, 0, visKartZRot);
         if (!InputSystemHandler.instance.inputCameraMode)
         {
-            rotTarget = Quaternion.Euler(Vector3.zero);            
+            rotTarget = Quaternion.Euler(Vector3.zero);
         }
-        visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 40f * Time.deltaTime);
-
+        if (wasFlyingCoyoteTimer > 0f)
+        {
+            visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 40f * Time.deltaTime);
+            wasFlyingCoyoteTimer -= Time.deltaTime;
+        }
+        else
+        {
+            visualKartBody.transform.localRotation = Quaternion.RotateTowards(visualKartBody.transform.localRotation, rotTarget, 150f * Time.deltaTime);
+        }
+    
         cocot.localRotation = Quaternion.Slerp(cocot.localRotation, Quaternion.Euler(nextTotalSpeed * 0.3f - 90, visKartZRot * 1.2f, 0), 0.5f);
         creteAccelZ += Mathf.Abs(visKartZRot);
         creteAccelZ = Mathf.Clamp(creteAccelZ, 0, 3f);

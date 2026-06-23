@@ -3,7 +3,32 @@ guid: 2c319ccb225ea7e4da6903adc66dca04
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Buisson
+    second: {fileID: 2100000, guid: 831a275fba9332d4583f2ccc3afeb237, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Caillebotis
+    second: {fileID: 2100000, guid: 559f0c02b18810c4d867aa7140ec50ce, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Herbe
+    second: {fileID: 2100000, guid: ded351052b186544385c81564b8a2acc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: JardinMairie
+    second: {fileID: 2100000, guid: 51382cf97f7e5304481389e4d712c716, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Trottoir
+    second: {fileID: 2100000, guid: ae1c25d6f663938429c0a6df62f5effa, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
