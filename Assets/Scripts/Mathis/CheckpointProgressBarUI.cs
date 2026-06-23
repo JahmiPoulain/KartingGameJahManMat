@@ -123,7 +123,10 @@ public class CheckpointProgressBarUI : MonoBehaviour
     public void OnCheckpointPassed(int checkpointIndex, float currentLapTime)
     {
         // Advance fill to this checkpoint's position
-        targetProgress = (float)checkpointIndex / totalCheckpoints;
+        bool inverted = InversionCatcher.instance != null && InversionCatcher.instance.Inverted;
+        targetProgress = inverted
+            ? 1f - ((float)(checkpointIndex - 1) / totalCheckpoints)
+            : (float)checkpointIndex / totalCheckpoints;
         Debug.Log($"[ProgressBar] checkpoint={checkpointIndex}, total={totalCheckpoints}, target={targetProgress}, barWidth={progressBarRect.rect.width}");
 
         // ── Delta Logic ──────────────────────────────
@@ -171,25 +174,61 @@ public class CheckpointProgressBarUI : MonoBehaviour
     private void ApplyProgress(float progress)
     {
         progress = Mathf.Clamp01(progress);
+        bool inverted = InversionCatcher.instance != null && InversionCatcher.instance.Inverted;
 
-        // Fill: stretch anchorMax.x from 0 to 1
         if (fillRect != null)
         {
-            Vector2 anchorMax = fillRect.anchorMax;
-            anchorMax.x = progress;
-            fillRect.anchorMax = anchorMax;
+            if (inverted)
+            {
+                // Remplissage de droite à gauche : anchorMin.x va de 1 → 0
+                Vector2 anchorMin = fillRect.anchorMin;
+                anchorMin.x = 1f - progress;
+                fillRect.anchorMin = anchorMin;
 
-            // Keep sizeDelta.x at 0 so it doesn't offset the anchor
+                // anchorMax.x fixé à 1
+                Vector2 anchorMax = fillRect.anchorMax;
+                anchorMax.x = 1f;
+                fillRect.anchorMax = anchorMax;
+            }
+            else
+            {
+                // Remplissage normal de gauche à droite
+                Vector2 anchorMin = fillRect.anchorMin;
+                anchorMin.x = 0f;
+                fillRect.anchorMin = anchorMin;
+
+                Vector2 anchorMax = fillRect.anchorMax;
+                anchorMax.x = progress;
+                fillRect.anchorMax = anchorMax;
+            }
+
             Vector2 sd = fillRect.sizeDelta;
             sd.x = 0f;
             fillRect.sizeDelta = sd;
         }
 
-        // Cursor: move along the bar using anchoredPosition relative to parent width
         if (cursorRect != null && progressBarRect != null)
         {
             float barWidth = progressBarRect.rect.width;
-            cursorRect.anchoredPosition = new Vector2(progress * barWidth, cursorRect.anchoredPosition.y);
+
+            if (inverted)
+            {
+                // Curseur part de la droite
+                cursorRect.anchoredPosition = new Vector2(
+                    barWidth - (progress * barWidth),
+                    cursorRect.anchoredPosition.y
+                );
+                // Retourne le curseur horizontalement
+                cursorRect.localScale = new Vector3(-1f, 1f, 1f);
+            }
+            else
+            {
+                cursorRect.anchoredPosition = new Vector2(
+                    progress * barWidth,
+                    cursorRect.anchoredPosition.y
+                );
+                cursorRect.localScale = Vector3.one;
+            }
         }
     }
 
@@ -207,10 +246,12 @@ public class CheckpointProgressBarUI : MonoBehaviour
             RectTransform tickRect = tick.GetComponent<RectTransform>();
 
             float ratio = (float)i / totalCheckpoints;
+            bool inverted = InversionCatcher.instance != null && InversionCatcher.instance.Inverted;
 
-            // On ne touche qu'à la position X, tout le reste vient du prefab
             Vector2 pos = tickRect.anchoredPosition;
-            pos.x = (ratio * ticksContainer.rect.width) - 10f;
+            pos.x = inverted
+                ? ticksContainer.rect.width - (ratio * ticksContainer.rect.width) - 10f
+                : (ratio * ticksContainer.rect.width) - 10f;
             pos.y = 10f;
             tickRect.anchoredPosition = pos;
         }
