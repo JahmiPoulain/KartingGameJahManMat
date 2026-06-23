@@ -148,6 +148,7 @@ public class KartScriptV2 : MonoBehaviour
     [Header("Wind")]
     float currentTargetWindForce;
     float currentWindForce;
+    float windTurnForce;
     Vector3 currentWindDir;
     [SerializeField] Transform normalModeWindTarget;
     [SerializeField] Transform reverseModeWindTarget;
@@ -365,6 +366,7 @@ public class KartScriptV2 : MonoBehaviour
         currentTargetWindForce = force;
         Debug.Log(dir + " " + force);
         if (fast) { currentWindForce = force * 0.85f; }
+        windTurnForce = 2f;
         //if (flightSpeed < 6f) { flightSpeed = 6f; }
         //flightDir.forward = dir;
     }
@@ -420,11 +422,19 @@ public class KartScriptV2 : MonoBehaviour
         //Debug.Log(dot);
         if (dot > 0)
         { 
-            transform.localEulerAngles += new Vector3(0, currentWindForce * 2f * Time.fixedDeltaTime, 0);
+            transform.localEulerAngles += new Vector3(0, currentWindForce * windTurnForce * Time.fixedDeltaTime, 0);
+            if (Vector3.Dot(new Vector3(goalDir.x, 0, goalDir.z), new Vector3(transform.right.x, 0, transform.right.z)) <= 0)
+            {
+                windTurnForce = 0f;
+            }
         }
         else if (dot < 0)
         {
-            transform.localEulerAngles -= new Vector3(0, currentWindForce * 2f * Time.fixedDeltaTime, 0);
+            transform.localEulerAngles -= new Vector3(0, currentWindForce * windTurnForce * Time.fixedDeltaTime, 0);
+            if (Vector3.Dot(new Vector3(goalDir.x, 0, goalDir.z), new Vector3(transform.right.x, 0, transform.right.z)) >= 0)
+            {
+                windTurnForce = 0f;
+            }
         }
         
 
