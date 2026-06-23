@@ -89,8 +89,7 @@ public class CheckpointManager : MonoBehaviour
             newPos = checkpoint.transform.position + Vector3.up * 0.5f;
             newRotation = checkpoint.transform.rotation;
 
-            if (InversionCatcher.instance != null && InversionCatcher.instance.Inverted)
-                newRotation *= Quaternion.Euler(0, 180, 0);
+
 
             hasCheckpoint = true;
             Debug.Log($"Checkpoint {checkpoint.Index} validated. Progress: {nextIndex - 1}/{TotalCheckpointCount}");

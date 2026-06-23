@@ -674,8 +674,39 @@ public class LeaderboardManager : MonoBehaviour
             connectedPlayerUlid = response.player_ulid;
 
             localPlayerName = GetCurrentPlayerProfileName();
-            FinishConnectedSessionSetup();
+            SynchronizeLootLockerPlayerName(profileId, localPlayerName);
         });
+    }
+
+    private void SynchronizeLootLockerPlayerName(string profileId, string playerName)
+    {
+        if (string.IsNullOrWhiteSpace(playerName))
+        {
+            FinishConnectedSessionSetup();
+            return;
+        }
+
+        string requestedPlayerUlid = connectedPlayerUlid;
+
+        LootLockerSDKManager.SetPlayerName(playerName, response =>
+        {
+            if (profileId != GetCurrentPlayerProfileId() ||
+                connectedProfileId != profileId ||
+                connectedPlayerUlid != requestedPlayerUlid)
+            {
+                return;
+            }
+
+            if (!response.success)
+            {
+                Debug.LogWarning(
+                    $"Impossible de synchroniser le nom LootLocker \"{playerName}\". " +
+                    "Les scores seront tout de même envoyés avec leur identifiant et leurs métadonnées."
+                );
+            }
+
+            FinishConnectedSessionSetup();
+        }, requestedPlayerUlid);
     }
 
     private void FinishConnectedSessionSetup()
