@@ -239,7 +239,7 @@ public class PnjVibes : MonoBehaviour
         // Avec plusieurs points on passe au suivant (dans le sens choisi) ; avec un seul on reste dessus.
         if (arrived && points.Length > 1)
         {
-            currentPointIndex = (currentPointIndex + pointDirection + points.Length) % points.Length;
+            AdvanceToNextPoint();
         }
 
         return arrived;
@@ -282,8 +282,32 @@ public class PnjVibes : MonoBehaviour
 
         if (arrived && points.Length > 1)
         {
-            currentPointIndex = (currentPointIndex + pointDirection + points.Length) % points.Length;
+            AdvanceToNextPoint();
         }
+    }
+
+    // Passe au point suivant en mode aller-retour (ping-pong) :
+    // arrive au bout -> demi-tour, au lieu de reboucler vers le premier point.
+    void AdvanceToNextPoint()
+    {
+        if (points.Length <= 1) return;
+
+        int next = currentPointIndex + pointDirection;
+
+        if (next >= points.Length)
+        {
+            // On a atteint le dernier point : on repart en arri�re.
+            pointDirection = -1;
+            next = points.Length - 2;
+        }
+        else if (next < 0)
+        {
+            // On a atteint le premier point : on repart en avant.
+            pointDirection = 1;
+            next = 1;
+        }
+
+        currentPointIndex = next;
     }
 
     // Le corps tangue dans tous les sens et sautille de fa�on irr�guli�re.
