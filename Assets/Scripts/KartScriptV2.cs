@@ -1376,6 +1376,7 @@ public class KartScriptV2 : MonoBehaviour
             }
 
             bounceForce = Mathf.Clamp(unsignedCurSpeed * 3f, 25f, unsignedCurSpeed);
+            if (!grounded) bounceForce *= 3f;
             currentSpeed *= 0.2f;
             currentTurboForce *= 0.2f;
         }
