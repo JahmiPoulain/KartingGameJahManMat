@@ -18,6 +18,18 @@ public class UIManager2 : MonoBehaviour
 
     public static UIManager2 instance;
 
+    [SerializeField] private GameObject f3Canvas; // for F3 menu, show fps, debug stuff, coords, etc.
+    [SerializeField] private TMP_Text f3StatsText; // le texte dans le f3Canvas qui affiche les stats
+    [SerializeField] private float f3RefreshRate = 0.25f; // fréquence de mise à jour de l'affichage (secondes)
+
+    // Internes pour le calcul du FPS et le rafraîchissement
+    private float f3Timer = 0f;
+    private int f3FrameCount = 0;
+    private float f3FpsAccumulator = 0f;
+    private float f3FpsMin = float.MaxValue;
+    private float f3FpsMax = 0f;
+
+
     [Header("Input System")]
     [SerializeField] private InputActionReference pauseAction;
 
@@ -142,7 +154,99 @@ public class UIManager2 : MonoBehaviour
             }
         }
         AnimatePointer(false);
+
+        HandleF3Overlay();
     }
+
+    #region Debug Overlay (F3)
+    void HandleF3Overlay()
+    {
+        // Toggle on/off avec F3
+        if (Input.GetKeyDown(KeyCode.F3) && f3Canvas != null)
+        {
+            f3Canvas.SetActive(!f3Canvas.activeSelf);
+            // On reset les compteurs à chaque ouverture pour des valeurs propres
+            if (f3Canvas.activeSelf) ResetF3Counters();
+        }
+
+        if (f3Canvas == null || !f3Canvas.activeSelf || f3StatsText == null) return;
+
+        // On utilise unscaledDeltaTime pour que le FPS reste correct même en pause (timeScale = 0)
+        float dt = Time.unscaledDeltaTime;
+        f3FpsAccumulator += dt;
+        f3FrameCount++;
+
+        // Rafraîchissement de l'affichage à intervalle régulier (évite que ça clignote trop vite)
+        f3Timer += dt;
+        if (f3Timer >= f3RefreshRate)
+        {
+            float avgFrameTime = f3FpsAccumulator / Mathf.Max(1, f3FrameCount);
+            float fps = avgFrameTime > 0f ? 1f / avgFrameTime : 0f;
+
+            if (fps < f3FpsMin) f3FpsMin = fps;
+            if (fps > f3FpsMax) f3FpsMax = fps;
+
+            f3StatsText.text = BuildF3Text(fps, avgFrameTime * 1000f);
+
+            f3Timer = 0f;
+            f3FpsAccumulator = 0f;
+            f3FrameCount = 0;
+        }
+    }
+
+    void ResetF3Counters()
+    {
+        f3Timer = 0f;
+        f3FpsAccumulator = 0f;
+        f3FrameCount = 0;
+        f3FpsMin = float.MaxValue;
+        f3FpsMax = 0f;
+    }
+
+    string BuildF3Text(float fps, float frameTimeMs)
+    {
+        System.Text.StringBuilder sb = new System.Text.StringBuilder(256);
+
+        sb.AppendLine("<b>DEBUG (F3)</b>");
+        sb.AppendLine($"FPS  : {fps:0} ({frameTimeMs:0.0} ms)");
+        sb.AppendLine($"Min/Max : {(f3FpsMin == float.MaxValue ? 0 : f3FpsMin):0} / {f3FpsMax:0}");
+
+        // Coordonnées du joueur
+        if (KartScriptV2.instance != null)
+        {
+            Vector3 p = KartScriptV2.instance.transform.position;
+            float speed = KartScriptV2.instance.rb != null ? KartScriptV2.instance.rb.linearVelocity.magnitude : 0f;
+            sb.AppendLine($"Pos  : X {p.x:0.0}  Y {p.y:0.0}  Z {p.z:0.0}");
+            sb.AppendLine($"Speed: {speed * 3.6f:0} km/h");
+        }
+        else
+        {
+            sb.AppendLine("Pos  : (no kart)");
+        }
+
+        // Stats de rendu : batches / triangles / verts.
+        // UnityStats n'existe que dans l'éditeur, donc on garde ça sous #if UNITY_EDITOR.
+#if UNITY_EDITOR
+        sb.AppendLine($"Batches : {UnityEditor.UnityStats.batches}");
+        sb.AppendLine($"SetPass : {UnityEditor.UnityStats.setPassCalls}");
+        sb.AppendLine($"Tris    : {UnityEditor.UnityStats.triangles:n0}");
+        sb.AppendLine($"Verts   : {UnityEditor.UnityStats.vertices:n0}");
+        sb.AppendLine($"DrawCalls : {UnityEditor.UnityStats.drawCalls}");
+#else
+        sb.AppendLine("Batches/Tris : éditeur uniquement");
+#endif
+
+        // Mémoire & système
+        long monoMem = System.GC.GetTotalMemory(false) / (1024 * 1024);
+        sb.AppendLine($"Mem (mono) : {monoMem} MB");
+        sb.AppendLine($"Reserved : {UnityEngine.Profiling.Profiler.GetTotalReservedMemoryLong() / (1024 * 1024)} MB");
+        sb.AppendLine($"Res  : {Screen.width}x{Screen.height} @{(int)Screen.currentResolution.refreshRateRatio.value}Hz");
+        sb.AppendLine($"VSync : {QualitySettings.vSyncCount}  TargetFPS : {Application.targetFrameRate}");
+        sb.AppendLine($"Unity : {Application.unityVersion}");
+
+        return sb.ToString();
+    }
+    #endregion
 
     public void Resume()
     {
