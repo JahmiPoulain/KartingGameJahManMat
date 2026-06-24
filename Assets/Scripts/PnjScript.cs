@@ -23,6 +23,14 @@ public class PnjVibes : MonoBehaviour
     public float explosionRadius = 3f;
     public float upwardModifier = 1.5f;
 
+    [Header("Param�tres de Respawn (apr�s ragdoll)")]
+    // Temps total avant de revenir � la vie une fois balanc�.
+    public float respawnDelay = 15f;
+    // Dur�e du clignotement juste avant de respawn (compris dans le respawnDelay).
+    public float blinkDuration = 2f;
+    // Vitesse du clignotement (plus petit = clignote plus vite).
+    public float blinkInterval = 0.15f;
+
     [Header("Param�tres du Break Dance (custom)")]
     // Vitesse de rotation sur le cr�ne (degr�s par seconde).
     public float breakSpinSpeed = 540f;
@@ -55,6 +63,9 @@ public class PnjVibes : MonoBehaviour
     // Sens de parcours des points : +1 = ordre normal, -1 = ordre invers�.
     // Tir� au hasard (une chance sur deux) au d�marrage.
     private int pointDirection = 1;
+    // Petit d�calage de vitesse d'anim propre � chaque PNJ (-0.5..0.5) pour
+    // qu'ils ne sautillent pas tous exactement en m�me temps (�vite l'effet sync bizarre).
+    private float animSpeedOffset = 0f;
     private Vector3 meshOffset;
     private float hopTimer;
     private float breakSpinAngle;
@@ -67,6 +78,12 @@ public class PnjVibes : MonoBehaviour
     private Collider mainCollider;
     private Rigidbody[] ragdollRigidbodies;
     private Collider[] ragdollColliders;
+
+    // Pose locale d'origine de chaque os du ragdoll, pour le remettre droit au respawn.
+    private Vector3[] ragdollInitialLocalPos;
+    private Quaternion[] ragdollInitialLocalRot;
+    // Renderers pour le clignotement avant respawn.
+    private Renderer[] renderers;
 
     private bool IsIdle = false;
 
@@ -87,11 +104,28 @@ public class PnjVibes : MonoBehaviour
         // Chaque bourr� a sa propre graine pour ne pas tituber tous pareil.
         drunkSeed = Random.value * 100f;
 
+        // Petit d�calage de vitesse d'anim al�atoire (-0.5..0.5) pour d�synchroniser les PNJ.
+        animSpeedOffset = Random.Range(-0.5f, 0.5f);
+        // On d�marre aussi le timer � un endroit al�atoire pour qu'ils ne sautillent pas en phase.
+        hopTimer = Random.value * 10f;
+
         mainRigidbody = GetComponent<Rigidbody>();
         mainCollider = GetComponent<Collider>();
 
         ragdollRigidbodies = GetComponentsInChildren<Rigidbody>();
         ragdollColliders = GetComponentsInChildren<Collider>();
+
+        // On m�morise la pose locale de d�part de chaque os pour pouvoir
+        // remettre le PNJ droit quand il respawn (sinon il garde la pose tordue du ragdoll).
+        ragdollInitialLocalPos = new Vector3[ragdollRigidbodies.Length];
+        ragdollInitialLocalRot = new Quaternion[ragdollRigidbodies.Length];
+        for (int i = 0; i < ragdollRigidbodies.Length; i++)
+        {
+            ragdollInitialLocalPos[i] = ragdollRigidbodies[i].transform.localPosition;
+            ragdollInitialLocalRot[i] = ragdollRigidbodies[i].transform.localRotation;
+        }
+
+        renderers = GetComponentsInChildren<Renderer>();
 
         mainRigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
 
@@ -205,7 +239,7 @@ public class PnjVibes : MonoBehaviour
         // Avec plusieurs points on passe au suivant (dans le sens choisi) ; avec un seul on reste dessus.
         if (arrived && points.Length > 1)
         {
-            currentPointIndex = (currentPointIndex + pointDirection + points.Length) % points.Length;
+            AdvanceToNextPoint();
         }
 
         return arrived;
@@ -248,8 +282,32 @@ public class PnjVibes : MonoBehaviour
 
         if (arrived && points.Length > 1)
         {
-            currentPointIndex = (currentPointIndex + pointDirection + points.Length) % points.Length;
+            AdvanceToNextPoint();
         }
+    }
+
+    // Passe au point suivant en mode aller-retour (ping-pong) :
+    // arrive au bout -> demi-tour, au lieu de reboucler vers le premier point.
+    void AdvanceToNextPoint()
+    {
+        if (points.Length <= 1) return;
+
+        int next = currentPointIndex + pointDirection;
+
+        if (next >= points.Length)
+        {
+            // On a atteint le dernier point : on repart en arri�re.
+            pointDirection = -1;
+            next = points.Length - 2;
+        }
+        else if (next < 0)
+        {
+            // On a atteint le premier point : on repart en avant.
+            pointDirection = 1;
+            next = 1;
+        }
+
+        currentPointIndex = next;
     }
 
     // Le corps tangue dans tous les sens et sautille de fa�on irr�guli�re.
@@ -271,7 +329,7 @@ public class PnjVibes : MonoBehaviour
 
     void ApplyFunnyAnimation()
     {
-        hopTimer += Time.deltaTime * bounceSpeed;
+        hopTimer += Time.deltaTime * (bounceSpeed + animSpeedOffset);
 
         float hopY = Mathf.Abs(Mathf.Sin(hopTimer)) * bounceForce;
         float tiltZ = Mathf.Sin(hopTimer) * tiltAmount;
@@ -301,7 +359,7 @@ public class PnjVibes : MonoBehaviour
     // Version calme de l'animation : leger balancement / respiration sur place.
     void ApplyIdleAnimation()
     {
-        hopTimer += Time.deltaTime * idleBounceSpeed;
+        hopTimer += Time.deltaTime * (idleBounceSpeed + animSpeedOffset);
 
         float hopY = Mathf.Abs(Mathf.Sin(hopTimer)) * idleBounceForce;
         float tiltZ = Mathf.Sin(hopTimer) * idleTiltAmount;
@@ -355,5 +413,87 @@ public class PnjVibes : MonoBehaviour
 
             rb.AddExplosionForce(impactForce, impactPoint, explosionRadius, upwardModifier, ForceMode.Impulse);
         }
+
+        // On programme le retour � la vie apr�s un d�lai (avec clignotement � la fin).
+        StartCoroutine(RespawnAfterDelay());
+    }
+
+    // Attend respawnDelay, clignote sur la fin, puis remet le PNJ debout et le fait remarcher.
+    System.Collections.IEnumerator RespawnAfterDelay()
+    {
+        // Phase "il gît au sol" : on attend tout le d�lai sauf la dur�e du clignotement.
+        float waitBeforeBlink = Mathf.Max(0f, respawnDelay - blinkDuration);
+        yield return new WaitForSeconds(waitBeforeBlink);
+
+        // Phase clignotement : on fait clignoter les renderers pour pr�venir qu'il revient.
+        float t = 0f;
+        bool visible = true;
+        while (t < blinkDuration)
+        {
+            visible = !visible;
+            SetRenderersVisible(visible);
+            yield return new WaitForSeconds(blinkInterval);
+            t += blinkInterval;
+        }
+        SetRenderersVisible(true);
+
+        Respawn();
+    }
+
+    void SetRenderersVisible(bool visible)
+    {
+        if (renderers == null) return;
+        foreach (Renderer r in renderers)
+        {
+            if (r != null) r.enabled = visible;
+        }
+    }
+
+    // Remet le PNJ d'aplomb sur un des points et le relance comme avant.
+    void Respawn()
+    {
+        // On coupe la physique du ragdoll et on fige les vitesses.
+        foreach (Rigidbody rb in ragdollRigidbodies)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+
+        // On remet chaque os � sa pose d'origine (sauf le corps principal qu'on replace � la main).
+        for (int i = 0; i < ragdollRigidbodies.Length; i++)
+        {
+            if (ragdollRigidbodies[i] == mainRigidbody) continue;
+            ragdollRigidbodies[i].transform.localPosition = ragdollInitialLocalPos[i];
+            ragdollRigidbodies[i].transform.localRotation = ragdollInitialLocalRot[i];
+        }
+
+        DisableRagdoll();
+
+        // On replace le PNJ sur le point le plus proche de l� o� il a atterri.
+        if (points != null && points.Length > 0)
+        {
+            currentPointIndex = GetClosestPointIndex();
+            transform.position = points[currentPointIndex].position;
+        }
+        transform.rotation = Quaternion.identity;
+
+        // R�activation du corps principal pour qu'il remarche normalement.
+        if (mainCollider != null) mainCollider.enabled = true;
+        if (mainRigidbody != null)
+        {
+            mainRigidbody.isKinematic = false;
+            mainRigidbody.linearVelocity = Vector3.zero;
+            mainRigidbody.angularVelocity = Vector3.zero;
+            mainRigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
+        }
+
+        // Reset de la pose du mesh anim� (l'enfant qui sautille).
+        if (transform.childCount > 0)
+        {
+            transform.GetChild(0).localPosition = Vector3.zero;
+            transform.GetChild(0).localRotation = Quaternion.identity;
+        }
+
+        isRagdoll = false;
     }
 }
