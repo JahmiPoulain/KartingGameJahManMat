@@ -272,6 +272,7 @@ public class UIManager2 : MonoBehaviour
 
     public void QuitToMainMenu()
     {
+        InversionCatcher.instance.Inverted = false;
         GameSceneManager.Instance.ReturnToMainMenu();
     }
 
