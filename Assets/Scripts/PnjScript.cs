@@ -52,6 +52,9 @@ public class PnjVibes : MonoBehaviour
     public float drunkBobHeight = 0.15f;
 
     private int currentPointIndex = 0;
+    // Sens de parcours des points : +1 = ordre normal, -1 = ordre invers�.
+    // Tir� au hasard (une chance sur deux) au d�marrage.
+    private int pointDirection = 1;
     private Vector3 meshOffset;
     private float hopTimer;
     private float breakSpinAngle;
@@ -110,6 +113,9 @@ public class PnjVibes : MonoBehaviour
             // On demarre la boucle par le point le plus proche du PNJ,
             // pas forcement le premier de la liste.
             currentPointIndex = GetClosestPointIndex();
+
+            // Une chance sur deux de parcourir les points dans le sens inverse.
+            pointDirection = Random.value < 0.5f ? -1 : 1;
         }
 
         if (isBreakDancing)
@@ -196,10 +202,10 @@ public class PnjVibes : MonoBehaviour
         bool arrived = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z),
                                         new Vector3(flatTarget.x, 0, flatTarget.z)) < arrivalDistance;
 
-        // Avec plusieurs points on passe au suivant ; avec un seul on reste dessus.
+        // Avec plusieurs points on passe au suivant (dans le sens choisi) ; avec un seul on reste dessus.
         if (arrived && points.Length > 1)
         {
-            currentPointIndex = (currentPointIndex + 1) % points.Length;
+            currentPointIndex = (currentPointIndex + pointDirection + points.Length) % points.Length;
         }
 
         return arrived;
@@ -242,7 +248,7 @@ public class PnjVibes : MonoBehaviour
 
         if (arrived && points.Length > 1)
         {
-            currentPointIndex = (currentPointIndex + 1) % points.Length;
+            currentPointIndex = (currentPointIndex + pointDirection + points.Length) % points.Length;
         }
     }
 
