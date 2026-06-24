@@ -82,6 +82,7 @@ public class CheckpointManager : MonoBehaviour
             if (chrono != null && CheckpointProgressBarUI.Instance != null)
             {
                 // On envoie l'index réel franchi et le temps au tour actuel
+                if (lapManager.CurrentLap > 3) return;
                 CheckpointProgressBarUI.Instance.OnCheckpointPassed(checkpoint.Index, chrono.CurrentTime);
             }
             // -----------------------------------------------------------
