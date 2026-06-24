@@ -251,7 +251,7 @@ public class CheckpointProgressBarUI : MonoBehaviour
             Vector2 pos = tickRect.anchoredPosition;
             pos.x = inverted
                 ? ticksContainer.rect.width - (ratio * ticksContainer.rect.width) - 10f
-                : (ratio * ticksContainer.rect.width) - 10f;
+                : (ratio * ticksContainer.rect.width) + 10f;
             pos.y = 10f;
             tickRect.anchoredPosition = pos;
         }
